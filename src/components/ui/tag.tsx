@@ -1,13 +1,11 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes } from "react";
 import { Check, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type TagVariant = "suited" | "caution" | "neutral";
 
-export interface TagProps {
+export interface TagProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: TagVariant;
-  children: ReactNode;
-  className?: string;
 }
 
 const VARIANT_STYLES: Record<TagVariant, string> = {
@@ -16,7 +14,7 @@ const VARIANT_STYLES: Record<TagVariant, string> = {
   neutral: "bg-surface text-text-secondary",
 };
 
-export function Tag({ variant = "neutral", children, className }: TagProps) {
+export function Tag({ variant = "neutral", children, className, ...props }: TagProps) {
   return (
     <span
       className={cn(
@@ -24,6 +22,7 @@ export function Tag({ variant = "neutral", children, className }: TagProps) {
         VARIANT_STYLES[variant],
         className,
       )}
+      {...props}
     >
       {variant === "suited" && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
       {variant === "caution" && <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />}
