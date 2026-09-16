@@ -93,33 +93,41 @@ export interface GpxWaypoint {
   name: string;
 }
 
+function escapeXml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function trackBlock(name: string, geometry: GeoJSON.LineString): string {
+  const trkpts = geometry.coordinates.map(([lng, lat]) => `      <trkpt lat="${lat}" lon="${lng}"></trkpt>`).join("\n");
+  return `  <trk>
+    <name>${escapeXml(name)}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>`;
+}
+
 /** Builds a downloadable GPX 1.1 file from a track line and optional named waypoints. */
-export function generateGpx(options: {
+export function generateGpx(options: { name: string; geometry: GeoJSON.LineString; waypoints?: GpxWaypoint[] }): string {
+  return generateMultiTrackGpx({ name: options.name, tracks: [{ name: options.name, geometry: options.geometry }], waypoints: options.waypoints });
+}
+
+/** Builds a downloadable GPX 1.1 file with one track per day — used for whole-tour downloads. */
+export function generateMultiTrackGpx(options: {
   name: string;
-  geometry: GeoJSON.LineString;
+  tracks: { name: string; geometry: GeoJSON.LineString }[];
   waypoints?: GpxWaypoint[];
 }): string {
-  const escapeXml = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-  const trkpts = options.geometry.coordinates
-    .map(([lng, lat]) => `      <trkpt lat="${lat}" lon="${lng}"></trkpt>`)
-    .join("\n");
-
   const wpts = (options.waypoints ?? [])
     .map((w) => `  <wpt lat="${w.lat}" lon="${w.lng}"><name>${escapeXml(w.name)}</name></wpt>`)
     .join("\n");
+  const tracks = options.tracks.map((t) => trackBlock(t.name, t.geometry)).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="Herepath" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata><name>${escapeXml(options.name)}</name></metadata>
 ${wpts}
-  <trk>
-    <name>${escapeXml(options.name)}</name>
-    <trkseg>
-${trkpts}
-    </trkseg>
-  </trk>
+${tracks}
 </gpx>
 `;
 }
