@@ -6,3 +6,4 @@ export * from "./routes";
 export * from "./day-rides";
 export * from "./tours";
 export * from "./collections";
+export * from "./search-chips";

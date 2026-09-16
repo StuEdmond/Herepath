@@ -31,6 +31,7 @@ const {
   tourOvernightStays,
   collections,
   collectionRoutes,
+  searchChips,
 } = schema;
 
 if (!process.env.DATABASE_URL) {
@@ -42,6 +43,7 @@ const db = drizzle(client, { schema });
 
 async function main() {
   console.log("Wiping existing data...");
+  await db.delete(searchChips);
   await db.delete(collectionRoutes);
   await db.delete(collections);
   await db.delete(tourOvernightStays);
@@ -853,6 +855,15 @@ async function main() {
     { collectionId: greatPasses.id, routeId: routeByName["Hardknott and Wrynose"].id, position: 1 },
     { collectionId: greatPasses.id, routeId: routeByName["Bealach na Ba"].id, position: 2 },
     { collectionId: greatPasses.id, routeId: routeByName["Horseshoe Pass"].id, position: 3 },
+  ]);
+
+  console.log("Seeding search chips...");
+  await db.insert(searchChips).values([
+    { label: "Castles", query: "castle", position: 0 },
+    { label: "Reservoirs", query: "reservoir", position: 1 },
+    { label: "Mountain passes", query: "pass", position: 2 },
+    { label: "Viaducts", query: "viaduct", position: 3 },
+    { label: "Coast roads", query: "coast", position: 4 },
   ]);
 
   console.log("Seed complete.");

@@ -8,6 +8,13 @@
       "when": 1789591344246,
       "tag": "0000_late_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789596097862,
+      "tag": "0001_unknown_wild_pack",
+      "breakpoints": true
     }
   ]
 }
