@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { regions, routes, places, bikeTypeEnum, contentStatusEnum, dayRideBikeSuitability, dayRideStages, dayRidePlacesToEat } from "@/db/schema";
 import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
 import { StageBuilder, type StageDraft } from "@/components/admin/stage-builder";
+import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { Button } from "@/components/ui/button";
 
 export interface DayRideDefaults {
@@ -21,6 +22,7 @@ export interface DayRideDefaults {
   heroImage: string | null;
   status: string;
   isSample: boolean;
+  geometry?: GeoJSON.GeoJSON | null;
 }
 
 export async function DayRideForm({
@@ -104,19 +106,27 @@ export async function DayRideForm({
         Loop (starts and finishes in the same place)
       </label>
 
+      <GpxUploadField
+        distanceFieldName="totalDistanceMiles"
+        includeStartEndFields={false}
+        defaults={{
+          geometry: (defaults?.geometry as GeoJSON.LineString | null) ?? null,
+          distanceMiles: defaults?.totalDistanceMiles ?? "",
+          startPoint: null,
+          endPoint: null,
+        }}
+      />
+
       <FormRow>
-        <Field label="Total distance (miles)">
-          <TextInput name="totalDistanceMiles" defaultValue={defaults?.totalDistanceMiles} required inputMode="decimal" />
-        </Field>
         <Field label="Riding time (minutes)">
           <TextInput name="ridingTimeMinutes" type="number" defaultValue={defaults?.ridingTimeMinutes} required />
+        </Field>
+        <Field label="Full day time estimate" hint='e.g. "5 to 6 hours"'>
+          <TextInput name="fullDayTimeEstimate" defaultValue={defaults?.fullDayTimeEstimate} required />
         </Field>
       </FormRow>
 
       <FormRow>
-        <Field label="Full day time estimate" hint='e.g. "5 to 6 hours"'>
-          <TextInput name="fullDayTimeEstimate" defaultValue={defaults?.fullDayTimeEstimate} required />
-        </Field>
         <Field label="Status">
           <Select name="status" defaultValue={defaults?.status ?? "draft"}>
             {contentStatusEnum.enumValues.map((s) => (

@@ -29,6 +29,9 @@ function readForm(formData: FormData) {
     throw new Error("Name, region, intro paragraphs, start/finish and distance are required");
   }
 
+  const geometryRaw = String(formData.get("geometry") ?? "");
+  const geometry = geometryRaw ? (JSON.parse(geometryRaw) as GeoJSON.LineString) : null;
+
   return {
     name,
     regionId,
@@ -45,6 +48,7 @@ function readForm(formData: FormData) {
     heroImage,
     status,
     isSample,
+    geometry,
   };
 }
 

@@ -1,0 +1,288 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { eq, and } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { ShieldAlert } from "lucide-react";
+import { db } from "@/db/client";
+import { dayRides, regions, dayRideBikeSuitability, dayRideStages, dayRidePlacesToEat, routes, places, tourDays, tours } from "@/db/schema";
+import { getDayRideHardestDifficulty } from "@/lib/difficulty";
+import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
+import { Tag } from "@/components/ui/tag";
+import { StatTile } from "@/components/ui/stat-tile";
+import { Card, CardImage, CardBody } from "@/components/ui/card";
+import { TripTypeBadge } from "@/components/ui/trip-type-badge";
+import { Button } from "@/components/ui/button";
+import { DayRideMapCard } from "@/components/route/day-ride-map-card";
+import { StageTimeline, type TimelineStage } from "@/components/route/stage-timeline";
+import { PlacesToEat, type PlaceToEatEntry } from "@/components/route/places-to-eat";
+
+async function getDayRide(slug: string) {
+  const [dayRide] = await db.select().from(dayRides).where(eq(dayRides.slug, slug));
+  return dayRide;
+}
+
+function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
+const BIKE_TYPE_LABELS: Record<string, string> = {
+  sports: "Sports",
+  naked_and_roadster: "Naked and roadster",
+  adventure: "Adventure",
+  touring: "Touring",
+  cruiser: "Cruiser",
+  "125cc_and_new_riders": "125cc and new riders",
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const dayRide = await getDayRide(slug);
+  if (!dayRide) return {};
+
+  const description = dayRide.introSell.length > 155 ? `${dayRide.introSell.slice(0, 152)}...` : dayRide.introSell;
+
+  return {
+    title: dayRide.name,
+    description,
+    openGraph: {
+      title: `${dayRide.name} · Herepath`,
+      description,
+      images: dayRide.heroImage ? [{ url: dayRide.heroImage }] : undefined,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dayRide.name,
+      description,
+      images: dayRide.heroImage ? [dayRide.heroImage] : undefined,
+    },
+  };
+}
+
+export default async function DayRidePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const dayRide = await getDayRide(slug);
+  if (!dayRide || dayRide.status !== "published") notFound();
+
+  const [region] = await db.select().from(regions).where(eq(regions.id, dayRide.regionId));
+
+  const suitability = await db.select().from(dayRideBikeSuitability).where(eq(dayRideBikeSuitability.dayRideId, dayRide.id));
+  const suited = suitability.filter((s) => s.level === "suited");
+  const caution = suitability.filter((s) => s.level === "caution");
+
+  const stageRows = await db
+    .select({ stage: dayRideStages, route: routes, place: places })
+    .from(dayRideStages)
+    .leftJoin(routes, eq(dayRideStages.routeId, routes.id))
+    .leftJoin(places, eq(dayRideStages.placeId, places.id))
+    .where(eq(dayRideStages.dayRideId, dayRide.id))
+    .orderBy(dayRideStages.position);
+
+  const hardestDifficulty = await getDayRideHardestDifficulty(dayRide.id);
+
+  const timelineStages: TimelineStage[] = stageRows.map((row) => ({
+    id: row.stage.id,
+    kind: row.stage.kind,
+    location: row.stage.location,
+    note: row.stage.note,
+    description: row.stage.description,
+    fromMile: row.stage.fromMile,
+    toMile: row.stage.toMile,
+    mile: row.stage.mile,
+    stopType: row.stage.stopType,
+    route: row.route ? { name: row.route.name, slug: row.route.slug } : null,
+    place: row.place ? { name: row.place.name } : null,
+  }));
+
+  const highlightSegments = stageRows
+    .filter((row) => row.stage.kind === "route" && row.route?.geometry)
+    .map((row) => ({ id: `stage-${row.stage.id}`, geometry: row.route!.geometry as GeoJSON.LineString }));
+
+  // Places to eat, cross-referenced with any matching 'stop' stage for a mile marker.
+  const stopMileByPlace = new Map(
+    stageRows.filter((r) => r.stage.kind === "stop" && r.stage.placeId).map((r) => [r.stage.placeId!, r.stage.mile ? Number(r.stage.mile) : null]),
+  );
+  const placesToEatRows = await db
+    .select({ place: places, isSuggestedLunch: dayRidePlacesToEat.isSuggestedLunch })
+    .from(dayRidePlacesToEat)
+    .innerJoin(places, eq(dayRidePlacesToEat.placeId, places.id))
+    .where(eq(dayRidePlacesToEat.dayRideId, dayRide.id));
+  const placeToEatEntries: PlaceToEatEntry[] = placesToEatRows.map((row) => ({
+    id: row.place.id,
+    name: row.place.name,
+    type: row.place.type,
+    address: row.place.address,
+    websiteUrl: row.place.websiteUrl,
+    tags: row.place.tags,
+    priceBand: row.place.priceBand,
+    shortDescription: row.place.shortDescription,
+    isSuggestedLunch: row.isSuggestedLunch,
+    stageMile: stopMileByPlace.get(row.place.id) ?? null,
+  }));
+
+  const fuelStops = stageRows.filter((row) => row.stage.kind === "stop" && row.stage.stopType === "fuel" && row.place);
+
+  const longerTrips = await db
+    .select({ tour: tours })
+    .from(tourDays)
+    .innerJoin(tours, eq(tourDays.tourId, tours.id))
+    .where(and(eq(tourDays.dayRideId, dayRide.id), eq(tours.status, "published")));
+
+  return (
+    <div className="flex flex-col gap-6 pb-10">
+      <CardImage
+        src={dayRide.heroImage ?? undefined}
+        alt={dayRide.name}
+        className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]"
+      />
+
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">
+        {/* 1. Label, name, rating */}
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[13px] text-text-muted">Day ride · {region?.name}</span>
+            {dayRide.isSample && (
+              <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-[12px] text-text-muted">Sample content</span>
+            )}
+          </div>
+          <h1 className="text-[28px]">{dayRide.name}</h1>
+          <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
+        </div>
+
+        {/* 2. Introduction */}
+        <div className="flex flex-col gap-3 text-[15px] text-text-secondary">
+          <p>{dayRide.introSell}</p>
+          <p>{dayRide.introCharacter}</p>
+        </div>
+
+        {/* 3. Stat tiles */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Total distance" value={`${dayRide.totalDistanceMiles} miles`} />
+          <StatTile label="Riding time" value={formatMinutes(dayRide.ridingTimeMinutes)} />
+          <StatTile
+            label="Hardest section"
+            value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
+          />
+          <StatTile label="Start and finish" value={dayRide.isLoop ? dayRide.startLocation : `${dayRide.startLocation} → ${dayRide.finishLocation}`} />
+        </div>
+
+        {/* 4. Best suited to */}
+        {(suited.length > 0 || caution.length > 0) && (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-[17px]">Best suited to</h2>
+            <div className="flex flex-wrap gap-2">
+              {suited.map((s) => (
+                <Tag key={s.bikeType} variant="suited" title={s.note ?? undefined}>
+                  {BIKE_TYPE_LABELS[s.bikeType]}
+                </Tag>
+              ))}
+              {caution.map((s) => (
+                <Tag key={s.bikeType} variant="caution" title={s.note ?? undefined}>
+                  {BIKE_TYPE_LABELS[s.bikeType]}
+                </Tag>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. Full loop map */}
+        {dayRide.geometry ? (
+          <DayRideMapCard
+            slug={dayRide.slug}
+            geometry={dayRide.geometry as GeoJSON.LineString}
+            highlightSegments={highlightSegments}
+          />
+        ) : (
+          <p className="rounded-lg bg-surface p-4 text-[14px] text-text-muted">Map available once a GPX track is added in admin.</p>
+        )}
+
+        {/* Safety disclaimer */}
+        <div className="flex gap-2 rounded-lg bg-red-tint-bg p-3 text-[13px] text-red-tint-text">
+          <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>
+            This ride is guidance only. Riders must judge conditions and their own ability — road conditions change,
+            so ride to what you can see, not to this page.
+          </p>
+        </div>
+
+        {/* 6. Stage by stage */}
+        <div className="flex flex-col gap-3">
+          <h2 className="text-[17px]">The ride, stage by stage</h2>
+          <StageTimeline stages={timelineStages} />
+        </div>
+
+        {/* 7. Plan your day */}
+        <div className="flex flex-col gap-3">
+          <h2 className="text-[17px]">Plan your day</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-lg bg-surface p-3 text-[14px]">
+              <span className="font-medium text-text-primary">Fuel plan — </span>
+              {fuelStops.length > 0 ? (
+                <span className="text-text-secondary">
+                  {fuelStops.map((s) => `Mile ${s.stage.mile} (${s.place!.name})`).join(", ")}
+                </span>
+              ) : (
+                <span className="text-text-secondary">No dedicated fuel stop — fill up before you set off.</span>
+              )}
+            </div>
+            <div className="rounded-lg bg-surface p-3 text-[14px]">
+              <span className="font-medium text-text-primary">Full day, with stops — </span>
+              <span className="text-text-secondary">{dayRide.fullDayTimeEstimate}</span>
+            </div>
+            {dayRide.bestTime && (
+              <div className="rounded-lg bg-surface p-3 text-[14px]">
+                <span className="font-medium text-text-primary">Best time — </span>
+                <span className="text-text-secondary">{dayRide.bestTime}</span>
+              </div>
+            )}
+            {dayRide.parkingNote && (
+              <div className="rounded-lg bg-surface p-3 text-[14px]">
+                <span className="font-medium text-text-primary">Parking at start — </span>
+                <span className="text-text-secondary">{dayRide.parkingNote}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 8. Places to eat */}
+        {placeToEatEntries.length > 0 && <PlacesToEat entries={placeToEatEntries} />}
+
+        {/* 9. Rider reviews */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[17px]">Rider reviews</h2>
+            <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]" disabled title="Sign in to write a review — coming soon">
+              Write a review
+            </Button>
+          </div>
+          <p className="text-[14px] text-text-muted">No reviews yet — be the first to ride and review it.</p>
+        </div>
+
+        {/* 10. Make it a longer trip */}
+        {longerTrips.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h2 className="text-[17px]">Make it a longer trip</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {longerTrips.map(({ tour }) => (
+                <Link key={tour.id} href={`/tours/${tour.slug}`}>
+                  <Card>
+                    <CardImage src={tour.heroImage ?? undefined} alt={tour.name} badge={<TripTypeBadge type="tour" />} />
+                    <CardBody>
+                      <h3 className="text-[16px]">{tour.name}</h3>
+                      <p className="text-[13px] text-text-muted">
+                        {tour.durationDays} days · {tour.totalDistanceMiles} miles
+                      </p>
+                    </CardBody>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

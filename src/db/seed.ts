@@ -417,6 +417,20 @@ async function main() {
       fullDayTimeEstimate: "5 to 6 hours",
       bestTime: "Spring to autumn, starting early to beat weekend tourist traffic.",
       parkingNote: "Free on-street parking is available around Glossop town centre.",
+      // Composite line through the three featured routes, connected by straight
+      // links — illustrative only, like the rest of the sample data.
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-1.9497, 53.4443],
+          [-1.688, 53.403],
+          [-1.7735, 53.3423],
+          [-1.7838, 53.3378],
+          [-1.9142, 53.2596],
+          [-2.0796, 53.2226],
+          [-1.9497, 53.4443],
+        ],
+      },
       isSample: true,
       status: "published",
     })
@@ -465,6 +479,14 @@ async function main() {
       fullDayTimeEstimate: "5 to 6 hours",
       bestTime: "Clear days, since the moor tops catch low cloud.",
       parkingNote: "Public car park in Hawes town centre.",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-2.2179, 54.3235],
+          [-2.2679, 54.3684],
+          [-2.2179, 54.3235],
+        ],
+      },
       isSample: true,
       status: "published",
     })
@@ -502,6 +524,15 @@ async function main() {
       fullDayTimeEstimate: "6 to 7 hours",
       bestTime: "Spring to autumn, avoiding peak summer tourist traffic through Betws-y-Coed.",
       parkingNote: "Pay and display car park in Betws-y-Coed.",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-3.8004, 53.0955],
+          [-4.1264, 53.1191],
+          [-3.8286, 53.2799],
+          [-3.8004, 53.0955],
+        ],
+      },
       isSample: true,
       status: "published",
     })
@@ -543,6 +574,13 @@ async function main() {
       fullDayTimeEstimate: "4 to 5 hours",
       bestTime: "Spring to autumn, avoiding school-holiday traffic through the coastal towns.",
       parkingNote: "On-street parking available in Barnstaple town centre.",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-4.0587, 51.0781],
+          [-4.5423, 50.829],
+        ],
+      },
       isSample: true,
       status: "published",
     })
@@ -616,7 +654,9 @@ async function main() {
       slug: "pennines-crossing-day-1-glossop-to-hebden-bridge",
       regionSlug: "peak-district",
       start: "Glossop",
+      startCoord: [-1.9497, 53.4443] as [number, number],
       finish: "Hebden Bridge",
+      finishCoord: [-1.9977, 53.7448] as [number, number],
       featuredRoute: "Snake Pass (A57)",
       linkNote: "Via Woodhead and the Longdendale valley to Hebden Bridge",
       overnight: "Hebden Bridge",
@@ -627,7 +667,9 @@ async function main() {
       slug: "pennines-crossing-day-2-hebden-bridge-to-hawes",
       regionSlug: "yorkshire-dales",
       start: "Hebden Bridge",
+      startCoord: [-1.9977, 53.7448] as [number, number],
       finish: "Hawes",
+      finishCoord: [-2.2179, 54.3235] as [number, number],
       featuredRoute: "Buttertubs Pass",
       linkNote: "Via Skipton and Wharfedale to Wensleydale",
       overnight: "Hawes",
@@ -638,7 +680,9 @@ async function main() {
       slug: "pennines-crossing-day-3-hawes-to-alston",
       regionSlug: "northern-england",
       start: "Hawes",
+      startCoord: [-2.2179, 54.3235] as [number, number],
       finish: "Alston",
+      finishCoord: [-2.4318, 54.811] as [number, number],
       featuredRoute: null as string | null,
       linkNote: "Via Swaledale and the North Pennines to Alston",
       overnight: "Alston",
@@ -649,7 +693,9 @@ async function main() {
       slug: "pennines-crossing-day-4-alston-to-haltwhistle",
       regionSlug: "northern-england",
       start: "Alston",
+      startCoord: [-2.4318, 54.811] as [number, number],
       finish: "Haltwhistle",
+      finishCoord: [-2.4469, 54.97] as [number, number],
       featuredRoute: null as string | null,
       linkNote: "Via the South Tyne valley to Haltwhistle",
       overnight: "Haltwhistle",
@@ -659,6 +705,9 @@ async function main() {
 
   for (const [index, day] of pennineDaySeeds.entries()) {
     const featuredDistance = day.featuredRoute ? Number(routeByName[day.featuredRoute].distanceMiles) : 0;
+    const featuredGeometry = day.featuredRoute
+      ? (routeByName[day.featuredRoute].geometry as GeoJSON.LineString).coordinates
+      : [];
     const [dayRide] = await db
       .insert(dayRides)
       .values({
@@ -673,6 +722,10 @@ async function main() {
         totalDistanceMiles: "130",
         ridingTimeMinutes: 220,
         fullDayTimeEstimate: "6 to 7 hours",
+        geometry: {
+          type: "LineString",
+          coordinates: [day.startCoord, ...featuredGeometry, day.finishCoord],
+        },
         isSample: true,
         status: "published",
       })

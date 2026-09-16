@@ -13,7 +13,17 @@ export interface GpxDefaults {
   endPoint: GeoPoint | null;
 }
 
-export function GpxUploadField({ defaults }: { defaults?: GpxDefaults }) {
+export function GpxUploadField({
+  defaults,
+  distanceFieldName = "distanceMiles",
+  includeStartEndFields = true,
+}: {
+  defaults?: GpxDefaults;
+  /** Name of the hidden distance input — lets callers wire it to their own field (e.g. "totalDistanceMiles"). */
+  distanceFieldName?: string;
+  /** Route has separate start/end point columns; DayRide/Tour don't, so this can be turned off. */
+  includeStartEndFields?: boolean;
+}) {
   const [geometry, setGeometry] = useState<GeoJSON.LineString | null>(defaults?.geometry ?? null);
   const [distanceMiles, setDistanceMiles] = useState(defaults?.distanceMiles ?? "");
   const [startPoint, setStartPoint] = useState<GeoPoint | null>(defaults?.startPoint ?? null);
@@ -53,7 +63,7 @@ export function GpxUploadField({ defaults }: { defaults?: GpxDefaults }) {
 
       <Field label="Distance (miles)" hint="Auto-filled from the GPX; you can override it.">
         <TextInput
-          name="distanceMiles"
+          name={distanceFieldName}
           value={distanceMiles}
           onChange={(e) => setDistanceMiles(e.target.value)}
           required
@@ -62,10 +72,14 @@ export function GpxUploadField({ defaults }: { defaults?: GpxDefaults }) {
       </Field>
 
       <input type="hidden" name="geometry" value={geometry ? JSON.stringify(geometry) : ""} />
-      <input type="hidden" name="startLat" value={startPoint?.lat ?? ""} />
-      <input type="hidden" name="startLng" value={startPoint?.lng ?? ""} />
-      <input type="hidden" name="endLat" value={endPoint?.lat ?? ""} />
-      <input type="hidden" name="endLng" value={endPoint?.lng ?? ""} />
+      {includeStartEndFields && (
+        <>
+          <input type="hidden" name="startLat" value={startPoint?.lat ?? ""} />
+          <input type="hidden" name="startLng" value={startPoint?.lng ?? ""} />
+          <input type="hidden" name="endLat" value={endPoint?.lat ?? ""} />
+          <input type="hidden" name="endLng" value={endPoint?.lng ?? ""} />
+        </>
+      )}
     </div>
   );
 }
