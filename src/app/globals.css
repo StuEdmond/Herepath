@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/*
+ * Herepath design tokens (Section 3.1 of the brief).
+ * Dark is the reference theme and is the default; the light override
+ * applies under prefers-color-scheme, and can be forced with
+ * data-theme="light" / data-theme="dark" on <html> (used by the
+ * theme toggle on the /preview page for testing).
+ */
+:root {
+  --green-primary: #2e7d5b;
+  --green-bright: #4fae82;
+  --green-tint-bg: #16352a;
+  --green-tint-text: #9fd9bc;
+  --red-accent: #e63b2e;
+  --red-tint-bg: #4a1c18;
+  --red-tint-text: #ffb4ac;
+  --bg: #0e0f12;
+  --surface: #22262e;
+  --surface-raised: #343a46;
+  --text-primary: #f5f7fa;
+  --text-secondary: #b7bec8;
+  --text-muted: #8a93a3;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --green-primary: #2e7d5b;
+    --green-bright: #2e7d5b;
+    --green-tint-bg: #e3f1ea;
+    --green-tint-text: #1f5a40;
+    --red-accent: #c93226;
+    --red-tint-bg: #fbe7e5;
+    --red-tint-text: #8a231b;
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface-raised: #e6e9ef;
+    --text-primary: #0e0f12;
+    --text-secondary: #4a5160;
+    --text-muted: #6b7384;
+  }
+}
+
+:root[data-theme="dark"] {
+  --green-primary: #2e7d5b;
+  --green-bright: #4fae82;
+  --green-tint-bg: #16352a;
+  --green-tint-text: #9fd9bc;
+  --red-accent: #e63b2e;
+  --red-tint-bg: #4a1c18;
+  --red-tint-text: #ffb4ac;
+  --bg: #0e0f12;
+  --surface: #22262e;
+  --surface-raised: #343a46;
+  --text-primary: #f5f7fa;
+  --text-secondary: #b7bec8;
+  --text-muted: #8a93a3;
+}
+
+:root[data-theme="light"] {
+  --green-primary: #2e7d5b;
+  --green-bright: #2e7d5b;
+  --green-tint-bg: #e3f1ea;
+  --green-tint-text: #1f5a40;
+  --red-accent: #c93226;
+  --red-tint-bg: #fbe7e5;
+  --red-tint-text: #8a231b;
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-raised: #e6e9ef;
+  --text-primary: #0e0f12;
+  --text-secondary: #4a5160;
+  --text-muted: #6b7384;
+}
+
+@theme inline {
+  --color-green-primary: var(--green-primary);
+  --color-green-bright: var(--green-bright);
+  --color-green-tint-bg: var(--green-tint-bg);
+  --color-green-tint-text: var(--green-tint-text);
+  --color-red-accent: var(--red-accent);
+  --color-red-tint-bg: var(--red-tint-bg);
+  --color-red-tint-text: var(--red-tint-text);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --font-sans: var(--font-archivo);
+  --font-heading: var(--font-archivo-narrow);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
+  font-size: 15px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-archivo-narrow), var(--font-archivo), sans-serif;
+  font-weight: 500;
+}
