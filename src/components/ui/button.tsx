@@ -11,7 +11,7 @@ export const buttonVariants = cva(
         secondary:
           "border border-text-muted/40 bg-transparent text-text-primary hover:bg-surface",
         ghost: "bg-transparent text-text-primary hover:bg-surface",
-        danger: "bg-red-accent text-white hover:bg-red-accent/90",
+        danger: "bg-red-accent-strong text-white hover:bg-red-accent-strong/90",
       },
       fullWidth: {
         true: "w-full",

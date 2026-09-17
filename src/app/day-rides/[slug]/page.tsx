@@ -137,6 +137,7 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
         src={dayRide.heroImage ?? undefined}
         alt={dayRide.name}
         className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]"
+        priority
       />
 
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">

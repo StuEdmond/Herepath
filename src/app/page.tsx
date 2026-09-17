@@ -4,7 +4,7 @@ import { regions, searchChips } from "@/db/schema";
 import { getExploreResults, filterAndSortResults, matchedLandmark, type ExploreFilters } from "@/lib/explore";
 import { ExploreFilters as ExploreFiltersComponent } from "@/components/explore/filters";
 import { ResultCard } from "@/components/explore/result-card";
-import { ResultsPinMap } from "@/components/explore/results-pin-map";
+import { DynamicResultsPinMap } from "@/components/explore/dynamic-results-pin-map";
 
 export const metadata: Metadata = {
   title: "Herepath",
@@ -50,7 +50,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           <p className="text-[14px] text-text-muted">Try widening the region or difficulty.</p>
         </div>
       ) : view === "map" ? (
-        <ResultsPinMap results={results} />
+        <DynamicResultsPinMap results={results} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {results.map((result) => (

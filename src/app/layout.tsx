@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Archivo_Narrow } from "next/font/google";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Footer } from "@/components/layout/footer";
+import { CookieConsentBanner } from "@/components/layout/cookie-consent-banner";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -17,6 +18,7 @@ const archivoNarrow = Archivo_Narrow({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: {
     default: "Herepath",
     template: "%s · Herepath",
@@ -35,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex-1 pb-20 md:pb-0">{children}</main>
         <Footer />
         <BottomNav />
+        <CookieConsentBanner />
       </body>
     </html>
   );

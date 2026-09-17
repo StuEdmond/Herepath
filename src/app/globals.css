@@ -13,6 +13,10 @@
   --green-tint-bg: #16352a;
   --green-tint-text: #9fd9bc;
   --red-accent: #e63b2e;
+  /* White text at 13-15px on solid red-accent fails WCAG AA (4.18:1) in dark
+     mode; this darker shade is used only for that case (badges, danger
+     buttons) so the documented red-accent stays untouched everywhere else. */
+  --red-accent-strong: #c93226;
   --red-tint-bg: #4a1c18;
   --red-tint-text: #ffb4ac;
   --bg: #0e0f12;
@@ -30,6 +34,7 @@
     --green-tint-bg: #e3f1ea;
     --green-tint-text: #1f5a40;
     --red-accent: #c93226;
+    --red-accent-strong: #c93226;
     --red-tint-bg: #fbe7e5;
     --red-tint-text: #8a231b;
     --bg: #f5f7fa;
@@ -47,6 +52,7 @@
   --green-tint-bg: #16352a;
   --green-tint-text: #9fd9bc;
   --red-accent: #e63b2e;
+  --red-accent-strong: #c93226;
   --red-tint-bg: #4a1c18;
   --red-tint-text: #ffb4ac;
   --bg: #0e0f12;
@@ -63,6 +69,7 @@
   --green-tint-bg: #e3f1ea;
   --green-tint-text: #1f5a40;
   --red-accent: #c93226;
+  --red-accent-strong: #c93226;
   --red-tint-bg: #fbe7e5;
   --red-tint-text: #8a231b;
   --bg: #f5f7fa;
@@ -79,6 +86,7 @@
   --color-green-tint-bg: var(--green-tint-bg);
   --color-green-tint-text: var(--green-tint-text);
   --color-red-accent: var(--red-accent);
+  --color-red-accent-strong: var(--red-accent-strong);
   --color-red-tint-bg: var(--red-tint-bg);
   --color-red-tint-text: var(--red-tint-text);
   --color-bg: var(--bg);

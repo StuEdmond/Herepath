@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { parseGpx } from "@/lib/gpx";
-import { RouteMap } from "@/components/map/route-map";
+import { MapSkeleton } from "@/components/map/map-skeleton";
 import { Field, TextInput } from "@/components/admin/form-fields";
+
+const RouteMap = dynamic(() => import("@/components/map/route-map").then((m) => m.RouteMap), {
+  ssr: false,
+  loading: () => <MapSkeleton className="h-56 w-full rounded-lg" />,
+});
 import type { GeoPoint } from "@/db/schema/routes";
 
 export interface GpxDefaults {

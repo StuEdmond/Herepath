@@ -17,7 +17,7 @@ export function TripTypeBadge({ type, className }: TripTypeBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md bg-red-accent px-2 py-1 text-[13px] font-medium text-white",
+        "inline-flex items-center rounded-md bg-red-accent-strong px-2 py-1 text-[13px] font-medium text-white",
         className,
       )}
     >

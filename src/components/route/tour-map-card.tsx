@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Download, Printer } from "lucide-react";
-import { TrackMap, type TrackLine } from "@/components/map/track-map";
+import { DynamicTrackMap } from "@/components/map/dynamic-track-map";
+import type { TrackLine } from "@/components/map/track-map";
 import { LinkButton } from "@/components/ui/link-button";
 
 const DAY_COLORS = ["#4fae82", "#4a90d9", "#d9a544", "#9b72cf", "#3bc4b0", "#d97bb0"];
@@ -24,7 +25,7 @@ export function TourMapCard({
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-surface p-3">
       {lines.length > 0 ? (
-        <TrackMap lines={lines} className="h-64 w-full rounded-lg sm:h-80" />
+        <DynamicTrackMap lines={lines} className="h-64 w-full rounded-lg sm:h-80" />
       ) : (
         <p className="p-2 text-[14px] text-text-muted">Map available once each day&apos;s GPX track is added in admin.</p>
       )}

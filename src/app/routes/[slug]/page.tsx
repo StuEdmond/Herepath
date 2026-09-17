@@ -122,6 +122,7 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
         src={route.heroImage ?? undefined}
         alt={route.name}
         className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]"
+        priority
       />
 
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">

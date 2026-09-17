@@ -146,7 +146,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
 
   return (
     <div className="flex flex-col gap-6 pb-10">
-      <CardImage src={tour.heroImage ?? undefined} alt={tour.name} className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]" />
+      <CardImage src={tour.heroImage ?? undefined} alt={tour.name} className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]" priority />
 
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">
         {/* 1. Label, name, rating */}

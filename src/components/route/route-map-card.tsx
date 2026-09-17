@@ -1,5 +1,5 @@
 import { Download, Map as MapIcon, Navigation } from "lucide-react";
-import { RouteMap } from "@/components/map/route-map";
+import { DynamicRouteMap } from "@/components/map/dynamic-route-map";
 import { LinkButton } from "@/components/ui/link-button";
 import { buildGoogleMapsUrl, buildAppleMapsUrl } from "@/lib/map-links";
 
@@ -9,7 +9,7 @@ export function RouteMapCard({ slug, geometry }: { slug: string; geometry: GeoJS
 
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-surface p-3">
-      <RouteMap geometry={geometry} className="h-64 w-full rounded-lg sm:h-80" />
+      <DynamicRouteMap geometry={geometry} className="h-64 w-full rounded-lg sm:h-80" />
       <div className="flex flex-wrap gap-2">
         <LinkButton href={`/routes/${slug}/gpx`} variant="primary" className="min-h-10 px-4 text-[14px]">
           <Download className="h-4 w-4" aria-hidden="true" />
