@@ -4,16 +4,20 @@ import { eq, and, ne, isNotNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ShieldAlert, Fuel } from "lucide-react";
 import { db } from "@/db/client";
-import { routes, regions, routeBikeSuitability, routeFuelStops, places, routeLandmarks, landmarks, dayRideStages, dayRides } from "@/db/schema";
+import { routes, regions, routeBikeSuitability, routeFuelStops, places, routeLandmarks, landmarks, dayRideStages, dayRides, savedRides } from "@/db/schema";
 import type { GeoPoint } from "@/db/schema/routes";
 import { haversineMiles } from "@/lib/geo";
+import { auth } from "@/lib/auth";
+import { getReviewsForTarget } from "@/lib/reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
+import { StarRating } from "@/components/ui/star-rating";
 import { Tag } from "@/components/ui/tag";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TripTypeBadge } from "@/components/ui/trip-type-badge";
-import { Button } from "@/components/ui/button";
 import { RouteMapCard } from "@/components/route/route-map-card";
+import { ReviewsSection } from "@/components/route/reviews-section";
+import { SaveRideButton } from "@/components/route/save-ride-button";
 
 async function getRoute(slug: string) {
   const [route] = await db.select().from(routes).where(eq(routes.slug, slug));
@@ -115,6 +119,17 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
     .where(and(eq(dayRideStages.routeId, route.id), eq(dayRides.status, "published")))
     .limit(1);
 
+  const session = await auth();
+  const { reviews, average } = await getReviewsForTarget("route", route.id);
+  let initialSaved = false;
+  if (session?.user?.id) {
+    const [saved] = await db
+      .select()
+      .from(savedRides)
+      .where(and(eq(savedRides.userId, session.user.id), eq(savedRides.targetType, "route"), eq(savedRides.targetId, route.id)));
+    initialSaved = !!saved;
+  }
+
   return (
     <div className="flex flex-col gap-6 pb-10">
       {/* 1. Hero photo */}
@@ -128,16 +143,23 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">
         {/* 2. Region, name, rating */}
         <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13px] text-text-muted">{region?.name}</span>
-            {route.isSample && (
-              <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-[12px] text-text-muted">
-                Sample content
-              </span>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[13px] text-text-muted">{region?.name}</span>
+              {route.isSample && (
+                <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-[12px] text-text-muted">
+                  Sample content
+                </span>
+              )}
+            </div>
+            <SaveRideButton targetType="route" targetId={route.id} initialSaved={initialSaved} />
           </div>
           <h1 className="text-[28px]">{route.name}</h1>
-          <span className="text-[14px] text-text-muted">No reviews yet</span>
+          {average !== null ? (
+            <StarRating rating={average} reviewCount={reviews.length} />
+          ) : (
+            <span className="text-[14px] text-text-muted">No reviews yet</span>
+          )}
         </div>
 
         {/* 3. Two-paragraph introduction */}
@@ -237,15 +259,11 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
         )}
 
         {/* 9. Rider reviews */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[17px]">Rider reviews</h2>
-            <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]" disabled title="Sign in to write a review — coming soon">
-              Write a review
-            </Button>
-          </div>
-          <p className="text-[14px] text-text-muted">No reviews yet — be the first to ride and review it.</p>
-        </div>
+        <ReviewsSection
+          reviews={reviews}
+          average={average}
+          writeReviewHref={`/reviews/new?targetType=route&targetId=${route.id}&returnSlug=${route.slug}&name=${encodeURIComponent(route.name)}`}
+        />
 
         {/* 10. Rider photos */}
         <div className="flex flex-col gap-2">

@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 dev-out.log
 dev-err.log
+
+# local stand-in for object storage (Phase 2 photo uploads)
+/public/uploads/

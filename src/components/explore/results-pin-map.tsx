@@ -50,6 +50,7 @@ export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
       center: [-2.5, 54],
       zoom: 5,
       attributionControl: false,
+      cooperativeGestures: true,
     });
     instance.addControl(new AttributionControl({ customAttribution: "© OpenStreetMap contributors" }));
     instance.addControl(new NavigationControl({ showCompass: false }), "top-right");

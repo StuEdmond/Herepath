@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db/client";
 import {
@@ -15,16 +15,21 @@ import {
   dayRideStages,
   routes,
   places,
+  savedRides,
 } from "@/db/schema";
 import { getDayRideHardestDifficulty, getTourHardestDifficulty } from "@/lib/difficulty";
+import { auth } from "@/lib/auth";
+import { getReviewsForTarget, hasLoggedRide } from "@/lib/reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
+import { StarRating } from "@/components/ui/star-rating";
 import { Tag } from "@/components/ui/tag";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { TourMapCard } from "@/components/route/tour-map-card";
 import { TourDayCard, type TourDayInfo } from "@/components/route/tour-day-card";
 import { WhereToStay, type OvernightPlace } from "@/components/route/where-to-stay";
+import { ReviewsSection } from "@/components/route/reviews-section";
+import { SaveRideButton } from "@/components/route/save-ride-button";
 
 async function getTour(slug: string) {
   const [tour] = await db.select().from(tours).where(eq(tours.slug, slug));
@@ -144,6 +149,19 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
     .innerJoin(tours, eq(tourVariations.relatedTourId, tours.id))
     .where(eq(tourVariations.tourId, tour.id));
 
+  const session = await auth();
+  const { reviews, average } = await getReviewsForTarget("tour", tour.id);
+  let initialSaved = false;
+  let canReview = false;
+  if (session?.user?.id) {
+    const [saved] = await db
+      .select()
+      .from(savedRides)
+      .where(and(eq(savedRides.userId, session.user.id), eq(savedRides.targetType, "tour"), eq(savedRides.targetId, tour.id)));
+    initialSaved = !!saved;
+    canReview = await hasLoggedRide(session.user.id, "tour", tour.id);
+  }
+
   return (
     <div className="flex flex-col gap-6 pb-10">
       <CardImage src={tour.heroImage ?? undefined} alt={tour.name} className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]" priority />
@@ -151,16 +169,23 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">
         {/* 1. Label, name, rating */}
         <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13px] text-text-muted">
-              Multi-day tour · {regionRows.map((r) => r.name).join(", ")}
-            </span>
-            {tour.isSample && (
-              <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-[12px] text-text-muted">Sample content</span>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[13px] text-text-muted">
+                Multi-day tour · {regionRows.map((r) => r.name).join(", ")}
+              </span>
+              {tour.isSample && (
+                <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-[12px] text-text-muted">Sample content</span>
+              )}
+            </div>
+            <SaveRideButton targetType="tour" targetId={tour.id} initialSaved={initialSaved} />
           </div>
           <h1 className="text-[28px]">{tour.name}</h1>
-          <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
+          {average !== null ? (
+            <StarRating rating={average} reviewCount={reviews.length} />
+          ) : (
+            <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
+          )}
         </div>
 
         {/* 2. Introduction */}
@@ -279,15 +304,17 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
         )}
 
         {/* 9. Rider reviews */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[17px]">Rider reviews</h2>
-            <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]" disabled title="Sign in to write a review — coming soon">
-              Write a review
-            </Button>
-          </div>
-          <p className="text-[14px] text-text-muted">No reviews yet — be the first to ride and review it.</p>
-        </div>
+        <ReviewsSection
+          reviews={reviews}
+          average={average}
+          ratedFromCompletedRiders
+          writeReviewHref={
+            canReview
+              ? `/reviews/new?targetType=tour&targetId=${tour.id}&returnSlug=${tour.slug}&name=${encodeURIComponent(tour.name)}`
+              : undefined
+          }
+          disabledReason={session?.user ? "Log this tour in your diary before reviewing it" : "Sign in and log this tour to review it"}
+        />
 
         {/* 10. Make it your own */}
         {variationRows.length > 0 && (

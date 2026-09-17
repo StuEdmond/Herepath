@@ -67,6 +67,9 @@ export function TrackMap({ lines, className }: TrackMapProps) {
       center: [-1.9, 53.3],
       zoom: 6,
       attributionControl: false,
+      // Otherwise scrolling the page while the cursor happens to be over an
+      // embedded map zooms the map instead — this requires ctrl/cmd+scroll.
+      cooperativeGestures: true,
     });
     instance.addControl(new AttributionControl({ customAttribution: "© OpenStreetMap contributors" }));
     instance.addControl(new NavigationControl({ showCompass: false }), "top-right");

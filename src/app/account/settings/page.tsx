@@ -1,0 +1,65 @@
+import type { Metadata } from "next";
+import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { updateProfile, deleteAccount, signOutAction } from "../actions";
+import { Field, TextInput } from "@/components/admin/form-fields";
+import { Button } from "@/components/ui/button";
+import { DeleteAccountButton } from "./delete-account-button";
+
+export const metadata: Metadata = { title: "Account settings" };
+
+export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/account/sign-in");
+  const { saved } = await searchParams;
+
+  const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
+
+  return (
+    <div className="mx-auto flex max-w-lg flex-col gap-6 p-4 pt-8 pb-16">
+      <h1 className="text-[24px]">Account settings</h1>
+
+      <form action={updateProfile} className="flex flex-col gap-3">
+        <Field label="Name">
+          <TextInput name="name" defaultValue={user?.name ?? ""} />
+        </Field>
+        <Field label="Main bike">
+          <TextInput name="mainBike" defaultValue={user?.mainBike ?? ""} placeholder="e.g. Triumph Tiger 900" />
+        </Field>
+        {saved && <p className="text-[13px] text-green-bright">Saved.</p>}
+        <Button type="submit" variant="primary" className="self-start">
+          Save changes
+        </Button>
+      </form>
+
+      <div className="flex flex-col gap-2 border-t border-surface-raised pt-4">
+        <h2 className="text-[16px] text-text-primary">Your data</h2>
+        <p className="text-[13px] text-text-muted">Download a copy of your reviews, saved rides and ride diary.</p>
+        <a href="/account/data-export">
+          <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]">
+            Download my data
+          </Button>
+        </a>
+      </div>
+
+      <form action={signOutAction} className="border-t border-surface-raised pt-4">
+        <Button type="submit" variant="secondary">
+          Sign out
+        </Button>
+      </form>
+
+      <div className="flex flex-col gap-2 border-t border-surface-raised pt-4">
+        <h2 className="text-[16px] text-text-primary">Delete account</h2>
+        <p className="text-[13px] text-text-muted">
+          Permanently deletes your account, ride diary, reviews and saved rides. This can&apos;t be undone.
+        </p>
+        <form action={deleteAccount}>
+          <DeleteAccountButton />
+        </form>
+      </div>
+    </div>
+  );
+}
