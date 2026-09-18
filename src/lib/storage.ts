@@ -7,14 +7,16 @@ const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 async function store(buffer: Buffer, folder: string): Promise<string> {
   const filename = `${crypto.randomUUID()}.jpg`;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  // A Blob store connected in the Vercel dashboard provides BLOB_STORE_ID (the SDK then authenticates
+  // itself); older or manually created stores provide BLOB_READ_WRITE_TOKEN instead.
+  if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
     const { put } = await import("@vercel/blob");
     const blob = await put(`${folder}/${filename}`, buffer, { access: "public", contentType: "image/jpeg" });
     return blob.url;
   }
 
   if (process.env.VERCEL) {
-    throw new Error("Image uploads on Vercel need a Blob store — add BLOB_READ_WRITE_TOKEN to the project's environment variables.");
+    throw new Error("Image uploads need a Blob store — connect one to this project in Vercel's Storage tab, then redeploy.");
   }
 
   const dir = path.join(process.cwd(), "public", "uploads", folder);

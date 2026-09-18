@@ -71,7 +71,7 @@ export function TrackMap({ lines, className }: TrackMapProps) {
       // embedded map zooms the map instead — this requires ctrl/cmd+scroll.
       cooperativeGestures: true,
     });
-    instance.addControl(new AttributionControl({ customAttribution: "© OpenStreetMap contributors" }));
+    instance.addControl(new AttributionControl({ customAttribution: process.env.NEXT_PUBLIC_MAP_STYLE_URL ? undefined : "© OpenStreetMap contributors" }));
     instance.addControl(new NavigationControl({ showCompass: false }), "top-right");
     setMap(instance);
 

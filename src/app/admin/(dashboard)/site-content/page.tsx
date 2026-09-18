@@ -4,8 +4,8 @@ import { Field, TextInput, Textarea } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
 import { saveSiteContent, resetSiteContent } from "./actions";
 
-export default async function AdminSiteContentPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
-  const { saved } = await searchParams;
+export default async function AdminSiteContentPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+  const { saved, error } = await searchParams;
   const contents = await Promise.all(CONTENT_GROUPS.map((g) => getContent(g.id)));
 
   return (
@@ -24,7 +24,10 @@ export default async function AdminSiteContentPage({ searchParams }: { searchPar
             <summary className="cursor-pointer text-[16px] text-text-primary">{group.label}</summary>
 
             <div className="mt-3 flex flex-col gap-3">
-              {saved === group.id && <p className="text-[13px] text-green-bright">Saved.</p>}
+              {saved === group.id && !error && <p className="text-[13px] text-green-bright">Saved.</p>}
+              {saved === group.id && error && (
+                <p className="text-[13px] text-red-accent">Your wording was saved, but the image could not be: {error}</p>
+              )}
               <Link href={group.path} className="self-start text-[13px] text-green-bright underline">
                 View page
               </Link>

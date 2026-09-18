@@ -19,13 +19,19 @@ export async function saveSiteContent(groupId: string, formData: FormData) {
   const group = findGroup(groupId);
   if (!group) throw new Error("Unknown page");
 
+  let uploadError: string | null = null;
+
   for (const field of group.fields) {
     const key = `${groupId}.${field.name}`;
 
     if (field.type === "image") {
-      const url = await uploadedImage(formData, `file:${field.name}`, "site");
-      if (url) await setValue(key, url);
-      else if (formData.get(`remove:${field.name}`) === "on") await db.delete(siteContent).where(eq(siteContent.key, key));
+      try {
+        const url = await uploadedImage(formData, `file:${field.name}`, "site");
+        if (url) await setValue(key, url);
+        else if (formData.get(`remove:${field.name}`) === "on") await db.delete(siteContent).where(eq(siteContent.key, key));
+      } catch (err) {
+        uploadError = `${field.label}: ${err instanceof Error ? err.message : "the upload failed"}`;
+      }
       continue;
     }
 
@@ -36,7 +42,8 @@ export async function saveSiteContent(groupId: string, formData: FormData) {
 
   revalidatePath(group.path);
   revalidatePath("/admin/site-content");
-  redirect(`/admin/site-content?saved=${groupId}`);
+  const error = uploadError ? `&error=${encodeURIComponent(uploadError)}` : "";
+  redirect(`/admin/site-content?saved=${groupId}${error}`);
 }
 
 export async function resetSiteContent(groupId: string) {
