@@ -124,6 +124,18 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
     }
   }
 
+  async function handleTikTok() {
+    if (typeof navigator.share === "function") {
+      await handleMoreApps();
+      return;
+    }
+    // Opened first, while the click still counts as a user gesture, so the browser doesn't block it.
+    window.open("https://www.tiktok.com/upload", "_blank", "noopener,noreferrer");
+    await handleSaveImage();
+    await navigator.clipboard.writeText(caption).catch(() => {});
+    alert("Image saved and caption copied — upload the image on the TikTok page that just opened and paste the caption.");
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center" onClick={onClose}>
       <div
@@ -202,8 +214,14 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
           <Button type="button" variant="secondary" onClick={handleInstagram} className="min-h-11 text-[14px]">
             Instagram
           </Button>
-          <YoutubeShare youtubeLink={youtubeLink} setYoutubeLink={setYoutubeLink} />
+          <Button type="button" variant="secondary" onClick={handleTikTok} className="min-h-11 text-[14px]">
+            TikTok
+          </Button>
+          <div className="col-span-2">
+            <YoutubeShare youtubeLink={youtubeLink} setYoutubeLink={setYoutubeLink} />
+          </div>
         </div>
+        <p className="-mt-2 text-[12px] text-text-muted">The Story format fits TikTok best.</p>
 
         <div className="grid grid-cols-3 gap-2">
           <Button type="button" variant="secondary" onClick={handleCopyLink} className="min-h-10 text-[13px]">
@@ -240,7 +258,7 @@ function YoutubeShare({ youtubeLink, setYoutubeLink }: { youtubeLink: string; se
         onBlur={() => {
           if (youtubeLink) setEditing(false);
         }}
-        className="min-h-11 rounded-lg border border-text-muted/40 bg-surface px-2 text-[13px] text-text-primary"
+        className="min-h-11 w-full rounded-lg border border-text-muted/40 bg-surface px-2 text-[13px] text-text-primary"
       />
     );
   }
