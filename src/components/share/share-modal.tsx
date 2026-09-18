@@ -205,22 +205,22 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
           />
         </label>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button type="button" variant="secondary" onClick={handleFacebook} className="min-h-11 text-[14px]">
-            <BrandIcon brand="facebook" className="h-5 w-5" /> Facebook
-          </Button>
-          <Button type="button" variant="secondary" onClick={handleX} className="min-h-11 text-[14px]">
-            <BrandIcon brand="x" className="h-4 w-4" /> X
-          </Button>
-          <Button type="button" variant="secondary" onClick={handleInstagram} className="min-h-11 text-[14px]">
-            <BrandIcon brand="instagram" className="h-5 w-5" /> Instagram
-          </Button>
-          <Button type="button" variant="secondary" onClick={handleTikTok} className="min-h-11 text-[14px]">
-            <BrandIcon brand="tiktok" className="h-4 w-4" /> TikTok
-          </Button>
-          <div className="col-span-2">
-            <YoutubeShare youtubeLink={youtubeLink} setYoutubeLink={setYoutubeLink} />
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-4 gap-2">
+            <Button type="button" variant="secondary" onClick={handleFacebook} aria-label="Share on Facebook" title="Facebook" className="min-h-12 px-0">
+              <BrandIcon brand="facebook" className="h-6 w-6" />
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleX} aria-label="Share on X" title="X" className="min-h-12 px-0">
+              <BrandIcon brand="x" className="h-5 w-5" />
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleInstagram} aria-label="Share on Instagram" title="Instagram" className="min-h-12 px-0">
+              <BrandIcon brand="instagram" className="h-6 w-6" />
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleTikTok} aria-label="Share on TikTok" title="TikTok" className="min-h-12 px-0">
+              <BrandIcon brand="tiktok" className="h-5 w-5" />
+            </Button>
           </div>
+          <YoutubeShare youtubeLink={youtubeLink} setYoutubeLink={setYoutubeLink} />
         </div>
         <p className="-mt-2 text-[12px] text-text-muted">The Story format fits TikTok best.</p>
 
@@ -273,9 +273,11 @@ function YoutubeShare({ youtubeLink, setYoutubeLink }: { youtubeLink: string; se
         type="button"
         variant="secondary"
         onClick={() => window.open(youtubeLink, "_blank", "noopener,noreferrer")}
-        className="min-h-11 flex-1 text-[13px]"
+        aria-label="Watch on YouTube"
+        title="Watch on YouTube"
+        className="min-h-11 flex-1 px-0"
       >
-        <BrandIcon brand="youtube" className="h-5 w-5" /> Watch on YouTube
+        <BrandIcon brand="youtube" className="h-6 w-6" />
       </Button>
       <Button type="button" variant="ghost" onClick={() => setEditing(true)} className="min-h-11 px-2 text-[13px]">
         Edit
