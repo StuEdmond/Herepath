@@ -1,19 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Compass, Bookmark, User, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
-  { href: "/", label: "Explore", icon: Compass },
-  { href: "/saved", label: "Saved", icon: Bookmark },
-  { href: "/rides", label: "Your rides", icon: User },
-  { href: "/map", label: "Map", icon: Map },
+  { href: "/explore", label: "Explore", icon: Compass, isActive: (path: string, view: string | null) => path === "/explore" && view !== "map" },
+  { href: "/saved", label: "Saved", icon: Bookmark, isActive: (path: string) => path.startsWith("/saved") },
+  { href: "/rides", label: "Your rides", icon: User, isActive: (path: string) => path.startsWith("/rides") },
+  { href: "/explore?view=map", label: "Map", icon: Map, isActive: (path: string, view: string | null) => path === "/explore" && view === "map" },
 ] as const;
 
 export function BottomNav() {
   const pathname = usePathname();
+  const view = useSearchParams().get("view");
 
   return (
     <nav
@@ -21,8 +22,8 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-raised bg-surface md:hidden print:hidden"
     >
       <ul className="flex">
-        {ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        {ITEMS.map(({ href, label, icon: Icon, isActive }) => {
+          const active = isActive(pathname, view);
           return (
             <li key={href} className="flex-1">
               <Link

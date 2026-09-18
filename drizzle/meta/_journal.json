@@ -22,6 +22,13 @@
       "when": 1789673139451,
       "tag": "0002_abandoned_silvermane",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789735145937,
+      "tag": "0003_fast_mole_man",
+      "breakpoints": true
     }
   ]
 }

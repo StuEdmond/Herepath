@@ -12,3 +12,5 @@ export * from "./enums-social";
 export * from "./reviews";
 export * from "./saved-rides";
 export * from "./diary";
+export * from "./contact";
+export * from "./waitlist";

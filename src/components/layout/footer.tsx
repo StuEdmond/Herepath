@@ -20,6 +20,12 @@ export function Footer() {
         <Link href="/about" className="underline hover:text-text-secondary">
           About
         </Link>
+        <Link href="/faq" className="underline hover:text-text-secondary">
+          FAQ
+        </Link>
+        <Link href="/contact" className="underline hover:text-text-secondary">
+          Contact us
+        </Link>
         <Link href="/privacy" className="underline hover:text-text-secondary">
           Privacy policy
         </Link>

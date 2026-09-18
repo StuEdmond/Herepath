@@ -17,7 +17,7 @@ export default async function NewReviewPage({
   const params = await searchParams;
   const session = await auth();
   if (!session?.user) redirect(`/account/sign-in`);
-  if (!params.targetType || !params.targetId || !params.returnSlug) redirect("/");
+  if (!params.targetType || !params.targetId || !params.returnSlug) redirect("/explore");
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-4 p-4 pt-8">

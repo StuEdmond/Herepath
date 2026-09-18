@@ -14,7 +14,7 @@ export async function createSearchChip(formData: FormData) {
 
   await db.insert(searchChips).values({ label, query, position });
   revalidatePath("/admin/search-chips");
-  revalidatePath("/");
+  revalidatePath("/explore");
   redirect("/admin/search-chips");
 }
 
@@ -26,13 +26,13 @@ export async function updateSearchChip(id: string, formData: FormData) {
 
   await db.update(searchChips).set({ label, query, position }).where(eq(searchChips.id, id));
   revalidatePath("/admin/search-chips");
-  revalidatePath("/");
+  revalidatePath("/explore");
   redirect("/admin/search-chips");
 }
 
 export async function deleteSearchChip(id: string) {
   await db.delete(searchChips).where(eq(searchChips.id, id));
   revalidatePath("/admin/search-chips");
-  revalidatePath("/");
+  revalidatePath("/explore");
   redirect("/admin/search-chips");
 }

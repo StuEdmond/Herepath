@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Archivo, Archivo_Narrow } from "next/font/google";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Footer } from "@/components/layout/footer";
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-bg text-text-primary">
         <main className="flex-1 pb-20 md:pb-0">{children}</main>
         <Footer />
-        <BottomNav />
+        <Suspense fallback={null}>
+          <BottomNav />
+        </Suspense>
         <CookieConsentBanner />
       </body>
     </html>
