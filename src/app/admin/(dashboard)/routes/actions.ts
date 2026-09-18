@@ -16,8 +16,9 @@ import {
   surfaceQualityEnum,
 } from "@/db/schema";
 import { slugify } from "@/lib/slug";
+import { uploadedImage, uploadedImages } from "@/lib/storage";
 
-function readForm(formData: FormData) {
+async function readForm(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const regionId = String(formData.get("regionId") ?? "");
   const introSell = String(formData.get("introSell") ?? "").trim();
@@ -29,8 +30,8 @@ function readForm(formData: FormData) {
   const hazards = String(formData.get("hazards") ?? "").trim() || null;
   const bestTime = String(formData.get("bestTime") ?? "").trim() || null;
   const stopOffNote = String(formData.get("stopOffNote") ?? "").trim() || null;
-  const heroImage = String(formData.get("heroImage") ?? "").trim() || null;
-  const gallery = String(formData.get("gallery") ?? "")
+  const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
+  const galleryUrls = String(formData.get("gallery") ?? "")
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -40,6 +41,9 @@ function readForm(formData: FormData) {
   if (!name || !regionId || !introSell || !introCharacter || !distanceMiles) {
     throw new Error("Name, region, intro paragraphs and distance are required");
   }
+
+  const heroImage = (await uploadedImage(formData, "heroImageFile", "content")) ?? heroImageUrl;
+  const gallery = [...galleryUrls, ...(await uploadedImages(formData, "galleryFiles", "content"))];
 
   const geometryRaw = String(formData.get("geometry") ?? "");
   const geometry = geometryRaw ? (JSON.parse(geometryRaw) as GeoJSON.LineString) : null;
@@ -104,7 +108,7 @@ async function saveRelations(routeId: string, formData: FormData) {
 }
 
 export async function createRoute(formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   const [route] = await db
     .insert(routes)
     .values({ ...data, slug: slugify(data.name) })
@@ -115,7 +119,7 @@ export async function createRoute(formData: FormData) {
 }
 
 export async function updateRoute(id: string, formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   await db.update(routes).set({ ...data, slug: slugify(data.name), updatedAt: new Date() }).where(eq(routes.id, id));
   await saveRelations(id, formData);
   revalidatePath("/admin/routes");

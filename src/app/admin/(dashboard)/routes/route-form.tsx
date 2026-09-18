@@ -12,7 +12,7 @@ import {
   routeLandmarks,
 } from "@/db/schema";
 import type { GeoPoint } from "@/db/schema/routes";
-import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
+import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { Button } from "@/components/ui/button";
 
@@ -154,12 +154,16 @@ export async function RouteForm({
       </FormRow>
 
       <FormRow>
-        <Field label="Hero image URL" hint="Object storage upload comes in Phase 2">
-          <TextInput name="heroImage" type="url" defaultValue={defaults?.heroImage ?? ""} />
-        </Field>
-        <Field label="Gallery image URLs" hint="One per line">
-          <Textarea name="gallery" defaultValue={defaults?.gallery.join("\n") ?? ""} />
-        </Field>
+        <ImageUploadField label="Hero image" fileName="heroImageFile" urlName="heroImage" defaultUrl={defaults?.heroImage} />
+        <div className="flex flex-col gap-3">
+          <Field label="Gallery image links" hint="One per line — delete a line to remove that image">
+            <Textarea name="gallery" defaultValue={defaults?.gallery.join("\n") ?? ""} />
+          </Field>
+          <label className="flex flex-col gap-1 text-[13px] text-text-muted">
+            Add gallery images
+            <input type="file" name="galleryFiles" accept="image/*" multiple className="text-[13px] text-text-secondary" />
+          </label>
+        </div>
       </FormRow>
 
       <label className="flex items-center gap-1.5 text-[14px] text-text-primary">

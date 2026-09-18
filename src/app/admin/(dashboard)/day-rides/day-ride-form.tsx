@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { regions, routes, places, bikeTypeEnum, contentStatusEnum, dayRideBikeSuitability, dayRideStages, dayRidePlacesToEat } from "@/db/schema";
-import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
+import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
 import { StageBuilder, type StageDraft } from "@/components/admin/stage-builder";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { Button } from "@/components/ui/button";
@@ -147,9 +147,7 @@ export async function DayRideForm({
         </Field>
       </FormRow>
 
-      <Field label="Hero image URL" hint="Object storage upload comes in Phase 2">
-        <TextInput name="heroImage" type="url" defaultValue={defaults?.heroImage ?? ""} />
-      </Field>
+      <ImageUploadField label="Hero image" fileName="heroImageFile" urlName="heroImage" defaultUrl={defaults?.heroImage} />
 
       <label className="flex items-center gap-1.5 text-[14px] text-text-primary">
         <input type="checkbox" name="isSample" defaultChecked={defaults?.isSample} />

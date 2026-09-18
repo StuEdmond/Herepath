@@ -2,26 +2,26 @@ import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import { Field, TextInput, Textarea } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
+import { getContent } from "@/lib/site-content";
 import { submitContactMessage } from "./actions";
 
 export const metadata: Metadata = { title: "Contact us" };
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ sent?: string }> }) {
   const { sent } = await searchParams;
+  const c = await getContent("contact");
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-4 p-4 pt-8 pb-16">
       <div>
-        <h1 className="text-[28px]">Contact us</h1>
-        <p className="mt-1 text-text-secondary">
-          Questions, feedback, or something not working right? We read every message.
-        </p>
+        <h1 className="text-[28px]">{c.title}</h1>
+        <p className="mt-1 text-text-secondary">{c.intro}</p>
       </div>
 
       {sent === "1" ? (
         <div className="flex items-start gap-2 rounded-xl bg-surface p-5 text-[15px] text-text-secondary">
           <Check className="mt-0.5 h-5 w-5 shrink-0 text-green-bright" aria-hidden="true" />
-          <p>Thanks — your message is in, and we&apos;ll get back to you by email.</p>
+          <p>{c.success}</p>
         </div>
       ) : (
         <form action={submitContactMessage} className="flex flex-col gap-3">

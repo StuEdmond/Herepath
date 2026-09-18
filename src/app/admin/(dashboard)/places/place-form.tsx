@@ -1,5 +1,5 @@
 import { placeTypeEnum } from "@/db/schema";
-import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
+import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
 import { PLACE_TAG_OPTIONS } from "./constants";
 
@@ -61,9 +61,7 @@ export function PlaceForm({
         <Textarea name="shortDescription" defaultValue={defaults?.shortDescription ?? ""} />
       </Field>
       <FormRow>
-        <Field label="Photo URL" hint="Object storage upload comes in Phase 2">
-          <TextInput name="photo" type="url" defaultValue={defaults?.photo ?? ""} />
-        </Field>
+        <ImageUploadField label="Photo" fileName="photoFile" urlName="photo" defaultUrl={defaults?.photo} />
         <Field label="Price band">
           <Select name="priceBand" defaultValue={defaults?.priceBand ? String(defaults.priceBand) : ""}>
             <option value="">Not set</option>

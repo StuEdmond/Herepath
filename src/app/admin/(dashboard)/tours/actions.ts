@@ -6,9 +6,10 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { tours, tourRegions, tourBikeSuitability, tourDays, tourOvernightStays, bikeTypeEnum, regions, places } from "@/db/schema";
 import { slugify } from "@/lib/slug";
+import { uploadedImage } from "@/lib/storage";
 import type { TourDayDraft } from "@/components/admin/tour-day-builder";
 
-function readForm(formData: FormData) {
+async function readForm(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const introSell = String(formData.get("introSell") ?? "").trim();
   const introCharacter = String(formData.get("introCharacter") ?? "").trim();
@@ -18,7 +19,7 @@ function readForm(formData: FormData) {
   const startLocation = String(formData.get("startLocation") ?? "").trim();
   const finishLocation = String(formData.get("finishLocation") ?? "").trim();
   const bestTime = String(formData.get("bestTime") ?? "").trim() || null;
-  const heroImage = String(formData.get("heroImage") ?? "").trim() || null;
+  const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
   const status = String(formData.get("status") ?? "draft") as "draft" | "published";
   const isSample = formData.get("isSample") === "on";
 
@@ -33,6 +34,8 @@ function readForm(formData: FormData) {
   if (!name || !introSell || !introCharacter || !startLocation || !finishLocation || !totalDistanceMiles) {
     throw new Error("Name, intro paragraphs, start/finish and distance are required");
   }
+
+  const heroImage = (await uploadedImage(formData, "heroImageFile", "content")) ?? heroImageUrl;
 
   return {
     name,
@@ -99,7 +102,7 @@ async function saveRelations(tourId: string, formData: FormData) {
 }
 
 export async function createTour(formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   const [tour] = await db
     .insert(tours)
     .values({ ...data, slug: slugify(data.name) })
@@ -110,7 +113,7 @@ export async function createTour(formData: FormData) {
 }
 
 export async function updateTour(id: string, formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   await db.update(tours).set({ ...data, slug: slugify(data.name), updatedAt: new Date() }).where(eq(tours.id, id));
   await saveRelations(id, formData);
   revalidatePath("/admin/tours");

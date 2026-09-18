@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { places, placeTypeEnum } from "@/db/schema";
+import { uploadedImage } from "@/lib/storage";
 import { PLACE_TAG_OPTIONS } from "./constants";
 
-function readForm(formData: FormData) {
+async function readForm(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const type = String(formData.get("type") ?? "") as (typeof placeTypeEnum.enumValues)[number];
   if (!name) throw new Error("Name is required");
@@ -17,7 +18,7 @@ function readForm(formData: FormData) {
   const address = String(formData.get("address") ?? "").trim() || null;
   const websiteUrl = String(formData.get("websiteUrl") ?? "").trim() || null;
   const shortDescription = String(formData.get("shortDescription") ?? "").trim() || null;
-  const photo = String(formData.get("photo") ?? "").trim() || null;
+  const photo = (await uploadedImage(formData, "photoFile", "content")) ?? (String(formData.get("photo") ?? "").trim() || null);
   const priceBandRaw = String(formData.get("priceBand") ?? "");
   const priceBand = priceBandRaw ? Number(priceBandRaw) : null;
   const tags = PLACE_TAG_OPTIONS.filter((tag) => formData.get(`tag_${tag}`) === "on");
@@ -28,14 +29,14 @@ function readForm(formData: FormData) {
 }
 
 export async function createPlace(formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   await db.insert(places).values(data);
   revalidatePath("/admin/places");
   redirect("/admin/places");
 }
 
 export async function updatePlace(id: string, formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   await db.update(places).set({ ...data, updatedAt: new Date() }).where(eq(places.id, id));
   revalidatePath("/admin/places");
   redirect("/admin/places");

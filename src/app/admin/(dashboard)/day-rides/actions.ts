@@ -6,9 +6,10 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { dayRides, dayRideBikeSuitability, dayRideStages, dayRidePlacesToEat, bikeTypeEnum, places } from "@/db/schema";
 import { slugify } from "@/lib/slug";
+import { uploadedImage } from "@/lib/storage";
 import type { StageDraft } from "@/components/admin/stage-builder";
 
-function readForm(formData: FormData) {
+async function readForm(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const regionId = String(formData.get("regionId") ?? "");
   const introSell = String(formData.get("introSell") ?? "").trim();
@@ -21,13 +22,15 @@ function readForm(formData: FormData) {
   const fullDayTimeEstimate = String(formData.get("fullDayTimeEstimate") ?? "").trim();
   const bestTime = String(formData.get("bestTime") ?? "").trim() || null;
   const parkingNote = String(formData.get("parkingNote") ?? "").trim() || null;
-  const heroImage = String(formData.get("heroImage") ?? "").trim() || null;
+  const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
   const status = String(formData.get("status") ?? "draft") as "draft" | "published";
   const isSample = formData.get("isSample") === "on";
 
   if (!name || !regionId || !introSell || !introCharacter || !startLocation || !finishLocation || !totalDistanceMiles) {
     throw new Error("Name, region, intro paragraphs, start/finish and distance are required");
   }
+
+  const heroImage = (await uploadedImage(formData, "heroImageFile", "content")) ?? heroImageUrl;
 
   const geometryRaw = String(formData.get("geometry") ?? "");
   const geometry = geometryRaw ? (JSON.parse(geometryRaw) as GeoJSON.LineString) : null;
@@ -96,7 +99,7 @@ async function saveRelations(dayRideId: string, formData: FormData) {
 }
 
 export async function createDayRide(formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   const [dayRide] = await db
     .insert(dayRides)
     .values({ ...data, slug: slugify(data.name) })
@@ -107,7 +110,7 @@ export async function createDayRide(formData: FormData) {
 }
 
 export async function updateDayRide(id: string, formData: FormData) {
-  const data = readForm(formData);
+  const data = await readForm(formData);
   await db.update(dayRides).set({ ...data, slug: slugify(data.name), updatedAt: new Date() }).where(eq(dayRides.id, id));
   await saveRelations(id, formData);
   revalidatePath("/admin/day-rides");

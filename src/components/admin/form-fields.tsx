@@ -36,6 +36,34 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={cn(fieldClass, props.className)} />;
 }
 
+/** Upload a file, or keep/paste an image link. An uploaded file wins over the link when both are given. */
+export function ImageUploadField({
+  label,
+  fileName,
+  urlName,
+  defaultUrl,
+}: {
+  label: string;
+  fileName: string;
+  urlName: string;
+  defaultUrl: string | null | undefined;
+}) {
+  return (
+    <div className="flex flex-col gap-2 text-[13px] text-text-muted">
+      <span>{label}</span>
+      {defaultUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={defaultUrl} alt="" className="h-28 w-full max-w-xs rounded-lg object-cover" />
+      )}
+      <input type="file" name={fileName} accept="image/*" className="text-[13px] text-text-secondary" />
+      <TextInput name={urlName} defaultValue={defaultUrl ?? ""} placeholder="…or paste an image link" />
+      <span className="text-[12px]">
+        Choosing a file replaces the current image on save. Clear the link to remove it.
+      </span>
+    </div>
+  );
+}
+
 export function FormRow({ children }: { children: ReactNode }) {
   return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
 }
