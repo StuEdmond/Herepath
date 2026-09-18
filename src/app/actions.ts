@@ -11,5 +11,5 @@ export async function joinWaitlist(formData: FormData) {
   if (!email || !email.includes("@")) throw new Error("Enter a valid email address");
 
   await db.insert(waitlistSignups).values({ email }).onConflictDoNothing();
-  redirect("/?joined=1#pricing");
+  redirect("/pricing?joined=1");
 }

@@ -34,7 +34,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
           </span>
         </div>
         {user?.membershipTier !== "premium" && (
-          <Link href="/#pricing" className="text-[13px] text-green-bright underline">
+          <Link href="/pricing" className="text-[13px] text-green-bright underline">
             See what&apos;s included
           </Link>
         )}

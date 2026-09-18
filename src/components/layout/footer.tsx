@@ -20,6 +20,9 @@ export function Footer() {
         <Link href="/about" className="underline hover:text-text-secondary">
           About
         </Link>
+        <Link href="/pricing" className="underline hover:text-text-secondary">
+          Pricing
+        </Link>
         <Link href="/faq" className="underline hover:text-text-secondary">
           FAQ
         </Link>

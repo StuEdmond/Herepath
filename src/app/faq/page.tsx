@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "FAQ" };
 const FAQS = [
   {
     q: "Is Herepath free to use?",
-    a: "Yes. Browsing, searching, saving rides and keeping a ride diary are all free. We're planning an optional Premium tier — see the pricing section on the home page for what's coming.",
+    a: "Yes. Browsing, searching, saving rides and keeping a ride diary are all free. We're planning an optional Premium tier — see the pricing page for what's coming.",
   },
   {
     q: "Do I need an account?",
