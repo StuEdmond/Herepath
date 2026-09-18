@@ -88,6 +88,26 @@ npm run db:migrate
 
 Vercel limits request bodies to about 4.5MB, so very large photo uploads will fail there.
 
+## Mobile app (Android)
+
+The Android app is a Capacitor shell around the live website (`capacitor.config.ts`); the project is in `android/`. It loads `https://herepath.vercel.app`, so website changes reach the app without a new release. `mobile-web/` holds only the offline fallback page. The app adds `HerepathApp` to its user agent, which the site uses to hide the "Get the app" badges inside the app.
+
+To build and run it you need [Android Studio](https://developer.android.com/studio) (it installs Java and the Android SDK).
+
+```bash
+npm run android:sync   # after changing capacitor.config.ts or adding a plugin
+npm run android:open   # opens the project in Android Studio; press Run to start it on an emulator or phone
+```
+
+To test against the dev server on this computer instead of the live site, start `npm run dev` and sync with the emulator's address for this computer:
+
+```powershell
+$env:CAP_SERVER_URL = "http://10.0.2.2:3000"
+npm run android:sync
+```
+
+Run `npm run android:sync` again without that variable before building a release. The app id (`com.deadcylinder.herepath`) is permanent once published to Google Play.
+
 ## Useful commands
 
 ```bash

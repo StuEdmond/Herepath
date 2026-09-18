@@ -1,5 +1,6 @@
 import { BrandIcon, type Brand } from "@/components/share/brand-icon";
 import { getContent } from "@/lib/site-content";
+import { isHerepathApp } from "@/lib/app-detect";
 import { cn } from "@/lib/utils";
 
 function StoreBadge({ brand, small, name, url }: { brand: Brand; small: string; name: string; url: string }) {
@@ -24,6 +25,7 @@ function StoreBadge({ brand, small, name, url }: { brand: Brand; small: string; 
 
 /** Links to the iPhone and Android apps. Addresses are edited in Admin → Site content; blank shows "Coming soon". */
 export async function AppStoreBadges({ className }: { className?: string }) {
+  if (await isHerepathApp()) return null;
   const c = await getContent("app");
   return (
     <div className={cn("flex flex-wrap gap-3", className)}>
