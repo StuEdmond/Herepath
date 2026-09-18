@@ -14,6 +14,7 @@ import {
 import type { GeoPoint } from "@/db/schema/routes";
 import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
+import { ImageFileInput } from "@/components/ui/image-file-input";
 import { Button } from "@/components/ui/button";
 
 export interface RouteDefaults {
@@ -159,10 +160,10 @@ export async function RouteForm({
           <Field label="Gallery image links" hint="One per line — delete a line to remove that image">
             <Textarea name="gallery" defaultValue={defaults?.gallery.join("\n") ?? ""} />
           </Field>
-          <label className="flex flex-col gap-1 text-[13px] text-text-muted">
+          <div className="flex flex-col gap-1.5 text-[13px] text-text-muted">
             Add gallery images
-            <input type="file" name="galleryFiles" accept="image/*" multiple className="text-[13px] text-text-secondary" />
-          </label>
+            <ImageFileInput name="galleryFiles" multiple />
+          </div>
         </div>
       </FormRow>
 

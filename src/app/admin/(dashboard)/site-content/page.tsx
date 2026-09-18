@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CONTENT_GROUPS, getContent } from "@/lib/site-content";
 import { Field, TextInput, Textarea } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
+import { ImageFileInput } from "@/components/ui/image-file-input";
 import { saveSiteContent, resetSiteContent } from "./actions";
 
 export default async function AdminSiteContentPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
@@ -44,7 +45,7 @@ export default async function AdminSiteContentPage({ searchParams }: { searchPar
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={value} alt="" className="h-32 w-full max-w-sm rounded-lg object-cover" />
                         )}
-                        <input type="file" name={`file:${field.name}`} accept="image/*" className="text-[13px] text-text-secondary" />
+                        <ImageFileInput name={`file:${field.name}`} />
                         {value && (
                           <label className="flex items-center gap-1.5">
                             <input type="checkbox" name={`remove:${field.name}`} />

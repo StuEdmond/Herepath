@@ -102,9 +102,17 @@ export async function createDiaryEntry(formData: FormData) {
     .returning();
 
   const photos = formData.getAll("photos").filter((p): p is File => p instanceof File && p.size > 0);
-  for (const photo of photos) {
+  let browserGps: ({ lat: number; lng: number } | null)[] = [];
+  try {
+    const parsed = JSON.parse(String(formData.get("photoGps") ?? "[]"));
+    if (Array.isArray(parsed)) browserGps = parsed;
+  } catch {
+    // no usable location data from the browser — fall back to whatever the photos carry
+  }
+
+  for (const [index, photo] of photos.entries()) {
     const buffer = Buffer.from(await photo.arrayBuffer());
-    const { url, gps } = await processAndSavePhoto(buffer);
+    const { url, gps } = await processAndSavePhoto(buffer, browserGps[index] ?? null);
     const mileMarker = gps && geometryForPhotos ? estimateMileMarkerOnLine(geometryForPhotos, gps) : null;
     await db.insert(diaryEntryPhotos).values({ diaryEntryId: entry.id, url, mileMarker: mileMarker?.toString() });
   }

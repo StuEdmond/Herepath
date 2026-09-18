@@ -5,6 +5,7 @@ import { createDiaryEntry } from "../actions";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
+import { ImageFileInput } from "@/components/ui/image-file-input";
 
 export interface CatalogueOption {
   id: string;
@@ -123,9 +124,11 @@ export function DiaryForm({ catalogueOptions }: { catalogueOptions: CatalogueOpt
         <Textarea name="notes" rows={4} placeholder="How was the ride?" />
       </Field>
 
-      <Field label="Photos" hint="Location data is removed before anything is shown publicly">
-        <input type="file" name="photos" accept="image/*" multiple className="text-[14px] text-text-secondary" />
-      </Field>
+      <div className="flex flex-col gap-1.5 text-[13px] text-text-muted">
+        Photos
+        <ImageFileInput name="photos" multiple gpsFieldName="photoGps" />
+        <span className="text-[12px]">Location data is removed before anything is shown publicly</span>
+      </div>
 
       <fieldset className="flex flex-col gap-1.5">
         <legend className="text-[13px] text-text-muted">Visibility</legend>

@@ -1,5 +1,6 @@
 import type { ReactNode, SelectHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { ImageFileInput } from "@/components/ui/image-file-input";
 
 const fieldClass =
   "min-h-11 rounded-lg border border-text-muted/40 bg-surface px-3 text-[15px] text-text-primary";
@@ -55,7 +56,7 @@ export function ImageUploadField({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={defaultUrl} alt="" className="h-28 w-full max-w-xs rounded-lg object-cover" />
       )}
-      <input type="file" name={fileName} accept="image/*" className="text-[13px] text-text-secondary" />
+      <ImageFileInput name={fileName} />
       <TextInput name={urlName} defaultValue={defaultUrl ?? ""} placeholder="…or paste an image link" />
       <span className="text-[12px]">
         Choosing a file replaces the current image on save. Clear the link to remove it.

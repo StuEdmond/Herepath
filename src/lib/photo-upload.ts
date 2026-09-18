@@ -14,8 +14,11 @@ export interface ProcessedPhoto {
  * timeline), then re-encodes the image without any metadata before saving —
  * Section 6 requires stripping location data from publicly displayed photos.
  */
-export async function processAndSavePhoto(buffer: Buffer): Promise<ProcessedPhoto> {
-  const gps = await exifr.gps(buffer).catch(() => null);
+export async function processAndSavePhoto(buffer: Buffer, browserGps: LatLng | null = null): Promise<ProcessedPhoto> {
+  // The browser shrinks big photos before upload, which drops their EXIF data — in that case it
+  // sends the location it read beforehand.
+  const exif = await exifr.gps(buffer).catch(() => null);
+  const gps = exif ? { lat: exif.latitude, lng: exif.longitude } : browserGps;
   const url = await saveImageBuffer(buffer, "diary");
-  return { url, gps: gps ? { lat: gps.latitude, lng: gps.longitude } : null };
+  return { url, gps };
 }
