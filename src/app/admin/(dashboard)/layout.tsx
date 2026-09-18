@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/admin/search-chips", label: "Search chips" },
   { href: "/admin/contact-messages", label: "Messages" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/waitlist", label: "Waitlist" },
 ];
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
