@@ -5,6 +5,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { Tag } from "@/components/ui/tag";
 import { Button } from "@/components/ui/button";
 import { deleteDiaryEntry } from "@/app/diary/actions";
+import { ShareButton } from "@/components/share/share-button";
 import type { DiaryEntryView } from "@/lib/your-rides";
 
 const TYPE_PATH: Record<string, string> = { route: "routes", day_ride: "day-rides", tour: "tours" };
@@ -15,9 +16,12 @@ function formatDate(dateStr: string): string {
 }
 
 export function DiaryEntryCard({ entry }: { entry: DiaryEntryView }) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const publicPath = entry.targetType && entry.slug ? `/${TYPE_PATH[entry.targetType]}/${entry.slug}` : "/";
+
   const nameContent =
     entry.targetType && entry.slug ? (
-      <Link href={`/${TYPE_PATH[entry.targetType]}/${entry.slug}`} className="hover:underline">
+      <Link href={publicPath} className="hover:underline">
         {entry.name}
       </Link>
     ) : (
@@ -71,11 +75,27 @@ export function DiaryEntryCard({ entry }: { entry: DiaryEntryView }) {
         <span className="text-[12px] text-text-muted">
           {entry.visibility === "shared" ? "Shared as a public review" : "Private · Share as review"}
         </span>
-        <form action={deleteDiaryEntry.bind(null, entry.id)}>
-          <Button type="submit" variant="ghost" className="min-h-8 px-2 text-[12px] text-red-accent">
-            Delete
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          <ShareButton
+            className="min-h-8 px-2 text-[12px]"
+            data={{
+              title: entry.name,
+              region: entry.region ?? undefined,
+              date: formatDate(entry.date),
+              distanceMiles: Number(entry.distanceMiles),
+              rating: entry.rating ?? undefined,
+              notes: entry.notes ?? undefined,
+              photoUrl: entry.photos[0]?.url ?? null,
+              geometry: entry.geometry,
+              url: `${siteUrl}${publicPath}`,
+            }}
+          />
+          <form action={deleteDiaryEntry.bind(null, entry.id)}>
+            <Button type="submit" variant="ghost" className="min-h-8 px-2 text-[12px] text-red-accent">
+              Delete
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

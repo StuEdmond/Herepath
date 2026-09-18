@@ -19,6 +19,7 @@ import { StageTimeline, type TimelineStage } from "@/components/route/stage-time
 import { PlacesToEat, type PlaceToEatEntry } from "@/components/route/places-to-eat";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
+import { ShareButton } from "@/components/share/share-button";
 
 async function getDayRide(slug: string) {
   const [dayRide] = await db.select().from(dayRides).where(eq(dayRides.slug, slug));
@@ -167,7 +168,22 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
                 <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-[12px] text-text-muted">Sample content</span>
               )}
             </div>
-            <SaveRideButton targetType="day_ride" targetId={dayRide.id} initialSaved={initialSaved} />
+            <div className="flex items-center gap-2">
+              <ShareButton
+                data={{
+                  title: dayRide.name,
+                  region: region?.name,
+                  distanceMiles: Number(dayRide.totalDistanceMiles),
+                  ridingTimeMinutes: dayRide.ridingTimeMinutes,
+                  rating: average ?? undefined,
+                  notes: dayRide.introSell,
+                  photoUrl: dayRide.heroImage,
+                  geometry: dayRide.geometry as GeoJSON.LineString | null,
+                  url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/day-rides/${dayRide.slug}`,
+                }}
+              />
+              <SaveRideButton targetType="day_ride" targetId={dayRide.id} initialSaved={initialSaved} />
+            </div>
           </div>
           <h1 className="text-[28px]">{dayRide.name}</h1>
           {average !== null ? (

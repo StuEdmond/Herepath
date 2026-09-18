@@ -44,3 +44,55 @@ export function estimateMileMarkerOnLine(geometry: GeoJSON.LineString, point: La
 
   return Math.round(nearestCumulative * 10) / 10;
 }
+
+/**
+ * Cuts the first and last `milesFromEachEnd` off a route line — the Section
+ * 5.7 privacy safeguard so a shared ride map doesn't reveal exactly where a
+ * rider lives or keeps their bike. Interpolates onto the line rather than
+ * just dropping vertices, so the trim length is accurate regardless of how
+ * sparse the geometry is.
+ */
+export function trimLineEnds(geometry: GeoJSON.LineString, milesFromEachEnd: number): GeoJSON.LineString {
+  const coords = geometry.coordinates as [number, number][];
+  if (coords.length < 2) return geometry;
+
+  const toPoint = (c: [number, number]): LatLng => ({ lng: c[0], lat: c[1] });
+
+  const segmentLengths: number[] = [];
+  let totalLength = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const len = haversineMiles(toPoint(coords[i - 1]), toPoint(coords[i]));
+    segmentLengths.push(len);
+    totalLength += len;
+  }
+
+  // Route is too short to trim both ends meaningfully — leave it whole rather
+  // than collapsing to nothing.
+  if (totalLength <= milesFromEachEnd * 2) return geometry;
+
+  function pointAtDistance(fromStart: number): [number, number] {
+    let remaining = fromStart;
+    for (let i = 0; i < segmentLengths.length; i++) {
+      if (remaining <= segmentLengths[i]) {
+        const t = segmentLengths[i] === 0 ? 0 : remaining / segmentLengths[i];
+        const a = coords[i];
+        const b = coords[i + 1];
+        return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+      }
+      remaining -= segmentLengths[i];
+    }
+    return coords[coords.length - 1];
+  }
+
+  const trimmed: [number, number][] = [pointAtDistance(milesFromEachEnd)];
+  let cumulative = 0;
+  for (let i = 1; i < coords.length; i++) {
+    cumulative += segmentLengths[i - 1];
+    if (cumulative > milesFromEachEnd && cumulative < totalLength - milesFromEachEnd) {
+      trimmed.push(coords[i]);
+    }
+  }
+  trimmed.push(pointAtDistance(totalLength - milesFromEachEnd));
+
+  return { type: "LineString", coordinates: trimmed };
+}

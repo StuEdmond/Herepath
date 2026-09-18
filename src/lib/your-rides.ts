@@ -34,6 +34,8 @@ export interface DiaryEntryView {
   rodeWithCount: number | null;
   visibility: "private" | "shared";
   photos: { id: string; url: string; mileMarker: string | null }[];
+  region: string | null;
+  geometry: GeoJSON.LineString | null;
 }
 
 /** Resolves every route actually ridden by a user — directly logged, or featured inside a logged day ride/tour. */
@@ -70,10 +72,15 @@ export async function getDiaryEntries(userId: string): Promise<DiaryEntryView[]>
   const dayRideIds = entries.filter((e) => e.targetType === "day_ride").map((e) => e.targetId!);
   const tourIds = entries.filter((e) => e.targetType === "tour").map((e) => e.targetId!);
 
-  const [routeRows, dayRideRows, tourRows, photoRows] = await Promise.all([
-    routeIds.length > 0 ? db.select({ id: routes.id, name: routes.name, slug: routes.slug }).from(routes).where(inArray(routes.id, routeIds)) : [],
+  const [routeRows, dayRideRows, tourRows, photoRows, regionRows] = await Promise.all([
+    routeIds.length > 0
+      ? db.select({ id: routes.id, name: routes.name, slug: routes.slug, geometry: routes.geometry, regionId: routes.regionId }).from(routes).where(inArray(routes.id, routeIds))
+      : [],
     dayRideIds.length > 0
-      ? db.select({ id: dayRides.id, name: dayRides.name, slug: dayRides.slug }).from(dayRides).where(inArray(dayRides.id, dayRideIds))
+      ? db
+          .select({ id: dayRides.id, name: dayRides.name, slug: dayRides.slug, geometry: dayRides.geometry, regionId: dayRides.regionId })
+          .from(dayRides)
+          .where(inArray(dayRides.id, dayRideIds))
       : [],
     tourIds.length > 0 ? db.select({ id: tours.id, name: tours.name, slug: tours.slug }).from(tours).where(inArray(tours.id, tourIds)) : [],
     db
@@ -85,9 +92,13 @@ export async function getDiaryEntries(userId: string): Promise<DiaryEntryView[]>
           entries.map((e) => e.id),
         ),
       ),
+    db.select().from(regions),
   ]);
 
-  const nameBySlug = new Map([...routeRows, ...dayRideRows, ...tourRows].map((r) => [r.id, r]));
+  const routeById = new Map(routeRows.map((r) => [r.id, r]));
+  const dayRideById = new Map(dayRideRows.map((r) => [r.id, r]));
+  const tourById = new Map(tourRows.map((r) => [r.id, r]));
+  const regionNameById = new Map(regionRows.map((r) => [r.id, r.name]));
   const photosByEntry = new Map<string, { id: string; url: string; mileMarker: string | null }[]>();
   for (const p of photoRows) {
     const list = photosByEntry.get(p.diaryEntryId) ?? [];
@@ -96,7 +107,13 @@ export async function getDiaryEntries(userId: string): Promise<DiaryEntryView[]>
   }
 
   return entries.map((e) => {
-    const catalogue = e.targetId ? nameBySlug.get(e.targetId) : undefined;
+    const route = e.targetType === "route" && e.targetId ? routeById.get(e.targetId) : undefined;
+    const dayRide = e.targetType === "day_ride" && e.targetId ? dayRideById.get(e.targetId) : undefined;
+    const tour = e.targetType === "tour" && e.targetId ? tourById.get(e.targetId) : undefined;
+    const catalogue = route ?? dayRide ?? tour;
+    const regionId = route?.regionId ?? dayRide?.regionId;
+    const geometry = (route?.geometry ?? dayRide?.geometry ?? e.ownRouteGeometry) as GeoJSON.LineString | null;
+
     return {
       id: e.id,
       targetType: e.targetType,
@@ -116,6 +133,8 @@ export async function getDiaryEntries(userId: string): Promise<DiaryEntryView[]>
       rodeWithCount: e.rodeWithCount,
       visibility: e.visibility,
       photos: photosByEntry.get(e.id) ?? [],
+      region: regionId ? (regionNameById.get(regionId) ?? null) : null,
+      geometry: geometry ?? null,
     };
   });
 }

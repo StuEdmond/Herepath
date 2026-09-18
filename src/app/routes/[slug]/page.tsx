@@ -18,6 +18,7 @@ import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { RouteMapCard } from "@/components/route/route-map-card";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
+import { ShareButton } from "@/components/share/share-button";
 
 async function getRoute(slug: string) {
   const [route] = await db.select().from(routes).where(eq(routes.slug, slug));
@@ -152,7 +153,22 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
                 </span>
               )}
             </div>
-            <SaveRideButton targetType="route" targetId={route.id} initialSaved={initialSaved} />
+            <div className="flex items-center gap-2">
+              <ShareButton
+                data={{
+                  title: route.name,
+                  region: region?.name,
+                  distanceMiles: Number(route.distanceMiles),
+                  ridingTimeMinutes: route.ridingTimeMinutes,
+                  rating: average ?? undefined,
+                  notes: route.introSell,
+                  photoUrl: route.heroImage,
+                  geometry: route.geometry as GeoJSON.LineString | null,
+                  url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/routes/${route.slug}`,
+                }}
+              />
+              <SaveRideButton targetType="route" targetId={route.id} initialSaved={initialSaved} />
+            </div>
           </div>
           <h1 className="text-[28px]">{route.name}</h1>
           {average !== null ? (
