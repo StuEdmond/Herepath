@@ -8,6 +8,7 @@ import { trimLineEnds } from "@/lib/geo";
 import { drawShareImage, type ShareFormat } from "@/lib/share-image";
 import { MapSnapshot } from "./map-snapshot";
 import { BrandIcon } from "./brand-icon";
+import { isNativeApp, openExternal, shareImageNative } from "@/lib/native";
 
 export interface ShareableData {
   title: string;
@@ -40,6 +41,8 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   const [mapCanvas, setMapCanvas] = useState<HTMLCanvasElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [youtubeLink, setYoutubeLink] = useState("");
+  const [native] = useState(() => isNativeApp());
+  const [note, setNote] = useState("");
   // This modal only ever mounts client-side (after a button click), but guard
   // against `document` anyway in case that ever changes.
   const canvasRef = useRef<HTMLCanvasElement>(typeof document !== "undefined" ? document.createElement("canvas") : (null as never));
@@ -84,6 +87,12 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   }
 
   async function handleSaveImage() {
+    // The app's web view can't download files, so inside the app the image goes to the share sheet
+    // (where "Save to device" and similar options live).
+    if (native) {
+      await handleMoreApps();
+      return;
+    }
     const blob = await getImageBlob();
     if (!blob) return;
     const a = document.createElement("a");
@@ -94,6 +103,21 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
 
   async function handleMoreApps() {
     const blob = await getImageBlob();
+
+    if (native && blob) {
+      // Instagram and TikTok ignore shared text, so put the caption on the clipboard too.
+      navigator.clipboard?.writeText(caption).then(
+        () => setNote("Caption copied — paste it into your post."),
+        () => {},
+      );
+      try {
+        await shareImageNative({ title: data.title, text: caption, blob });
+      } catch {
+        // cancelled, or the sharing plugin isn't in this build of the app
+      }
+      return;
+    }
+
     const file = blob ? new File([blob], "herepath-ride.png", { type: "image/png" }) : undefined;
     const shareData: ShareData = { title: data.title, text: caption, url: data.url };
     if (file && navigator.canShare?.({ files: [file] })) shareData.files = [file];
@@ -105,19 +129,22 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   }
 
   function handleCopyLink() {
-    navigator.clipboard.writeText(data.url);
+    navigator.clipboard.writeText(data.url).then(
+      () => setNote("Link copied."),
+      () => {},
+    );
   }
 
   function handleFacebook() {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.url)}`, "_blank", "noopener,noreferrer");
+    void openExternal(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.url)}`);
   }
 
   function handleX() {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}&url=${encodeURIComponent(data.url)}`, "_blank", "noopener,noreferrer");
+    void openExternal(`https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}&url=${encodeURIComponent(data.url)}`);
   }
 
   async function handleInstagram() {
-    if (typeof navigator !== "undefined" && "share" in navigator) {
+    if (native || (typeof navigator !== "undefined" && "share" in navigator)) {
       await handleMoreApps();
     } else {
       await handleSaveImage();
@@ -126,7 +153,7 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   }
 
   async function handleTikTok() {
-    if (typeof navigator.share === "function") {
+    if (native || typeof navigator.share === "function") {
       await handleMoreApps();
       return;
     }
@@ -223,6 +250,11 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
           <YoutubeShare youtubeLink={youtubeLink} setYoutubeLink={setYoutubeLink} />
         </div>
         <p className="-mt-2 text-[12px] text-text-muted">The Story format fits TikTok best.</p>
+        {note && (
+          <p role="status" className="text-[13px] text-green-bright">
+            {note}
+          </p>
+        )}
 
         <div className="grid grid-cols-3 gap-2">
           <Button type="button" variant="secondary" onClick={handleCopyLink} className="min-h-10 text-[13px]">
@@ -231,7 +263,7 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
           <Button type="button" variant="secondary" onClick={handleSaveImage} className="min-h-10 text-[13px]">
             <Download className="h-4 w-4" aria-hidden="true" /> Save image
           </Button>
-          {typeof navigator !== "undefined" && "share" in navigator && (
+          {(native || (typeof navigator !== "undefined" && "share" in navigator)) && (
             <Button type="button" variant="secondary" onClick={handleMoreApps} className="min-h-10 text-[13px]">
               <Share2 className="h-4 w-4" aria-hidden="true" /> More apps
             </Button>
@@ -272,7 +304,7 @@ function YoutubeShare({ youtubeLink, setYoutubeLink }: { youtubeLink: string; se
       <Button
         type="button"
         variant="secondary"
-        onClick={() => window.open(youtubeLink, "_blank", "noopener,noreferrer")}
+        onClick={() => void openExternal(youtubeLink)}
         aria-label="Watch on YouTube"
         title="Watch on YouTube"
         className="min-h-11 flex-1 px-0"

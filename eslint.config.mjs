@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Native project and its generated build output (not our source)
+    "android/**",
   ]),
 ]);
 
