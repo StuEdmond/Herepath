@@ -7,6 +7,7 @@ import { Textarea } from "@/components/admin/form-fields";
 import { trimLineEnds } from "@/lib/geo";
 import { drawShareImage, type ShareFormat } from "@/lib/share-image";
 import { MapSnapshot } from "./map-snapshot";
+import { BrandIcon } from "./brand-icon";
 
 export interface ShareableData {
   title: string;
@@ -206,16 +207,16 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
 
         <div className="grid grid-cols-2 gap-2">
           <Button type="button" variant="secondary" onClick={handleFacebook} className="min-h-11 text-[14px]">
-            Facebook
+            <BrandIcon brand="facebook" className="h-5 w-5" /> Facebook
           </Button>
           <Button type="button" variant="secondary" onClick={handleX} className="min-h-11 text-[14px]">
-            𝕏
+            <BrandIcon brand="x" className="h-4 w-4" /> X
           </Button>
           <Button type="button" variant="secondary" onClick={handleInstagram} className="min-h-11 text-[14px]">
-            Instagram
+            <BrandIcon brand="instagram" className="h-5 w-5" /> Instagram
           </Button>
           <Button type="button" variant="secondary" onClick={handleTikTok} className="min-h-11 text-[14px]">
-            TikTok
+            <BrandIcon brand="tiktok" className="h-4 w-4" /> TikTok
           </Button>
           <div className="col-span-2">
             <YoutubeShare youtubeLink={youtubeLink} setYoutubeLink={setYoutubeLink} />
@@ -250,16 +251,19 @@ function YoutubeShare({ youtubeLink, setYoutubeLink }: { youtubeLink: string; se
 
   if (editing || !youtubeLink) {
     return (
-      <input
-        type="url"
-        placeholder="Paste a YouTube link"
-        value={youtubeLink}
-        onChange={(e) => setYoutubeLink(e.target.value)}
-        onBlur={() => {
-          if (youtubeLink) setEditing(false);
-        }}
-        className="min-h-11 w-full rounded-lg border border-text-muted/40 bg-surface px-2 text-[13px] text-text-primary"
-      />
+      <div className="relative">
+        <BrandIcon brand="youtube" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" />
+        <input
+          type="url"
+          placeholder="Paste a YouTube link"
+          value={youtubeLink}
+          onChange={(e) => setYoutubeLink(e.target.value)}
+          onBlur={() => {
+            if (youtubeLink) setEditing(false);
+          }}
+          className="min-h-11 w-full rounded-lg border border-text-muted/40 bg-surface pl-10 pr-2 text-[13px] text-text-primary"
+        />
+      </div>
     );
   }
 
@@ -271,7 +275,7 @@ function YoutubeShare({ youtubeLink, setYoutubeLink }: { youtubeLink: string; se
         onClick={() => window.open(youtubeLink, "_blank", "noopener,noreferrer")}
         className="min-h-11 flex-1 text-[13px]"
       >
-        Watch on YouTube
+        <BrandIcon brand="youtube" className="h-5 w-5" /> Watch on YouTube
       </Button>
       <Button type="button" variant="ghost" onClick={() => setEditing(true)} className="min-h-11 px-2 text-[13px]">
         Edit
