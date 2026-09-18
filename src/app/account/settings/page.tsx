@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -7,6 +8,7 @@ import { users } from "@/db/schema";
 import { updateProfile, deleteAccount, signOutAction } from "../actions";
 import { Field, TextInput } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
+import { Tag } from "@/components/ui/tag";
 import { DeleteAccountButton } from "./delete-account-button";
 
 export const metadata: Metadata = { title: "Account settings" };
@@ -21,6 +23,22 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 p-4 pt-8 pb-16">
       <h1 className="text-[24px]">Account settings</h1>
+
+      <div className="flex items-center justify-between rounded-xl bg-surface p-4">
+        <div className="flex items-center gap-2">
+          <Tag variant={user?.membershipTier === "premium" ? "suited" : "neutral"}>
+            {user?.membershipTier === "premium" ? "Premium" : "Free"}
+          </Tag>
+          <span className="text-[13px] text-text-muted">
+            {user?.membershipTier === "premium" ? "Thanks for being an early Premium tester." : "Premium is coming soon."}
+          </span>
+        </div>
+        {user?.membershipTier !== "premium" && (
+          <Link href="/#pricing" className="text-[13px] text-green-bright underline">
+            See what&apos;s included
+          </Link>
+        )}
+      </div>
 
       <form action={updateProfile} className="flex flex-col gap-3">
         <Field label="Name">

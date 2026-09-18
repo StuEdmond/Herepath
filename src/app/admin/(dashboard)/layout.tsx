@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/admin/collections", label: "Collections" },
   { href: "/admin/search-chips", label: "Search chips" },
   { href: "/admin/contact-messages", label: "Messages" },
+  { href: "/admin/users", label: "Users" },
 ];
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {

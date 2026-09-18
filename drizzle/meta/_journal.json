@@ -29,6 +29,13 @@
       "when": 1789735145937,
       "tag": "0003_fast_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789736004348,
+      "tag": "0004_square_doorman",
+      "breakpoints": true
     }
   ]
 }

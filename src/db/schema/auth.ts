@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, primaryKey, integer, jsonb } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
+import { membershipTierEnum } from "./enums-social";
 
 /** Auth.js Drizzle adapter schema, extended with Herepath's own profile fields (Section 4.2 User). */
 export const users = pgTable("user", {
@@ -12,6 +13,7 @@ export const users = pgTable("user", {
   mainBike: text("main_bike"),
   memberSince: timestamp("member_since").notNull().defaultNow(),
   privacySettings: jsonb("privacy_settings").$type<{ diaryVisible?: boolean }>(),
+  membershipTier: membershipTierEnum("membership_tier").notNull().default("free"),
 });
 
 export const accounts = pgTable(
