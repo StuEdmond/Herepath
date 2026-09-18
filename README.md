@@ -106,7 +106,7 @@ $env:CAP_SERVER_URL = "http://10.0.2.2:3000"
 npm run android:sync
 ```
 
-Run `npm run android:sync` again without that variable before building a release. The app id (`com.deadcylinder.herepath`) is permanent once published to Google Play.
+Run `npm run android:sync` again without that variable before building a release. The app id (`com.herepath`) is permanent once published to Google Play.
 
 ## Useful commands
 

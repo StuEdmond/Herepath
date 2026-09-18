@@ -1,4 +1,4 @@
-package com.deadcylinder.herepath;
+package com.herepath;
 
 import com.getcapacitor.BridgeActivity;
 

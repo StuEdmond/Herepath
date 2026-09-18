@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Herepath</string>
     <string name="title_activity_main">Herepath</string>
-    <string name="package_name">com.deadcylinder.herepath</string>
-    <string name="custom_url_scheme">com.deadcylinder.herepath</string>
+    <string name="package_name">com.herepath</string>
+    <string name="custom_url_scheme">com.herepath</string>
 </resources>

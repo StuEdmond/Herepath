@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.deadcylinder.herepath"
+    namespace = "com.herepath"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.deadcylinder.herepath"
+        applicationId "com.herepath"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

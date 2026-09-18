@@ -6,7 +6,7 @@ const serverUrl = process.env.CAP_SERVER_URL || "https://herepath.vercel.app";
 
 const config: CapacitorConfig = {
   // Permanent once the app is published to Google Play — decide before the first release.
-  appId: "com.deadcylinder.herepath",
+  appId: "com.herepath",
   appName: "Herepath",
   webDir: "mobile-web",
   appendUserAgent: "HerepathApp",
