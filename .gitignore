@@ -44,3 +44,6 @@ dev-err.log
 
 # local stand-in for object storage (Phase 2 photo uploads)
 /public/uploads/
+
+# Android Studio's per-machine project settings
+/android/.idea/
