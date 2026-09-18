@@ -11,6 +11,44 @@ config({ path: ".env.local" });
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import snappedGeometriesJson from "./sample-geometries.json";
+
+/**
+ * Real road-following paths for the sample data, generated once via
+ * `npx tsx scripts/generate-snapped-geometries.ts` (OSRM), so the sample
+ * content looks right for demos ahead of real GPX uploads. Falls back to a
+ * straight line for any key that isn't in the file, so seeding never
+ * breaks if this hasn't been (re)generated.
+ */
+const snappedGeometries = snappedGeometriesJson as Record<string, GeoJSON.LineString>;
+
+/** A leg of a multi-part geometry: either the day's featured route, or a snapped connector key. */
+type GeometryPart = "featuredRoute" | (string & {});
+
+/** Joins line segments end-to-end, dropping a duplicate point where two segments meet. */
+function concatLines(...lines: GeoJSON.LineString[]): GeoJSON.LineString {
+  const coordinates: [number, number][] = [];
+  for (const line of lines) {
+    const coords = line.coordinates as [number, number][];
+    const last = coordinates[coordinates.length - 1];
+    const first = coords[0];
+    const startIndex = last && first && last[0] === first[0] && last[1] === first[1] ? 1 : 0;
+    coordinates.push(...coords.slice(startIndex));
+  }
+  return { type: "LineString", coordinates };
+}
+
+function snappedOrStraightLine(key: string, from: { lat: number; lng: number }, to: { lat: number; lng: number }): GeoJSON.LineString {
+  return (
+    snappedGeometries[key] ?? {
+      type: "LineString",
+      coordinates: [
+        [from.lng, from.lat],
+        [to.lng, to.lat],
+      ],
+    }
+  );
+}
 
 const {
   regions,
@@ -339,13 +377,7 @@ async function main() {
         stopOffNote: seed.stopOffNote,
         startPoint: seed.startPoint,
         endPoint: seed.endPoint,
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [seed.startPoint.lng, seed.startPoint.lat],
-            [seed.endPoint.lng, seed.endPoint.lat],
-          ],
-        },
+        geometry: snappedOrStraightLine(`route:${seed.slug}`, seed.startPoint, seed.endPoint),
         isSample: true,
         status: "published",
       })
@@ -419,20 +451,16 @@ async function main() {
       fullDayTimeEstimate: "5 to 6 hours",
       bestTime: "Spring to autumn, starting early to beat weekend tourist traffic.",
       parkingNote: "Free on-street parking is available around Glossop town centre.",
-      // Composite line through the three featured routes, connected by straight
-      // links — illustrative only, like the rest of the sample data.
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [-1.9497, 53.4443],
-          [-1.688, 53.403],
-          [-1.7735, 53.3423],
-          [-1.7838, 53.3378],
-          [-1.9142, 53.2596],
-          [-2.0796, 53.2226],
-          [-1.9497, 53.4443],
-        ],
-      },
+      // Composite line through the three featured routes, joined by
+      // road-snapped connectors — see scripts/generate-snapped-geometries.ts.
+      geometry: concatLines(
+        routeByName["Snake Pass (A57)"].geometry as GeoJSON.LineString,
+        snappedGeometries["connector:ladybower-castleton"],
+        routeByName["Winnats Pass"].geometry as GeoJSON.LineString,
+        snappedGeometries["connector:winnats-buxton"],
+        routeByName["Cat and Fiddle (A537)"].geometry as GeoJSON.LineString,
+        snappedGeometries["connector:macclesfield-glossop"],
+      ),
       isSample: true,
       status: "published",
     })
@@ -481,14 +509,10 @@ async function main() {
       fullDayTimeEstimate: "5 to 6 hours",
       bestTime: "Clear days, since the moor tops catch low cloud.",
       parkingNote: "Public car park in Hawes town centre.",
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [-2.2179, 54.3235],
-          [-2.2679, 54.3684],
-          [-2.2179, 54.3235],
-        ],
-      },
+      geometry: concatLines(
+        routeByName["Buttertubs Pass"].geometry as GeoJSON.LineString,
+        snappedGeometries["connector:thwaite-hawes"],
+      ),
       isSample: true,
       status: "published",
     })
@@ -526,15 +550,11 @@ async function main() {
       fullDayTimeEstimate: "6 to 7 hours",
       bestTime: "Spring to autumn, avoiding peak summer tourist traffic through Betws-y-Coed.",
       parkingNote: "Pay and display car park in Betws-y-Coed.",
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [-3.8004, 53.0955],
-          [-4.1264, 53.1191],
-          [-3.8286, 53.2799],
-          [-3.8004, 53.0955],
-        ],
-      },
+      geometry: concatLines(
+        snappedGeometries["connector:betws-llanberis"],
+        snappedGeometries["connector:llanberis-conwy"],
+        snappedGeometries["connector:conwy-betws"],
+      ),
       isSample: true,
       status: "published",
     })
@@ -576,13 +596,7 @@ async function main() {
       fullDayTimeEstimate: "4 to 5 hours",
       bestTime: "Spring to autumn, avoiding school-holiday traffic through the coastal towns.",
       parkingNote: "On-street parking available in Barnstaple town centre.",
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [-4.0587, 51.0781],
-          [-4.5423, 50.829],
-        ],
-      },
+      geometry: snappedGeometries["dayride:atlantic-highway"],
       isSample: true,
       status: "published",
     })
@@ -656,60 +670,58 @@ async function main() {
       slug: "pennines-crossing-day-1-glossop-to-hebden-bridge",
       regionSlug: "peak-district",
       start: "Glossop",
-      startCoord: [-1.9497, 53.4443] as [number, number],
       finish: "Hebden Bridge",
-      finishCoord: [-1.9977, 53.7448] as [number, number],
       featuredRoute: "Snake Pass (A57)",
       linkNote: "Via Woodhead and the Longdendale valley to Hebden Bridge",
       overnight: "Hebden Bridge",
       fuelWarning: undefined as string | undefined,
+      geometryParts: ["featuredRoute", "connector:ladybower-hebden"] as GeometryPart[],
     },
     {
       name: "Pennines crossing, day 2: Hebden Bridge to Hawes",
       slug: "pennines-crossing-day-2-hebden-bridge-to-hawes",
       regionSlug: "yorkshire-dales",
       start: "Hebden Bridge",
-      startCoord: [-1.9977, 53.7448] as [number, number],
       finish: "Hawes",
-      finishCoord: [-2.2179, 54.3235] as [number, number],
       featuredRoute: "Buttertubs Pass",
       linkNote: "Via Skipton and Wharfedale to Wensleydale",
       overnight: "Hawes",
       fuelWarning: undefined as string | undefined,
+      geometryParts: ["connector:hebden-hawes", "featuredRoute", "connector:thwaite-hawes"] as GeometryPart[],
     },
     {
       name: "Pennines crossing, day 3: Hawes to Alston",
       slug: "pennines-crossing-day-3-hawes-to-alston",
       regionSlug: "northern-england",
       start: "Hawes",
-      startCoord: [-2.2179, 54.3235] as [number, number],
       finish: "Alston",
-      finishCoord: [-2.4318, 54.811] as [number, number],
       featuredRoute: null as string | null,
       linkNote: "Via Swaledale and the North Pennines to Alston",
       overnight: "Alston",
       fuelWarning: "Fuel is scarce between Hawes and Alston — fill up before you leave.",
+      geometryParts: ["connector:hawes-alston"] as GeometryPart[],
     },
     {
       name: "Pennines crossing, day 4: Alston to Haltwhistle",
       slug: "pennines-crossing-day-4-alston-to-haltwhistle",
       regionSlug: "northern-england",
       start: "Alston",
-      startCoord: [-2.4318, 54.811] as [number, number],
       finish: "Haltwhistle",
-      finishCoord: [-2.4469, 54.97] as [number, number],
       featuredRoute: null as string | null,
       linkNote: "Via the South Tyne valley to Haltwhistle",
       overnight: "Haltwhistle",
       fuelWarning: undefined as string | undefined,
+      geometryParts: ["connector:alston-haltwhistle"] as GeometryPart[],
     },
   ];
 
   for (const [index, day] of pennineDaySeeds.entries()) {
     const featuredDistance = day.featuredRoute ? Number(routeByName[day.featuredRoute].distanceMiles) : 0;
-    const featuredGeometry = day.featuredRoute
-      ? (routeByName[day.featuredRoute].geometry as GeoJSON.LineString).coordinates
-      : [];
+    const dayGeometry = concatLines(
+      ...day.geometryParts.map((part) =>
+        part === "featuredRoute" ? (routeByName[day.featuredRoute!].geometry as GeoJSON.LineString) : snappedGeometries[part],
+      ),
+    );
     const [dayRide] = await db
       .insert(dayRides)
       .values({
@@ -724,10 +736,7 @@ async function main() {
         totalDistanceMiles: "130",
         ridingTimeMinutes: 220,
         fullDayTimeEstimate: "6 to 7 hours",
-        geometry: {
-          type: "LineString",
-          coordinates: [day.startCoord, ...featuredGeometry, day.finishCoord],
-        },
+        geometry: dayGeometry,
         isSample: true,
         status: "published",
       })
