@@ -1,6 +1,8 @@
-import { siFacebook, siInstagram, siTiktok, siX, siYoutube } from "simple-icons";
+import { siApple, siFacebook, siGoogleplay, siInstagram, siTiktok, siX, siYoutube } from "simple-icons";
 
 const BRANDS = {
+  apple: { path: siApple.path, color: "currentColor" },
+  googleplay: { path: siGoogleplay.path, color: `#${siGoogleplay.hex}` },
   facebook: { path: siFacebook.path, color: `#${siFacebook.hex}` },
   instagram: { path: siInstagram.path, color: `#${siInstagram.hex}` },
   youtube: { path: siYoutube.path, color: `#${siYoutube.hex}` },

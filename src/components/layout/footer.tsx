@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { CookieSettingsLink } from "./cookie-settings-link";
+import { AppStoreBadges } from "./app-store-links";
 
 export function Footer() {
   const deadCylinderUrl = process.env.NEXT_PUBLIC_DEAD_CYLINDER_URL;
 
   return (
-    <footer className="flex flex-col gap-2 border-t border-surface-raised px-4 py-6 pb-24 text-[13px] text-text-muted md:pb-6 print:hidden">
+    <footer className="flex flex-col gap-3 border-t border-surface-raised px-4 py-6 pb-24 text-[13px] text-text-muted md:pb-6 print:hidden">
+      <AppStoreBadges />
       <p>
         Herepath, from{" "}
         {deadCylinderUrl ? (

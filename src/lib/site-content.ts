@@ -154,6 +154,17 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     ],
   },
   {
+    id: "app",
+    label: "Mobile app",
+    path: "/",
+    fields: [
+      text("heading", "Heading", "Get the Herepath app"),
+      text("body", "Text under the heading", "The Herepath app is coming soon to iPhone and Android."),
+      text("appStoreUrl", "App Store link", "", "Paste the full link once the iPhone app is published. Leave empty to show “Coming soon”."),
+      text("googlePlayUrl", "Google Play link", "", "Paste the full link once the Android app is published. Leave empty to show “Coming soon”."),
+    ],
+  },
+  {
     id: "contact",
     label: "Contact page",
     path: "/contact",

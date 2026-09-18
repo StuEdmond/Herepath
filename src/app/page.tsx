@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Route, ShieldCheck, Download, BookOpen, Share2, MapPinned } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getContent } from "@/lib/site-content";
+import { AppStoreBadges } from "@/components/layout/app-store-links";
 
 export const metadata: Metadata = {
   title: "Herepath",
@@ -22,7 +23,7 @@ function BannerImage({ src, alt }: { src: string; alt: string }) {
 }
 
 export default async function HomePage() {
-  const c = await getContent("home");
+  const [c, app] = await Promise.all([getContent("home"), getContent("app")]);
 
   return (
     <div className="flex flex-col">
@@ -71,6 +72,12 @@ export default async function HomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 px-4 py-8 text-center">
+        <h2 className="text-[24px]">{app.heading}</h2>
+        <p className="text-[14px] text-text-secondary">{app.body}</p>
+        <AppStoreBadges className="justify-center" />
       </section>
 
       <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-4 py-12 text-center">
