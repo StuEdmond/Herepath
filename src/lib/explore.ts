@@ -33,6 +33,11 @@ export interface ExploreResult {
   landmarkNames: string[];
   suitedBikeTypes: string[];
   point: GeoPoint | null;
+  /** For the hover card on the Explore map. Tours have no single riding time, and only routes record a road surface. */
+  ridingTimeMinutes: number | null;
+  surface: "good" | "mixed" | "poor" | null;
+  startName: string | null;
+  finishName: string | null;
 }
 
 /** Fetches every published route, day ride and tour, normalised into one shape for the Explore page. */
@@ -77,6 +82,10 @@ export async function getExploreResults(): Promise<ExploreResult[]> {
       landmarkNames: landmarksByRoute.get(route.id) ?? [],
       suitedBikeTypes: suitedByRoute.get(route.id) ?? [],
       point: route.startPoint,
+      ridingTimeMinutes: route.ridingTimeMinutes,
+      surface: route.surfaceQuality,
+      startName: route.startPoint?.label ?? null,
+      finishName: route.endPoint?.label ?? null,
     });
   }
 
@@ -119,6 +128,10 @@ export async function getExploreResults(): Promise<ExploreResult[]> {
       landmarkNames,
       suitedBikeTypes: suitedByDayRide.get(dayRide.id) ?? [],
       point: geometry ? { lat: geometry.coordinates[0][1], lng: geometry.coordinates[0][0] } : null,
+      ridingTimeMinutes: dayRide.ridingTimeMinutes,
+      surface: null,
+      startName: dayRide.startLocation || null,
+      finishName: dayRide.finishLocation || null,
     });
   }
 
@@ -162,6 +175,10 @@ export async function getExploreResults(): Promise<ExploreResult[]> {
       landmarkNames: [],
       suitedBikeTypes: suitedByTour.get(tour.id) ?? [],
       point: firstGeometry ? { lat: firstGeometry.coordinates[0][1], lng: firstGeometry.coordinates[0][0] } : null,
+      ridingTimeMinutes: null,
+      surface: null,
+      startName: tour.startLocation || null,
+      finishName: tour.finishLocation || null,
     });
   }
 

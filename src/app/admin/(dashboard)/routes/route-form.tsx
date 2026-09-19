@@ -107,6 +107,15 @@ export async function RouteForm({
       />
 
       <FormRow>
+        <Field label="Start name" hint="Shown on the Explore map, e.g. Glossop">
+          <TextInput name="startLabel" defaultValue={defaults?.startPoint?.label} />
+        </Field>
+        <Field label="Finish name" hint="e.g. Ladybower Reservoir">
+          <TextInput name="endLabel" defaultValue={defaults?.endPoint?.label} />
+        </Field>
+      </FormRow>
+
+      <FormRow>
         <Field label="Riding time (minutes)">
           <TextInput name="ridingTimeMinutes" type="number" defaultValue={defaults?.ridingTimeMinutes} required />
         </Field>

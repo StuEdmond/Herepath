@@ -51,8 +51,10 @@ async function readForm(formData: FormData) {
   const startLng = String(formData.get("startLng") ?? "");
   const endLat = String(formData.get("endLat") ?? "");
   const endLng = String(formData.get("endLng") ?? "");
-  const startPoint = startLat && startLng ? { lat: Number(startLat), lng: Number(startLng) } : null;
-  const endPoint = endLat && endLng ? { lat: Number(endLat), lng: Number(endLng) } : null;
+  const startLabel = String(formData.get("startLabel") ?? "").trim();
+  const endLabel = String(formData.get("endLabel") ?? "").trim();
+  const startPoint = startLat && startLng ? { lat: Number(startLat), lng: Number(startLng), ...(startLabel && { label: startLabel }) } : null;
+  const endPoint = endLat && endLng ? { lat: Number(endLat), lng: Number(endLng), ...(endLabel && { label: endLabel }) } : null;
 
   return {
     name,

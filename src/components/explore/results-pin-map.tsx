@@ -13,6 +13,7 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ExploreResult } from "@/lib/explore";
+import { buildPinCard } from "./pin-card";
 import { mapStyleUrl, type MapStyleId } from "@/lib/map-styles";
 import { MapStyleSwitcher } from "@/components/map/map-style-switcher";
 import { readMapStyle, useApplyMapStyle } from "@/components/map/use-map-style";
@@ -71,6 +72,26 @@ export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
     if (!map) return;
 
     const pinned = results.filter((r) => r.point);
+
+    // With a mouse, hovering (or tabbing to) a pin shows the ride's details and clicking opens it. A touch
+    // screen has no hover, so a tap shows the details with a "View ride" link instead.
+    const canHover = window.matchMedia("(hover: hover)").matches;
+    const openRide = (result: ExploreResult) => router.push(`/${TYPE_PATH[result.type]}/${result.slug}`);
+    const popup = new Popup({
+      offset: 14,
+      closeButton: false,
+      closeOnClick: !canHover,
+      maxWidth: "280px",
+      focusAfterOpen: false,
+      className: canHover ? "herepath-popup herepath-popup-hover" : "herepath-popup",
+    });
+    const showCard = (result: ExploreResult) => {
+      popup
+        .setLngLat([result.point!.lng, result.point!.lat])
+        .setDOMContent(buildPinCard(result, canHover ? undefined : () => openRide(result)))
+        .addTo(map);
+    };
+
     const markers = pinned.map((result) => {
       const el = document.createElement("button");
       el.type = "button";
@@ -81,10 +102,22 @@ export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
       el.style.border = "2px solid white";
       el.style.background = "#4fae82";
       el.style.cursor = "pointer";
-      el.addEventListener("click", () => router.push(`/${TYPE_PATH[result.type]}/${result.slug}`));
 
-      const popup = new Popup({ offset: 12, closeButton: false }).setText(result.name);
-      return new Marker({ element: el }).setLngLat([result.point!.lng, result.point!.lat]).setPopup(popup).addTo(map);
+      if (canHover) {
+        el.addEventListener("mouseenter", () => showCard(result));
+        el.addEventListener("mouseleave", () => popup.remove());
+        el.addEventListener("focus", () => showCard(result));
+        el.addEventListener("blur", () => popup.remove());
+        el.addEventListener("click", () => openRide(result));
+      } else {
+        el.addEventListener("click", (event) => {
+          // Stops the tap counting as a click on the map, which would close the card straight away.
+          event.stopPropagation();
+          showCard(result);
+        });
+      }
+
+      return new Marker({ element: el }).setLngLat([result.point!.lng, result.point!.lat]).addTo(map);
     });
 
     if (pinned.length > 0) {
@@ -100,6 +133,7 @@ export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
     }
 
     return () => {
+      popup.remove();
       for (const marker of markers) marker.remove();
     };
   }, [map, results, router]);
