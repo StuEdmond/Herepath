@@ -26,6 +26,28 @@ async function getTargetGeometry(targetType: TripTarget, targetId: string): Prom
   return null;
 }
 
+/** No ride needs more points than this; the import form thins recordings well below it, so this only stops oversized or odd input. */
+const MAX_OWN_ROUTE_POINTS = 6000;
+
+/** The route sent with the form, checked and cut down if needed. Anything that isn't a proper line is treated as no route. */
+function readOwnRouteGeometry(raw: string): OwnRouteGeometry | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { type?: unknown; coordinates?: unknown };
+    if (parsed.type !== "LineString" || !Array.isArray(parsed.coordinates)) return null;
+    const valid = parsed.coordinates.filter(
+      (c): c is [number, number] =>
+        Array.isArray(c) && typeof c[0] === "number" && typeof c[1] === "number" && Number.isFinite(c[0]) && Number.isFinite(c[1]),
+    );
+    if (valid.length < 2) return null;
+    const step = valid.length > MAX_OWN_ROUTE_POINTS ? (valid.length - 1) / (MAX_OWN_ROUTE_POINTS - 1) : 1;
+    const coordinates = step === 1 ? valid : Array.from({ length: MAX_OWN_ROUTE_POINTS }, (_, i) => valid[Math.round(i * step)]);
+    return { type: "LineString", coordinates };
+  } catch {
+    return null;
+  }
+}
+
 export async function createDiaryEntry(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) redirect("/account/sign-in");
@@ -72,8 +94,7 @@ export async function createDiaryEntry(formData: FormData) {
     }
   } else {
     ownRouteName = String(formData.get("ownRouteName") ?? "").trim() || "Untitled ride";
-    const geometryRaw = String(formData.get("ownRouteGeometry") ?? "");
-    ownRouteGeometry = geometryRaw ? JSON.parse(geometryRaw) : null;
+    ownRouteGeometry = readOwnRouteGeometry(String(formData.get("ownRouteGeometry") ?? ""));
     geometryForPhotos = ownRouteGeometry;
     distanceMiles = String(formData.get("distanceMiles") ?? "0");
   }

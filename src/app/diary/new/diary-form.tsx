@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createDiaryEntry } from "../actions";
-import { GpxUploadField } from "@/components/admin/gpx-upload-field";
+import { GpxImportField, type ImportedRide } from "@/components/diary/gpx-import-field";
 import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
 import { ImageFileInput } from "@/components/ui/image-file-input";
@@ -32,9 +32,29 @@ export function DiaryForm({
   catalogueOptions: CatalogueOption[];
   reviewablePlacesByTarget: Record<string, ReviewablePlace[]>;
 }) {
-  const [source, setSource] = useState<"catalogue" | "own">("catalogue");
+  // Importing a recording is the common way in, so it comes first.
+  const [source, setSource] = useState<"catalogue" | "own">("own");
   const [rodeSolo, setRodeSolo] = useState(true);
   const [selectedTarget, setSelectedTarget] = useState(catalogueOptions[0] ? `${catalogueOptions[0].type}:${catalogueOptions[0].id}` : "");
+
+  // These four can be filled in from an imported file, so the form holds them rather than leaving them to the browser.
+  const [routeName, setRouteName] = useState("");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [finishTime, setFinishTime] = useState("");
+  const importedNameRef = useRef("");
+
+  function applyImport(ride: ImportedRide) {
+    // A name the rider typed themselves is kept; one from an earlier import is replaced.
+    if (ride.name) {
+      const name = ride.name;
+      setRouteName((current) => (current.trim() === "" || current === importedNameRef.current ? name : current));
+      importedNameRef.current = name;
+    }
+    if (ride.date) setDate(ride.date);
+    if (ride.startTime) setStartTime(ride.startTime);
+    if (ride.finishTime) setFinishTime(ride.finishTime);
+  }
 
   const [targetType, targetId] = selectedTarget.split(":");
   const reviewablePlaces = reviewablePlacesByTarget[selectedTarget] ?? [];
@@ -44,17 +64,17 @@ export function DiaryForm({
       <div className="flex rounded-lg bg-surface p-1">
         <button
           type="button"
+          onClick={() => setSource("own")}
+          className={`min-h-10 flex-1 rounded-md text-[14px] font-medium ${source === "own" ? "bg-green-primary text-white" : "text-text-secondary"}`}
+        >
+          Import from your app
+        </button>
+        <button
+          type="button"
           onClick={() => setSource("catalogue")}
           className={`min-h-10 flex-1 rounded-md text-[14px] font-medium ${source === "catalogue" ? "bg-green-primary text-white" : "text-text-secondary"}`}
         >
           A Herepath ride
-        </button>
-        <button
-          type="button"
-          onClick={() => setSource("own")}
-          className={`min-h-10 flex-1 rounded-md text-[14px] font-medium ${source === "own" ? "bg-green-primary text-white" : "text-text-secondary"}`}
-        >
-          Your own route
         </button>
       </div>
       <input type="hidden" name="source" value={source} />
@@ -78,10 +98,18 @@ export function DiaryForm({
         </>
       ) : (
         <>
+          <div className="flex flex-col gap-3 rounded-xl bg-surface p-3">
+            <div>
+              <h2 className="text-[16px] text-text-primary">Import from your mapping app</h2>
+              <p className="mt-0.5 text-[13px] text-text-muted">
+                Choose the GPX file your app saved of your ride. We draw it on the map and fill in the distance, name, date and times for you.
+              </p>
+            </div>
+            <GpxImportField onImported={applyImport} />
+          </div>
           <Field label="Route name">
-            <TextInput name="ownRouteName" placeholder="e.g. My Sunday loop" required />
+            <TextInput name="ownRouteName" placeholder="e.g. My Sunday loop" required value={routeName} onChange={(e) => setRouteName(e.target.value)} />
           </Field>
-          <GpxUploadField geometryFieldName="ownRouteGeometry" includeStartEndFields={false} />
           <label className="flex items-center gap-1.5 text-[14px] text-text-primary">
             <input type="checkbox" name="suggestAsNewRoute" />
             Suggest this as a new route for Herepath
@@ -91,7 +119,7 @@ export function DiaryForm({
 
       <FormRow>
         <Field label="Date">
-          <TextInput name="date" type="date" required />
+          <TextInput name="date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
         <Field label="Rating">
           <Select name="rating" defaultValue="">
@@ -107,10 +135,10 @@ export function DiaryForm({
 
       <FormRow>
         <Field label="Start time">
-          <TextInput name="startTime" type="time" />
+          <TextInput name="startTime" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         </Field>
         <Field label="Finish time">
-          <TextInput name="finishTime" type="time" />
+          <TextInput name="finishTime" type="time" value={finishTime} onChange={(e) => setFinishTime(e.target.value)} />
         </Field>
       </FormRow>
 

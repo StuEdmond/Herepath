@@ -6,6 +6,23 @@ export interface ParsedGpx {
   distanceMiles: number;
   startPoint: GeoPoint;
   endPoint: GeoPoint;
+  /** The ride's name from the file, when the app that made it saved one. */
+  name?: string;
+  /** When the recording started and finished (ISO 8601, from the first and last timestamped points), when the file has them. */
+  startTime?: string;
+  endTime?: string;
+}
+
+/** A name, or a timestamp, as text — the XML parser can hand back numbers or objects for odd files. */
+function asText(value: unknown): string | undefined {
+  if (typeof value === "string") return value.trim() || undefined;
+  if (typeof value === "number") return String(value);
+  return undefined;
+}
+
+function asValidTime(value: unknown): string | undefined {
+  const text = asText(value);
+  return text && Number.isFinite(Date.parse(text)) ? text : undefined;
 }
 
 const METRES_PER_MILE = 1609.344;
@@ -32,6 +49,14 @@ export function parseGpx(xml: string): ParsedGpx {
   if (!gpx) throw new Error("Not a valid GPX file: missing <gpx> root element.");
 
   const points: [number, number][] = [];
+  let startTime: string | undefined;
+  let endTime: string | undefined;
+  const noteTime = (value: unknown) => {
+    const time = asValidTime(value);
+    if (!time) return;
+    startTime ??= time;
+    endTime = time;
+  };
 
   const collectFromSegments = (segments: unknown) => {
     const segList = Array.isArray(segments) ? segments : [segments];
@@ -42,7 +67,10 @@ export function parseGpx(xml: string): ParsedGpx {
       for (const pt of trkptList) {
         const lat = parseFloat(pt["@_lat"]);
         const lng = parseFloat(pt["@_lon"]);
-        if (Number.isFinite(lat) && Number.isFinite(lng)) points.push([lng, lat]);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          points.push([lng, lat]);
+          noteTime(pt.time);
+        }
       }
     }
   };
@@ -62,7 +90,10 @@ export function parseGpx(xml: string): ParsedGpx {
       for (const pt of rteptList) {
         const lat = parseFloat(pt["@_lat"]);
         const lng = parseFloat(pt["@_lon"]);
-        if (Number.isFinite(lat) && Number.isFinite(lng)) points.push([lng, lat]);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          points.push([lng, lat]);
+          noteTime(pt.time);
+        }
       }
     }
   }
@@ -79,12 +110,80 @@ export function parseGpx(xml: string): ParsedGpx {
   const [startLng, startLat] = points[0];
   const [endLng, endLat] = points[points.length - 1];
 
+  const firstTrack = tracks[0];
+  const firstRoute = gpx.rte ? (Array.isArray(gpx.rte) ? gpx.rte[0] : gpx.rte) : undefined;
+  const name = asText(gpx.metadata?.name) ?? asText(firstTrack?.name) ?? asText(firstRoute?.name);
+
   return {
     geometry: { type: "LineString", coordinates: points },
     distanceMiles: Math.round((totalMetres / METRES_PER_MILE) * 10) / 10,
     startPoint: { lat: startLat, lng: startLng },
     endPoint: { lat: endLat, lng: endLng },
+    name,
+    startTime,
+    endTime,
   };
+}
+
+const METRES_PER_DEGREE = 111320;
+
+/**
+ * Thins a recorded track that has far more points than it needs (a phone can log one every second, so a long ride runs to tens of
+ * thousands), keeping its shape to within a few metres. Uses the Ramer–Douglas–Peucker method, widening the tolerance until the
+ * track is small enough. Short tracks come back untouched.
+ */
+export function simplifyTrack(coords: [number, number][], maxPoints = 3000): [number, number][] {
+  if (coords.length <= maxPoints) return coords;
+
+  // Flat-earth maths around the middle of the track is plenty accurate for a single ride.
+  const midLat = coords[Math.floor(coords.length / 2)][1];
+  const kx = Math.cos((midLat * Math.PI) / 180) * METRES_PER_DEGREE;
+  const xy = coords.map(([lng, lat]) => [lng * kx, lat * METRES_PER_DEGREE] as const);
+
+  const distanceToSegment = (p: readonly [number, number], a: readonly [number, number], b: readonly [number, number]) => {
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const lengthSquared = dx * dx + dy * dy;
+    const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / lengthSquared));
+    return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+  };
+
+  const thin = (tolerance: number): [number, number][] => {
+    const keep = new Uint8Array(coords.length);
+    keep[0] = 1;
+    keep[coords.length - 1] = 1;
+    const stack: [number, number][] = [[0, coords.length - 1]];
+    while (stack.length > 0) {
+      const [start, end] = stack.pop()!;
+      let farthest = -1;
+      let farthestDistance = tolerance;
+      for (let i = start + 1; i < end; i++) {
+        const d = distanceToSegment(xy[i], xy[start], xy[end]);
+        if (d > farthestDistance) {
+          farthest = i;
+          farthestDistance = d;
+        }
+      }
+      if (farthest !== -1) {
+        keep[farthest] = 1;
+        stack.push([start, farthest], [farthest, end]);
+      }
+    }
+    return coords.filter((_, i) => keep[i] === 1);
+  };
+
+  let tolerance = 2;
+  let thinned = coords;
+  for (let attempt = 0; attempt < 12 && thinned.length > maxPoints; attempt++) {
+    thinned = thin(tolerance);
+    tolerance *= 2;
+  }
+  // A track that still won't fit (extremely unlikely) is cut down evenly instead.
+  if (thinned.length > maxPoints) {
+    const step = (thinned.length - 1) / (maxPoints - 1);
+    thinned = Array.from({ length: maxPoints }, (_, i) => thinned[Math.round(i * step)]);
+  }
+  return thinned;
 }
 
 export interface GpxWaypoint {
