@@ -18,3 +18,20 @@ export const placeReviews = pgTable(
   },
   (t) => [unique("place_reviews_user_place").on(t.userId, t.placeId)],
 );
+
+/** A rider flagging a tip for admin to look at. One report per rider per tip. */
+export const placeReviewReports = pgTable(
+  "place_review_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    placeReviewId: uuid("place_review_id")
+      .notNull()
+      .references(() => placeReviews.id, { onDelete: "cascade" }),
+    reporterId: text("reporter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique("place_review_reports_once").on(t.placeReviewId, t.reporterId)],
+);

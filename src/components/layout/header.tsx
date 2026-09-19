@@ -27,13 +27,14 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-surface-raised bg-surface print:hidden">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2.5 text-[17px] font-medium uppercase tracking-wide text-text-primary">
+        <Link href="/" className="order-1 flex items-center gap-2 text-[16px] font-medium uppercase tracking-wide text-text-primary md:gap-2.5 md:text-[17px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/herepath-mark.png" alt="" width={40} height={32} className="h-8 w-10" />
           Herepath
         </Link>
 
-        <nav aria-label="Primary" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-text-secondary">
+        {/* On a phone the links drop to their own row under the logo and account, so the top row stays tidy. */}
+        <nav aria-label="Primary" className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-text-secondary md:order-2 md:w-auto">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-text-primary">
               {link.label}
@@ -42,7 +43,7 @@ export async function Header() {
         </nav>
 
         {session?.user ? (
-          <div className="flex items-center gap-3">
+          <div className="order-2 flex min-w-0 items-center gap-1.5 md:order-3 md:gap-3">
             <Link href="/profile" className="hidden text-[14px] text-text-secondary hover:text-text-primary md:inline">
               Profile
             </Link>
@@ -55,16 +56,16 @@ export async function Header() {
                   displayName[0].toUpperCase()
                 )}
               </span>
-              <span className="max-w-28 truncate">{displayName}</span>
+              <span className="max-w-20 truncate sm:max-w-28">{displayName}</span>
             </Link>
             <form action={signOutAction}>
-              <Button type="submit" variant="ghost" className="min-h-9 px-3 text-[13px]">
+              <Button type="submit" variant="ghost" className="min-h-9 px-2 text-[13px] md:px-3">
                 Sign out
               </Button>
             </form>
           </div>
         ) : (
-          <Link href="/account/sign-in">
+          <Link href="/account/sign-in" className="order-2 md:order-3">
             <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]">
               Sign in
             </Button>

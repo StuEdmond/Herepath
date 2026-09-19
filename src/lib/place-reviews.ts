@@ -12,6 +12,7 @@ export interface ReviewablePlace {
 }
 
 export interface PlaceReviewView {
+  id: string;
   text: string;
   author: string;
 }
@@ -81,7 +82,7 @@ export async function getPlaceReviews(placeIds: string[], perPlace = 2): Promise
   if (placeIds.length === 0) return byPlace;
 
   const rows = await db
-    .select({ placeId: placeReviews.placeId, text: placeReviews.text, name: users.name })
+    .select({ id: placeReviews.id, placeId: placeReviews.placeId, text: placeReviews.text, name: users.name })
     .from(placeReviews)
     .innerJoin(users, eq(placeReviews.userId, users.id))
     .where(inArray(placeReviews.placeId, placeIds))
@@ -89,7 +90,7 @@ export async function getPlaceReviews(placeIds: string[], perPlace = 2): Promise
 
   for (const row of rows) {
     const list = byPlace.get(row.placeId) ?? [];
-    if (list.length < perPlace) list.push({ text: row.text, author: row.name?.trim().split(/\s+/)[0] || "A rider" });
+    if (list.length < perPlace) list.push({ id: row.id, text: row.text, author: row.name?.trim().split(/\s+/)[0] || "A rider" });
     byPlace.set(row.placeId, list);
   }
   return byPlace;
