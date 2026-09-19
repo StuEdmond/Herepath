@@ -25,6 +25,12 @@ export function Footer() {
         <Link href="/advice" className="underline hover:text-text-secondary">
           Advice
         </Link>
+        <Link href="/blog" className="underline hover:text-text-secondary">
+          Rider blog
+        </Link>
+        <Link href="/guidelines" className="underline hover:text-text-secondary">
+          Community guidelines
+        </Link>
         <Link href="/pricing" className="underline hover:text-text-secondary">
           Pricing
         </Link>

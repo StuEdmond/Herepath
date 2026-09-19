@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/admin/tours", label: "Tours" },
   { href: "/admin/collections", label: "Collections" },
   { href: "/admin/advice", label: "Advice" },
+  { href: "/admin/blog-posts", label: "Blog posts" },
   { href: "/admin/place-reviews", label: "Place tips" },
   { href: "/admin/site-content", label: "Site content" },
   { href: "/admin/search-chips", label: "Search chips" },

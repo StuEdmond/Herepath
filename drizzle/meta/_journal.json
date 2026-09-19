@@ -57,6 +57,13 @@
       "when": 1789822525333,
       "tag": "0007_legal_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789824646695,
+      "tag": "0008_superb_tag",
+      "breakpoints": true
     }
   ]
 }

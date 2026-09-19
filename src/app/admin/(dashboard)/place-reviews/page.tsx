@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { placeReviews, placeReviewReports, places, users } from "@/db/schema";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
-import { reportReasonLabel } from "@/lib/place-review-limits";
+import { reportReasonLabel } from "@/lib/report";
 import { deletePlaceReview, dismissPlaceReviewReports } from "./actions";
 
 function formatDate(date: Date): string {

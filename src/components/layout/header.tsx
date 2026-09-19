@@ -6,13 +6,15 @@ import { users } from "@/db/schema";
 import { signOutAction } from "@/app/account/actions";
 import { Button } from "@/components/ui/button";
 
+// The last three are also in the footer, so on a phone they're left out to keep the header to one tidy row.
 const NAV_LINKS = [
-  { href: "/explore", label: "Explore" },
-  { href: "/advice", label: "Advice" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  { href: "/explore", label: "Explore", desktopOnly: false },
+  { href: "/advice", label: "Advice", desktopOnly: false },
+  { href: "/blog", label: "Blog", desktopOnly: false },
+  { href: "/pricing", label: "Pricing", desktopOnly: false },
+  { href: "/faq", label: "FAQ", desktopOnly: true },
+  { href: "/about", label: "About", desktopOnly: true },
+  { href: "/contact", label: "Contact", desktopOnly: true },
 ] as const;
 
 export async function Header() {
@@ -36,7 +38,7 @@ export async function Header() {
         {/* On a phone the links drop to their own row under the logo and account, so the top row stays tidy. */}
         <nav aria-label="Primary" className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-text-secondary md:order-2 md:w-auto">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-text-primary">
+            <Link key={link.href} href={link.href} className={link.desktopOnly ? "hidden hover:text-text-primary md:inline" : "hover:text-text-primary"}>
               {link.label}
             </Link>
           ))}

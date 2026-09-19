@@ -9,6 +9,7 @@ Built with Next.js (App Router), TypeScript, Tailwind CSS, PostgreSQL (Drizzle O
 - **Public site:** home, Explore (search, filters, map view), route / day ride / tour pages, Pricing, FAQ, About, Contact, Privacy.
 - **Rider accounts:** sign up, saved rides, ride diary with photos, reviews, sharing.
 - **Advice (`/advice`):** guides on maintenance, camping, tool kits and gear, written in admin (drafts stay hidden until published). `npm run db:advice-starters` loads three starter drafts to edit.
+- **Rider blog (`/blog`):** signed-in riders write posts (optional cover photo and link to a ride, ticking the community guidelines). Nothing is public until a moderator approves it in **Admin > Blog posts**, where you can approve, reject with a note the rider sees, take a live post down, or handle reports. Editing a live post sends it back for review, and each rider can have three posts waiting at once.
 - **Rider tips on places:** when logging a ride, riders can leave a one-line tip for the cafes, hotels and campsites on it; tips appear on those places. Signed-in riders can report a tip; reported tips are flagged first under Admin > Place tips (and on the dashboard), where you can delete the tip or dismiss the reports.
 - **Admin (`/admin`):** routes, day rides, tours, places, landmarks, regions, collections, advice articles, place tips, search chips, **Site content** (edit page wording and images), contact messages, users (free/premium tier), and the Premium waitlist.
 

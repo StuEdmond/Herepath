@@ -137,6 +137,18 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           </div>
         )}
       </section>
+
+      <section className="flex flex-col gap-3">
+        <SectionHeader title="Your blog posts" href="/blog/mine" linkLabel="See your posts" />
+        <div className="flex flex-col items-start gap-3 rounded-xl bg-surface p-4">
+          <p className="text-[14px] text-text-secondary">Tell other riders about a road you&apos;ve ridden. Posts are checked by our team before they appear.</p>
+          <Link href="/blog/new">
+            <Button type="button" variant="secondary" className="min-h-10 px-4 text-[14px]">
+              Write a post
+            </Button>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

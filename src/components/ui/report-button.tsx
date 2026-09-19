@@ -3,19 +3,32 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { reportPlaceReview, type ReportResult } from "@/app/places/actions";
-import { REPORT_REASONS } from "@/lib/place-review-limits";
+import { REPORT_REASONS, type ReportResult } from "@/lib/report";
 
-export function ReportTipButton({ reviewId, signedIn }: { reviewId: string; signedIn: boolean }) {
+/**
+ * "Report" control for rider-written content. Signed-in readers choose a reason and send it;
+ * signed-out readers are taken to sign in. The action decides what is being reported.
+ */
+export function ReportButton({
+  action,
+  targetId,
+  signedIn,
+  label,
+}: {
+  action: (previous: ReportResult, formData: FormData) => Promise<ReportResult>;
+  targetId: string;
+  signedIn: boolean;
+  label: string;
+}) {
   const [open, setOpen] = useState(false);
-  const [state, action, pending] = useActionState<ReportResult, FormData>(reportPlaceReview, {});
+  const [state, formAction, pending] = useActionState<ReportResult, FormData>(action, {});
 
   if (state.done) return <span className="text-[12px] text-text-muted">Thanks — we&apos;ll take a look.</span>;
 
   if (!signedIn) {
     return (
       <Link href="/account/sign-in" className="text-[12px] text-text-muted underline hover:text-text-secondary">
-        Report this tip
+        {label}
       </Link>
     );
   }
@@ -23,19 +36,19 @@ export function ReportTipButton({ reviewId, signedIn }: { reviewId: string; sign
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="text-[12px] text-text-muted underline hover:text-text-secondary">
-        Report this tip
+        {label}
       </button>
     );
   }
 
   return (
-    <form action={action} className="mt-1 flex flex-wrap items-center gap-2">
-      <input type="hidden" name="reviewId" value={reviewId} />
-      <label className="sr-only" htmlFor={`reason-${reviewId}`}>
+    <form action={formAction} className="mt-1 flex flex-wrap items-center gap-2">
+      <input type="hidden" name="targetId" value={targetId} />
+      <label className="sr-only" htmlFor={`reason-${targetId}`}>
         Reason for reporting
       </label>
       <select
-        id={`reason-${reviewId}`}
+        id={`reason-${targetId}`}
         name="reason"
         required
         defaultValue=""

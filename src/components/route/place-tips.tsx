@@ -1,6 +1,7 @@
 import type { PlaceReviewView } from "@/lib/place-reviews";
 import { auth } from "@/lib/auth";
-import { ReportTipButton } from "./report-tip-button";
+import { reportPlaceReview } from "@/app/places/actions";
+import { ReportButton } from "@/components/ui/report-button";
 
 /** Short rider tips left about a place when they logged a ride. Shows nothing until there are some. */
 export async function PlaceTips({ reviews }: { reviews: PlaceReviewView[] }) {
@@ -15,7 +16,7 @@ export async function PlaceTips({ reviews }: { reviews: PlaceReviewView[] }) {
           <p className="text-[13px] text-text-secondary">
             &ldquo;{review.text}&rdquo; <span className="text-text-muted">— {review.author}</span>
           </p>
-          <ReportTipButton reviewId={review.id} signedIn={signedIn} />
+          <ReportButton action={reportPlaceReview} targetId={review.id} signedIn={signedIn} label="Report this tip" />
         </div>
       ))}
     </div>

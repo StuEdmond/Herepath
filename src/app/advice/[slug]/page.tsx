@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { db } from "@/db/client";
 import { adviceArticles } from "@/db/schema";
-import { categoryLabel, parseArticleBody, readingMinutes } from "@/lib/advice";
+import { categoryLabel, readingMinutes } from "@/lib/advice";
+import { ArticleBody } from "@/components/ui/article-body";
 import { Button } from "@/components/ui/button";
 
 async function getArticle(slug: string) {
@@ -37,8 +38,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const article = await getArticle(slug);
   if (!article) notFound();
 
-  const blocks = parseArticleBody(article.body);
-
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-5 p-4 pt-6 pb-16">
       <Link href="/advice" className="inline-flex min-h-11 items-center gap-1.5 self-start text-[14px] text-text-secondary hover:text-text-primary">
@@ -61,31 +60,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <img src={article.coverImage} alt="" className="max-h-96 w-full rounded-2xl object-cover" />
       )}
 
-      <div className="flex flex-col gap-4 text-[16px] leading-relaxed text-text-secondary">
-        {blocks.map((block, i) => {
-          if (block.kind === "heading") {
-            return (
-              <h2 key={i} className="mt-2 text-[22px] text-text-primary">
-                {block.text}
-              </h2>
-            );
-          }
-          if (block.kind === "list") {
-            return (
-              <ul key={i} className="flex list-disc flex-col gap-1.5 pl-5">
-                {block.items.map((item, j) => (
-                  <li key={j}>{item}</li>
-                ))}
-              </ul>
-            );
-          }
-          return (
-            <p key={i} className="whitespace-pre-line">
-              {block.text}
-            </p>
-          );
-        })}
-      </div>
+      <ArticleBody text={article.body} />
 
       <div className="mt-4 flex flex-col items-start gap-2 rounded-xl bg-surface p-5">
         <p className="text-[16px] text-text-primary">Ready to put it into practice?</p>
