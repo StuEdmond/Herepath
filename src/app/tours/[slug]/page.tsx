@@ -276,6 +276,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
           map={
             <TourMapCard
               slug={tour.slug}
+              name={tour.name}
               days={dayRows.map((row) => ({
                 dayNumber: row.tourDay.dayNumber,
                 name: row.dayRide.name,

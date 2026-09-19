@@ -15,18 +15,31 @@ function blobToBase64(blob: Blob): Promise<string> {
 }
 
 /**
- * Opens the phone's own share sheet with the image attached. The app's web view has no Web Share
- * API and can't download files, so the image is written to the app's cache first. Rejects if the
+ * Opens the phone's own share sheet with a file attached. The app's web view has no Web Share
+ * API and can't download files, so the file is written to the app's cache first. Rejects if the
  * user cancels or the native plugins aren't in the installed app build.
  */
-export async function shareImageNative({ title, text, blob }: { title: string; text: string; blob: Blob }): Promise<void> {
+export async function shareFileNative({
+  title,
+  text,
+  filename,
+  blob,
+  dialogTitle,
+}: {
+  title: string;
+  text?: string;
+  filename: string;
+  blob: Blob;
+  dialogTitle: string;
+}): Promise<void> {
   const [{ Share }, { Filesystem, Directory }] = await Promise.all([import("@capacitor/share"), import("@capacitor/filesystem")]);
-  const { uri } = await Filesystem.writeFile({
-    path: `herepath-ride-${Date.now()}.png`,
-    data: await blobToBase64(blob),
-    directory: Directory.Cache,
-  });
-  await Share.share({ title, text, files: [uri], dialogTitle: "Share your ride" });
+  const { uri } = await Filesystem.writeFile({ path: filename, data: await blobToBase64(blob), directory: Directory.Cache });
+  await Share.share({ title, text, files: [uri], dialogTitle });
+}
+
+/** Opens the phone's share sheet with a ride image attached. */
+export async function shareImageNative({ title, text, blob }: { title: string; text: string; blob: Blob }): Promise<void> {
+  await shareFileNative({ title, text, filename: `herepath-ride-${Date.now()}.png`, blob, dialogTitle: "Share your ride" });
 }
 
 /** Opens a link outside the app — in an in-app browser sheet on the phone, a new tab on the web. */

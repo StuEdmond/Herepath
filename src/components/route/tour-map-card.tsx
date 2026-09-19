@@ -4,14 +4,17 @@ import { DynamicTrackMap } from "@/components/map/dynamic-track-map";
 import type { TrackLine } from "@/components/map/track-map";
 import { LinkButton } from "@/components/ui/link-button";
 import { GpxGuideLink } from "./gpx-guide-link";
+import { NavAppHandoff } from "./nav-app-handoff";
 
 const DAY_COLORS = ["#4fae82", "#4a90d9", "#d9a544", "#9b72cf", "#3bc4b0", "#d97bb0"];
 
 export function TourMapCard({
   slug,
+  name,
   days,
 }: {
   slug: string;
+  name: string;
   days: { dayNumber: number; name: string; slug: string; geometry: GeoJSON.LineString | null }[];
 }) {
   const lines: TrackLine[] = days
@@ -78,6 +81,13 @@ export function TourMapCard({
         Each day opens separately in Google Maps or Apple Maps from its day ride page.{" "}
         <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
+
+      <NavAppHandoff
+        gpxHref={`/tours/${slug}/gpx`}
+        filename={`${slug}.gpx`}
+        rideName={name}
+        note="This is the whole tour, with each day as its own line. To ride one day at a time, use that day's GPX above instead."
+      />
     </div>
   );
 }

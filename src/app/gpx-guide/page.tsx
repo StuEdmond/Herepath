@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NAV_APP_GUIDES } from "@/lib/nav-app-guides";
 
 export const metadata: Metadata = {
   title: "Using a GPX file",
@@ -98,11 +99,32 @@ export default function GpxGuidePage() {
         </ul>
       </section>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-[18px] text-text-primary">Using it in a sat-nav or another app</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className="text-[18px] text-text-primary">Using it in Beeline, Garmin, TomTom or another sat-nav</h2>
         <p>
-          Many motorcycle sat-navs and route apps can import GPX files. In the app, or on the maker&apos;s website, look for{" "}
-          <em>import route</em> or <em>import GPX</em>. The route follows our line exactly, because the file holds the whole track.
+          Many motorcycle sat-navs and route apps can import GPX files, and the route follows our line exactly, because the file holds the whole
+          track. Here is how for some of the most popular.
+        </p>
+        {NAV_APP_GUIDES.map((guide) => (
+          <div key={guide.id} className="flex flex-col gap-1.5">
+            <h3 className="text-[16px] text-text-primary">{guide.name}</h3>
+            <p>{guide.intro}</p>
+            <ol className="list-inside list-decimal space-y-1 pl-1">
+              {guide.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            {guide.note && <p className="text-[13px] text-text-muted">{guide.note}</p>}
+            {guide.help.map((link) => (
+              <a key={link.url} href={link.url} className={`${LINK} text-[13px]`} target="_blank" rel="noopener noreferrer">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        ))}
+        <p>
+          In the Herepath app on Android, the <strong className="font-medium text-text-primary">Send to a navigation app</strong> button under a
+          ride&apos;s map opens your phone&apos;s share menu, so you can send the file straight to Beeline or Garmin Drive.
         </p>
         <p>
           Stuck? Send us a message through the{" "}

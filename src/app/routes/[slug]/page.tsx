@@ -234,7 +234,7 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
 
             </>
           }
-          map={route.geometry ? <RouteMapCard slug={route.slug} geometry={route.geometry as GeoJSON.LineString} /> : null}
+          map={route.geometry ? <RouteMapCard slug={route.slug} name={route.name} geometry={route.geometry as GeoJSON.LineString} /> : null}
           after={
             <>
         {/* 7. Rider notes */}

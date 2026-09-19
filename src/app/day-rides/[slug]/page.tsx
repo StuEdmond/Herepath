@@ -251,6 +251,7 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
             dayRide.geometry ? (
               <DayRideMapCard
                 slug={dayRide.slug}
+                name={dayRide.name}
                 geometry={dayRide.geometry as GeoJSON.LineString}
                 highlightSegments={highlightSegments}
               />

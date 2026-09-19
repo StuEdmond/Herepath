@@ -3,8 +3,9 @@ import { DynamicRouteMap } from "@/components/map/dynamic-route-map";
 import { LinkButton } from "@/components/ui/link-button";
 import { buildGoogleMapsUrl, buildAppleMapsUrl } from "@/lib/map-links";
 import { GpxGuideLink } from "./gpx-guide-link";
+import { NavAppHandoff } from "./nav-app-handoff";
 
-export function RouteMapCard({ slug, geometry }: { slug: string; geometry: GeoJSON.LineString }) {
+export function RouteMapCard({ slug, name, geometry }: { slug: string; name: string; geometry: GeoJSON.LineString }) {
   const googleUrl = buildGoogleMapsUrl(geometry);
   const appleUrl = buildAppleMapsUrl(geometry);
 
@@ -41,6 +42,7 @@ export function RouteMapCard({ slug, geometry }: { slug: string; geometry: GeoJS
         Map apps may reroute slightly to follow their own road preferences — the GPX file follows the exact route.{" "}
         <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
+      <NavAppHandoff gpxHref={`/routes/${slug}/gpx`} filename={`${slug}.gpx`} rideName={name} />
     </div>
   );
 }

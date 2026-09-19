@@ -4,13 +4,16 @@ import type { TrackLine } from "@/components/map/track-map";
 import { LinkButton } from "@/components/ui/link-button";
 import { buildStagedMapLinks, type MapStage } from "@/lib/map-links";
 import { GpxGuideLink } from "./gpx-guide-link";
+import { NavAppHandoff } from "./nav-app-handoff";
 
 export function DayRideMapCard({
   slug,
+  name,
   geometry,
   highlightSegments,
 }: {
   slug: string;
+  name: string;
   geometry: GeoJSON.LineString;
   /** Featured routes' own geometry, drawn in the brand green on top of the muted full-ride line. */
   highlightSegments: { id: string; geometry: GeoJSON.LineString }[];
@@ -35,6 +38,8 @@ export function DayRideMapCard({
           One file with the whole ride, for your sat-nav or route app. <GpxGuideLink className="underline hover:text-text-secondary" />
         </p>
       </div>
+
+      <NavAppHandoff gpxHref={`/day-rides/${slug}/gpx`} filename={`${slug}.gpx`} rideName={name} />
 
       {stages.length === 1 ? (
         <StageLinks stage={stages[0]} showLabel={false} />
