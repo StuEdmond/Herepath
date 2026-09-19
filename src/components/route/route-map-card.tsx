@@ -2,6 +2,7 @@ import { Download, Map as MapIcon, Navigation } from "lucide-react";
 import { DynamicRouteMap } from "@/components/map/dynamic-route-map";
 import { LinkButton } from "@/components/ui/link-button";
 import { buildGoogleMapsUrl, buildAppleMapsUrl } from "@/lib/map-links";
+import { GpxGuideLink } from "./gpx-guide-link";
 
 export function RouteMapCard({ slug, geometry }: { slug: string; geometry: GeoJSON.LineString }) {
   const googleUrl = buildGoogleMapsUrl(geometry);
@@ -37,7 +38,8 @@ export function RouteMapCard({ slug, geometry }: { slug: string; geometry: GeoJS
         </LinkButton>
       </div>
       <p className="text-[13px] text-text-muted">
-        Map apps may reroute slightly to follow their own road preferences — the GPX file follows the exact route.
+        Map apps may reroute slightly to follow their own road preferences — the GPX file follows the exact route.{" "}
+        <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
     </div>
   );

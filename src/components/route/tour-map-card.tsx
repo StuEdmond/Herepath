@@ -3,6 +3,7 @@ import { Download, Printer } from "lucide-react";
 import { DynamicTrackMap } from "@/components/map/dynamic-track-map";
 import type { TrackLine } from "@/components/map/track-map";
 import { LinkButton } from "@/components/ui/link-button";
+import { GpxGuideLink } from "./gpx-guide-link";
 
 const DAY_COLORS = ["#4fae82", "#4a90d9", "#d9a544", "#9b72cf", "#3bc4b0", "#d97bb0"];
 
@@ -74,7 +75,8 @@ export function TourMapCard({
       </div>
 
       <p className="text-[13px] text-text-muted">
-        Each day opens separately in Google Maps or Apple Maps from its day ride page.
+        Each day opens separately in Google Maps or Apple Maps from its day ride page.{" "}
+        <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
     </div>
   );
