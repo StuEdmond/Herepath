@@ -28,6 +28,7 @@ import { Tag } from "@/components/ui/tag";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TourMapCard } from "@/components/route/tour-map-card";
+import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { TourDayCard, type TourDayInfo } from "@/components/route/tour-day-card";
 import { WhereToStay, type OvernightPlace } from "@/components/route/where-to-stay";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -212,6 +213,9 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
           )}
         </div>
 
+        <RideMapLayout
+          before={
+            <>
         {/* 2. Introduction */}
         <div className="flex flex-col gap-3 text-[15px] text-text-secondary">
           <p>{tour.introSell}</p>
@@ -219,14 +223,16 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
         </div>
 
         {/* 3. Stat tiles */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Duration" value={`${tour.durationDays} days`} />
-          <StatTile label="Total distance" value={`${tour.totalDistanceMiles} miles`} />
-          <StatTile label="Average day" value={`${tour.averageDayMiles} miles`} />
-          <StatTile
-            label="Hardest section"
-            value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
-          />
+        <div className="@container">
+          <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+            <StatTile label="Duration" value={`${tour.durationDays} days`} />
+            <StatTile label="Total distance" value={`${tour.totalDistanceMiles} miles`} />
+            <StatTile label="Average day" value={`${tour.averageDayMiles} miles`} />
+            <StatTile
+              label="Hardest section"
+              value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
+            />
+          </div>
         </div>
 
         {/* 4. Summary rows */}
@@ -264,15 +270,20 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
           )}
         </div>
 
-        {/* 5. Tour map */}
-        <TourMapCard
-          slug={tour.slug}
-          days={dayRows.map((row) => ({
-            dayNumber: row.tourDay.dayNumber,
-            name: row.dayRide.name,
-            slug: row.dayRide.slug,
-            geometry: row.dayRide.geometry as GeoJSON.LineString | null,
-          }))}
+            </>
+          }
+          /* 5. Tour map */
+          map={
+            <TourMapCard
+              slug={tour.slug}
+              days={dayRows.map((row) => ({
+                dayNumber: row.tourDay.dayNumber,
+                name: row.dayRide.name,
+                slug: row.dayRide.slug,
+                geometry: row.dayRide.geometry as GeoJSON.LineString | null,
+              }))}
+            />
+          }
         />
 
         {/* 6. Day by day */}

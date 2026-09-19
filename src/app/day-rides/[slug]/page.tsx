@@ -17,6 +17,7 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { DayRideMapCard } from "@/components/route/day-ride-map-card";
+import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { StageTimeline, type TimelineStage } from "@/components/route/stage-timeline";
 import { PlacesToEat, type PlaceToEatEntry } from "@/components/route/places-to-eat";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -202,6 +203,9 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
           )}
         </div>
 
+        <RideMapLayout
+          before={
+            <>
         {/* 2. Introduction */}
         <div className="flex flex-col gap-3 text-[15px] text-text-secondary">
           <p>{dayRide.introSell}</p>
@@ -209,14 +213,16 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
         </div>
 
         {/* 3. Stat tiles */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Total distance" value={`${dayRide.totalDistanceMiles} miles`} />
-          <StatTile label="Riding time" value={formatMinutes(dayRide.ridingTimeMinutes)} />
-          <StatTile
-            label="Hardest section"
-            value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
-          />
-          <StatTile label="Start and finish" value={dayRide.isLoop ? dayRide.startLocation : `${dayRide.startLocation} → ${dayRide.finishLocation}`} />
+        <div className="@container">
+          <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+            <StatTile label="Total distance" value={`${dayRide.totalDistanceMiles} miles`} />
+            <StatTile label="Riding time" value={formatMinutes(dayRide.ridingTimeMinutes)} />
+            <StatTile
+              label="Hardest section"
+              value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
+            />
+            <StatTile label="Start and finish" value={dayRide.isLoop ? dayRide.startLocation : `${dayRide.startLocation} → ${dayRide.finishLocation}`} />
+          </div>
         </div>
 
         {/* 4. Best suited to */}
@@ -238,14 +244,21 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
           </div>
         )}
 
-        {/* 5. Full loop map */}
-        {dayRide.geometry ? (
-          <DayRideMapCard
-            slug={dayRide.slug}
-            geometry={dayRide.geometry as GeoJSON.LineString}
-            highlightSegments={highlightSegments}
-          />
-        ) : (
+            </>
+          }
+          /* 5. Full loop map */
+          map={
+            dayRide.geometry ? (
+              <DayRideMapCard
+                slug={dayRide.slug}
+                geometry={dayRide.geometry as GeoJSON.LineString}
+                highlightSegments={highlightSegments}
+              />
+            ) : null
+          }
+          after={
+            <>
+        {!dayRide.geometry && (
           <p className="rounded-lg bg-surface p-4 text-[14px] text-text-muted">Map available once a GPX track is added in admin.</p>
         )}
 
@@ -257,6 +270,9 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
             so ride to what you can see, not to this page.
           </p>
         </div>
+            </>
+          }
+        />
 
         {/* 6. Stage by stage */}
         <div className="flex flex-col gap-3">

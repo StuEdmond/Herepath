@@ -17,6 +17,7 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { RouteMapCard } from "@/components/route/route-map-card";
+import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
 import { ShareButton } from "@/components/share/share-button";
@@ -183,6 +184,9 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
           )}
         </div>
 
+        <RideMapLayout
+          before={
+            <>
         {/* 3. Two-paragraph introduction */}
         <div className="flex flex-col gap-3 text-[15px] text-text-secondary">
           <p>{route.introSell}</p>
@@ -190,11 +194,13 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
         </div>
 
         {/* 4. Stat tiles */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Distance" value={`${route.distanceMiles} miles`} />
-          <StatTile label="Riding time" value={formatMinutes(route.ridingTimeMinutes)} />
-          <StatTile label="Difficulty" value={<DifficultyGauge level={route.difficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} />} />
-          <StatTile label="Road surface" value={<span className="capitalize">{route.surfaceQuality}</span>} />
+        <div className="@container">
+          <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+            <StatTile label="Distance" value={`${route.distanceMiles} miles`} />
+            <StatTile label="Riding time" value={formatMinutes(route.ridingTimeMinutes)} />
+            <StatTile label="Difficulty" value={<DifficultyGauge level={route.difficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} />} />
+            <StatTile label="Road surface" value={<span className="capitalize">{route.surfaceQuality}</span>} />
+          </div>
         </div>
 
         {/* 5. Best suited to */}
@@ -226,9 +232,11 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
           </div>
         )}
 
-        {/* 6. Map card */}
-        {route.geometry && <RouteMapCard slug={route.slug} geometry={route.geometry as GeoJSON.LineString} />}
-
+            </>
+          }
+          map={route.geometry ? <RouteMapCard slug={route.slug} geometry={route.geometry as GeoJSON.LineString} /> : null}
+          after={
+            <>
         {/* 7. Rider notes */}
         {(route.hazards || route.bestTime || route.stopOffNote) && (
           <div className="flex flex-col gap-3">
@@ -278,6 +286,9 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
             </ul>
           </div>
         )}
+            </>
+          }
+        />
 
         {/* 9. Rider reviews */}
         <ReviewsSection

@@ -13,6 +13,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { mapStyleUrl, type MapStyleId } from "@/lib/map-styles";
 import { MapStyleSwitcher } from "./map-style-switcher";
 import { readMapStyle, useApplyMapStyle } from "./use-map-style";
+import { useMapExpanded } from "./map-layout-context";
+
+const EXPANDED_MAP_CLASS = "h-[60vh] min-h-80 w-full rounded-lg lg:h-[calc(100vh-11rem)]";
 
 /**
  * Turbopack (dev) fails to resolve maplibre-gl's own worker chunk — it serves
@@ -146,9 +149,13 @@ export function TrackMap({ lines, className }: TrackMapProps) {
     if (map) drawLines(map, false);
   });
 
+  // In the larger-map layout the map is much taller. Switching layout moves the map to a new place in the page,
+  // so it is created afresh at the new size and fits the route itself.
+  const expanded = useMapExpanded();
+
   return (
     <div className="relative">
-      <div ref={containerRef} className={className ?? "h-64 w-full rounded-lg"} />
+      <div ref={containerRef} className={expanded ? EXPANDED_MAP_CLASS : (className ?? "h-64 w-full rounded-lg")} />
       <MapStyleSwitcher />
     </div>
   );
