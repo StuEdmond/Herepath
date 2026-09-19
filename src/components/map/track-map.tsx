@@ -74,9 +74,9 @@ export function TrackMap({ lines, className }: TrackMapProps) {
       center: [-1.9, 53.3],
       zoom: 6,
       attributionControl: false,
-      // Otherwise scrolling the page while the cursor happens to be over an
-      // embedded map zooms the map instead — this requires ctrl/cmd+scroll.
-      cooperativeGestures: true,
+      // With a mouse the wheel zooms the map directly. On a touch screen it takes two fingers to move
+      // the map, so one finger can keep scrolling the page past it.
+      cooperativeGestures: !window.matchMedia("(hover: hover)").matches,
     });
     instance.addControl(new AttributionControl({ customAttribution: process.env.NEXT_PUBLIC_MAP_STYLE_URL ? undefined : "© OpenStreetMap contributors" }));
     instance.addControl(new NavigationControl({ showCompass: false }), "top-right");
