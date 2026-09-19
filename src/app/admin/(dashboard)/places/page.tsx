@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/db/client";
 import { places } from "@/db/schema";
 import { AdminListHeader, AdminTable } from "@/components/admin/admin-table";
@@ -9,6 +10,12 @@ export default async function AdminPlacesPage() {
   return (
     <div className="flex flex-col gap-4">
       <AdminListHeader title="Places" newHref="/admin/places/new" count={rows.length} />
+      <p className="text-[13px] text-text-muted">
+        A place appears on ride maps once it has a latitude and longitude.{" "}
+        <Link href="/admin/places/preload" className="text-green-bright underline hover:no-underline">
+          Preload map places for every ride
+        </Link>
+      </p>
       <AdminTable
         rows={rows}
         editHref={(row) => `/admin/places/${row.id}`}

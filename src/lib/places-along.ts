@@ -1,6 +1,6 @@
-import { and, isNotNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { places } from "@/db/schema";
+import { dayRides, places, routes, tourDays, tours } from "@/db/schema";
 import { distanceToLineMetres } from "./geo";
 import { OWN_PLACE_TYPES, OWN_PLACE_TYPE_LABELS, PLACE_KINDS, type AlongPlace, type PlaceKind } from "./place-kinds";
 
@@ -43,6 +43,41 @@ interface OverpassElement {
   lon?: number;
   center?: { lat: number; lon: number };
   tags?: Record<string, string>;
+}
+
+function asLine(geometry: unknown): Line | null {
+  const line = geometry as GeoJSON.LineString | null;
+  return line?.type === "LineString" && Array.isArray(line.coordinates) ? (line.coordinates as Line) : null;
+}
+
+/** The track(s) of a published ride: one for a route or day ride, one per day for a tour. Null if there's no such ride or no track. */
+export async function getRideLines(type: string, slug: string): Promise<Line[] | null> {
+  if (type === "route") {
+    const [route] = await db.select({ geometry: routes.geometry }).from(routes).where(and(eq(routes.slug, slug), eq(routes.status, "published")));
+    const line = route && asLine(route.geometry);
+    return line ? [line] : null;
+  }
+  if (type === "day-ride") {
+    const [dayRide] = await db
+      .select({ geometry: dayRides.geometry })
+      .from(dayRides)
+      .where(and(eq(dayRides.slug, slug), eq(dayRides.status, "published")));
+    const line = dayRide && asLine(dayRide.geometry);
+    return line ? [line] : null;
+  }
+  if (type === "tour") {
+    const [tour] = await db.select({ id: tours.id }).from(tours).where(and(eq(tours.slug, slug), eq(tours.status, "published")));
+    if (!tour) return null;
+    const days = await db
+      .select({ geometry: dayRides.geometry })
+      .from(tourDays)
+      .innerJoin(dayRides, eq(tourDays.dayRideId, dayRides.id))
+      .where(eq(tourDays.tourId, tour.id))
+      .orderBy(asc(tourDays.dayNumber));
+    const lines = days.map((d) => asLine(d.geometry)).filter((l): l is Line => !!l);
+    return lines.length > 0 ? lines : null;
+  }
+  return null;
 }
 
 /** Thins a long track to a manageable number of points; the corridor search doesn't need every one. */
