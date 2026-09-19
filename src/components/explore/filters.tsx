@@ -6,21 +6,13 @@ import { Search, Map as MapIcon, List, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LAST_SEARCH_KEY } from "@/lib/last-search";
+import { BIKE_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from "@/lib/route-filters";
 
 const TRIP_TYPES = [
   { value: "all", label: "All rides" },
   { value: "route", label: "Short routes" },
   { value: "day-ride", label: "Full day rides" },
   { value: "tour", label: "Multi-day tours" },
-] as const;
-
-const BIKE_TYPE_OPTIONS = [
-  { value: "sports", label: "Sports" },
-  { value: "naked_and_roadster", label: "Naked and roadster" },
-  { value: "adventure", label: "Adventure" },
-  { value: "touring", label: "Touring" },
-  { value: "cruiser", label: "Cruiser" },
-  { value: "125cc_and_new_riders", label: "125cc and new riders" },
 ] as const;
 
 export interface PopularChip {
@@ -147,9 +139,11 @@ export function ExploreFilters({
           className="min-h-11 rounded-lg border border-text-muted/40 bg-surface px-2 text-[14px] text-text-primary"
         >
           <option value="">Any difficulty</option>
-          <option value="relaxed">Relaxed (1 to 2)</option>
-          <option value="moderate">Moderate (3)</option>
-          <option value="challenging">Challenging (4 to 5)</option>
+          {DIFFICULTY_OPTIONS.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
         </select>
 
         <select

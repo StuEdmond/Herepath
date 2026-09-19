@@ -24,6 +24,8 @@ export interface PlannerRoute {
   difficulty: number;
   surface: "good" | "mixed" | "poor";
   suitedBikeTypes: string[];
+  /** Landmarks on the route (a castle, a reservoir, a pass), so a search for one finds it. */
+  landmarkNames: string[];
   start: LatLng;
   end: LatLng;
   startLabel?: string;

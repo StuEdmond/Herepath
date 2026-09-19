@@ -16,6 +16,7 @@ import {
 } from "@/db/schema";
 import { getDayRideHardestDifficulty, getTourHardestDifficulty } from "@/lib/difficulty";
 import type { GeoPoint } from "@/db/schema/routes";
+import { matchesDifficultyBand, matchesSearch } from "@/lib/route-filters";
 
 export type TripType = "route" | "day-ride" | "tour";
 
@@ -194,22 +195,6 @@ export interface ExploreFilters {
   sort?: "top-rated" | "shortest" | "longest";
 }
 
-function matchesQuery(result: ExploreResult, q: string): boolean {
-  const needle = q.toLowerCase();
-  return (
-    result.name.toLowerCase().includes(needle) ||
-    result.regionNames.some((r) => r.toLowerCase().includes(needle)) ||
-    result.landmarkNames.some((l) => l.toLowerCase().includes(needle))
-  );
-}
-
-function matchesDifficulty(result: ExploreResult, band: ExploreFilters["difficulty"]): boolean {
-  if (!band || band === "any") return true;
-  if (result.difficulty == null) return false;
-  if (band === "relaxed") return result.difficulty <= 2;
-  if (band === "moderate") return result.difficulty === 3;
-  return result.difficulty >= 4;
-}
 
 /** Which landmark name (if any) in this result matched the search text — used to highlight the tag on its card. */
 export function matchedLandmark(result: ExploreResult, q: string | undefined): string | null {
@@ -225,13 +210,13 @@ export function filterAndSortResults(results: ExploreResult[], filters: ExploreF
     filtered = filtered.filter((r) => r.type === filters.tripType);
   }
   if (filters.q) {
-    filtered = filtered.filter((r) => matchesQuery(r, filters.q!));
+    filtered = filtered.filter((r) => matchesSearch(filters.q!, r));
   }
   if (filters.region) {
     filtered = filtered.filter((r) => r.regionNames.includes(filters.region!));
   }
   if (filters.difficulty) {
-    filtered = filtered.filter((r) => matchesDifficulty(r, filters.difficulty));
+    filtered = filtered.filter((r) => matchesDifficultyBand(r.difficulty, filters.difficulty));
   }
   if (filters.bikeType) {
     filtered = filtered.filter((r) => r.suitedBikeTypes.includes(filters.bikeType!));

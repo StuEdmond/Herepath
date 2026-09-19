@@ -28,6 +28,9 @@ import {
   type TripItem,
   type LinkLeg,
 } from "@/lib/trip-planner";
+import { filterRoutes, hasFilters, NO_FILTERS, type RouteFilterState } from "@/lib/route-filters";
+import type { PopularChip } from "@/components/explore/filters";
+import { RouteFilterBar } from "./route-filter-bar";
 import { TripMap, type TripMapStop } from "./trip-map";
 import { useTripPlaces } from "./use-trip-places";
 
@@ -64,11 +67,13 @@ function LinkRow({ leg, label }: { leg: LinkLeg; label: string }) {
 
 export function TripBuilder({
   routes,
+  popularChips,
   initial,
   addSlug,
   signedIn,
 }: {
   routes: PlannerRoute[];
+  popularChips: PopularChip[];
   initial: InitialTrip | null;
   /** A route to start the trip with, from a "plan a trip with this route" link. */
   addSlug: string | null;
@@ -89,12 +94,21 @@ export function TripBuilder({
   const [saving, startSaving] = useTransition();
   const [picking, setPicking] = useState(false);
   const [fitKey, setFitKey] = useState(0);
-  const [filter, setFilter] = useState("");
+  const [filters, setFilters] = useState<RouteFilterState>(NO_FILTERS);
 
   const [targetMiles, setTargetMiles] = useState(120);
   const [search, setSearch] = useState<RoundTripSearch | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  const regionOptions = useMemo(() => [...new Set(routes.map((r) => r.regionName).filter(Boolean))].sort(), [routes]);
+  const filteredRoutes = useMemo(() => filterRoutes(routes, filters, origin), [routes, filters, origin]);
+  // Routes already in the trip stay on the map even when the filters would hide them.
+  const mapRoutes = useMemo(() => {
+    const shown = new Set(filteredRoutes.map((r) => r.id));
+    for (const item of items) shown.add(item.routeId);
+    return routes.filter((r) => shown.has(r.id));
+  }, [routes, filteredRoutes, items]);
 
   const trip = useMemo(() => summariseTrip(items, routesById, origin), [items, routesById, origin]);
   const days = useMemo(() => (milesPerDay && trip.stops.length > 0 ? splitIntoDays(trip, milesPerDay, origin) : null), [trip, milesPerDay, origin]);
@@ -179,8 +193,22 @@ export function TripBuilder({
     );
   }
 
+  // With no trip yet, zoom the map to whatever the filters leave, so a search shows its results.
+  function changeFilters(changes: Partial<RouteFilterState>) {
+    setFilters((current) => ({ ...current, ...changes }));
+    setSearch(null);
+    if (items.length === 0) setFitKey((k) => k + 1);
+  }
+
+  function clearFilters() {
+    setFilters(NO_FILTERS);
+    setSearch(null);
+    if (items.length === 0) setFitKey((k) => k + 1);
+  }
+
+  // Round trips are built from the routes that pass the filters, so a rider can ask for loops that suit their bike or difficulty.
   function runSearch() {
-    if (origin) setSearch(suggestRoundTrips(routes, origin, targetMiles));
+    if (origin) setSearch(suggestRoundTrips(filteredRoutes, origin, targetMiles));
   }
 
   function applyOption(option: { items: TripItem[] }) {
@@ -205,22 +233,27 @@ export function TripBuilder({
   // --- what to show ------------------------------------------------------------------------------------------------
 
   const inTrip = new Set(items.map((i) => i.routeId));
-  const visibleRoutes = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    const matching = routes.filter((r) => !q || `${r.name} ${r.regionName} ${r.startLabel ?? ""} ${r.endLabel ?? ""}`.toLowerCase().includes(q));
-    // Nearest to the start point first when there is one.
-    return origin ? [...matching].sort((a, b) => Math.min(haversineMiles(origin, a.start), haversineMiles(origin, a.end)) - Math.min(haversineMiles(origin, b.start), haversineMiles(origin, b.end))) : matching;
-  }, [routes, filter, origin]);
 
   const tripName = name.trim() || "My trip";
   const wholeHref = tripGpxHref(tripName, trip.stops.map((s) => ({ slug: s.route.slug, reversed: s.item.reversed })), origin);
   const downloadName = `${slugify(tripName) || "herepath-trip"}.gpx`;
 
   return (
+    <div className="flex flex-col gap-5">
+    <RouteFilterBar
+      filters={filters}
+      onChange={changeFilters}
+      onClear={clearFilters}
+      regionOptions={regionOptions}
+      popularChips={popularChips}
+      matching={filteredRoutes.length}
+      total={routes.length}
+      hasStart={origin !== null}
+    />
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start">
       <div className="min-w-0 lg:sticky lg:top-20">
         <TripMap
-          routes={routes}
+          routes={mapRoutes}
           stops={mapStops}
           legs={legs}
           origin={origin}
@@ -475,6 +508,7 @@ export function TripBuilder({
               Suggest round trips
             </Button>
           </div>
+          {hasFilters(filters) && <p className="text-[12px] text-text-muted">Loops are built only from the routes that match your filters ({filteredRoutes.length} of {routes.length}).</p>}
 
           {search && (
             <div className="flex flex-col gap-2" role="status">
@@ -483,7 +517,9 @@ export function TripBuilder({
                   We couldn&apos;t find a loop of about {targetMiles} miles from there.
                   {search.nearestRouteMiles !== null && search.nearestRouteMiles > 15
                     ? ` The nearest route is about ${Math.round(search.nearestRouteMiles)} miles from your start point, and we don't have enough routes around it yet.`
-                    : " Try a different length or start point."}{" "}
+                    : hasFilters(filters)
+                      ? ` Your filters leave only ${filteredRoutes.length} of ${routes.length} routes, so try loosening them, or a different length or start point.`
+                      : " Try a different length or start point."}{" "}
                   We&apos;re adding more routes all the time.
                 </p>
               ) : (
@@ -508,16 +544,12 @@ export function TripBuilder({
         {/* All routes */}
         <section className="flex flex-col gap-2 rounded-xl bg-surface p-3">
           <h2 className="text-[18px] text-text-primary">Add routes</h2>
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search by name, place or region"
-            aria-label="Search routes"
-            className="min-h-10 rounded-lg border border-text-muted/40 bg-surface px-3 text-[14px] text-text-primary"
-          />
-          <p className="text-[12px] text-text-muted">{origin ? "Nearest to your start point first. " : ""}{visibleRoutes.length} of {routes.length} routes.</p>
+          <p className="text-[12px] text-text-muted">
+            {filteredRoutes.length} of {routes.length} routes{hasFilters(filters) ? " match your filters above" : ""}.
+            {origin && !filters.sort ? " Nearest to your start point first." : ""}
+          </p>
           <ul className="flex max-h-[28rem] flex-col gap-1.5 overflow-y-auto pr-1">
-            {visibleRoutes.map((route) => {
+            {filteredRoutes.map((route) => {
               const added = inTrip.has(route.id);
               return (
                 <li key={route.id} className="flex items-center gap-2 rounded-lg bg-surface-raised p-2">
@@ -540,10 +572,23 @@ export function TripBuilder({
                 </li>
               );
             })}
-            {visibleRoutes.length === 0 && <li className="text-[13px] text-text-muted">No routes match that search.</li>}
+            {filteredRoutes.length === 0 && (
+              <li className="text-[13px] text-text-muted">
+                No routes match those filters. Try widening the region or difficulty.
+                {hasFilters(filters) && (
+                  <>
+                    {" "}
+                    <button type="button" onClick={clearFilters} className="text-green-bright underline hover:no-underline">
+                      Clear filters
+                    </button>
+                  </>
+                )}
+              </li>
+            )}
           </ul>
         </section>
       </div>
+    </div>
     </div>
   );
 }

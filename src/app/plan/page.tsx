@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
+import { db } from "@/db/client";
+import { searchChips } from "@/db/schema";
 import { getPlannerRoutes, getSavedTrip } from "@/lib/trips";
 import { TripBuilder, type InitialTrip } from "@/components/plan/trip-builder";
 
@@ -13,7 +15,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ trip?: string; add?: string }> }) {
   const { trip: tripId, add } = await searchParams;
   const session = await auth();
-  const routes = await getPlannerRoutes();
+  const [routes, popularChips] = await Promise.all([getPlannerRoutes(), db.select().from(searchChips).orderBy(searchChips.position)]);
 
   let initial: InitialTrip | null = null;
   if (tripId && UUID.test(tripId) && session?.user?.id) {
@@ -42,7 +44,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           your navigation app.
         </p>
       </div>
-      <TripBuilder routes={routes} initial={initial} addSlug={add ?? null} signedIn={!!session?.user} />
+      <TripBuilder routes={routes} popularChips={popularChips} initial={initial} addSlug={add ?? null} signedIn={!!session?.user} />
     </div>
   );
 }

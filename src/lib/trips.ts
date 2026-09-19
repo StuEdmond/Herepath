@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { regions, routeBikeSuitability, routes, savedTrips } from "@/db/schema";
+import { landmarks, regions, routeBikeSuitability, routeLandmarks, routes, savedTrips } from "@/db/schema";
 import { simplifyTrack } from "./gpx";
 import type { PlannerRoute } from "./trip-planner";
 
@@ -11,14 +11,20 @@ const OVERVIEW_POINTS = 150;
  * to a few hundred points, since it's only used to draw the route on the overview map; full tracks stay on the server.
  */
 export async function getPlannerRoutes(): Promise<PlannerRoute[]> {
-  const [rows, regionRows, suitedRows] = await Promise.all([
+  const [rows, regionRows, suitedRows, landmarkRows] = await Promise.all([
     db.select().from(routes).where(eq(routes.status, "published")).orderBy(routes.name),
     db.select().from(regions),
     db.select().from(routeBikeSuitability).where(eq(routeBikeSuitability.level, "suited")),
+    db
+      .select({ routeId: routeLandmarks.routeId, name: landmarks.name })
+      .from(routeLandmarks)
+      .innerJoin(landmarks, eq(routeLandmarks.landmarkId, landmarks.id)),
   ]);
   const regionName = new Map(regionRows.map((r) => [r.id, r.name]));
   const suitedByRoute = new Map<string, string[]>();
   for (const row of suitedRows) suitedByRoute.set(row.routeId, [...(suitedByRoute.get(row.routeId) ?? []), row.bikeType]);
+  const landmarksByRoute = new Map<string, string[]>();
+  for (const row of landmarkRows) landmarksByRoute.set(row.routeId, [...(landmarksByRoute.get(row.routeId) ?? []), row.name]);
 
   const result: PlannerRoute[] = [];
   for (const route of rows) {
@@ -34,6 +40,7 @@ export async function getPlannerRoutes(): Promise<PlannerRoute[]> {
       difficulty: route.difficulty,
       surface: route.surfaceQuality,
       suitedBikeTypes: suitedByRoute.get(route.id) ?? [],
+      landmarkNames: landmarksByRoute.get(route.id) ?? [],
       start: { lat: route.startPoint.lat, lng: route.startPoint.lng },
       end: { lat: route.endPoint.lat, lng: route.endPoint.lng },
       startLabel: route.startPoint.label,
