@@ -48,9 +48,12 @@ const FAQ_DEFAULTS = [
   ["Is my ride data private?", "Shared route maps trim the first and last half mile so a ride doesn't reveal where you live or keep your bike. Only what you choose to share publicly is visible to others."],
   ['Why do some rides say "Sample content"?', "We're in beta. A handful of routes are illustrative until we've collected real GPX recordings from riders — those are clearly tagged so you know what you're looking at."],
   ["What's coming next?", "Real GPX-recorded routes replacing the remaining sample content, an optional Premium tier, and video ride recaps built from your diary."],
+  ["Can I write for the Rider blog?", "Yes. Once you have an account, you can write a post from the Rider blog page or your Profile. Every post is checked by our team before it appears, and it needs to follow the community guidelines further down this page."],
+  ["How do I report a post or a rider tip?", "Every rider tip and blog post has a “Report” link. Choose a reason and send it, and our team will take a look. You need to be signed in to report something."],
+  ["Can my business advertise on Herepath?", "Yes — see the Advertise with us page. Sponsored listings are always clearly labelled, so riders can tell what's an advert."],
 ] as const;
 
-const FAQ_SLOTS = 12;
+export const FAQ_SLOTS = 15;
 
 export const CONTENT_GROUPS: ContentGroup[] = [
   {
@@ -151,6 +154,35 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       text("s3Heading", "Section 3 heading", "Dead Cylinder Co."),
       text("s3Before", "Section 3 text before the link", "Herepath has its own identity but is made by the same people behind"),
       text("s3After", "Section 3 text after the link", ", a British motorcycle heritage apparel brand."),
+    ],
+  },
+  {
+    id: "advertise",
+    label: "Advertise page",
+    path: "/advertise",
+    fields: [
+      text("title", "Heading", "Advertise with Herepath"),
+      area(
+        "intro",
+        "Intro",
+        "Reach riders while they're planning where to eat, stay and camp. Herepath lists the cafes, pubs, hotels, B&Bs and campsites that riders on these roads actually use, and we're talking to a small number of local businesses first while we're in beta.",
+      ),
+      text("whoHeading", "“Who it's for” heading", "Who it's for"),
+      area(
+        "whoFor",
+        "Who it's for",
+        "Cafes, pubs and restaurants on popular routes\nHotels, B&Bs and campsites for overnight stops\nBike shops, garages and riding-gear retailers\nInsurance, breakdown cover and other rider services",
+        "One per line.",
+      ),
+      text("howHeading", "“How it works” heading", "How it works"),
+      area(
+        "howBody",
+        "How it works",
+        "A sponsored listing appears alongside the other places on the relevant day ride and tour pages, with a clear “Sponsored” label so riders always know it's an advert.\n\nWe don't sell better reviews. Rider tips on your listing are written by real riders and never edited or removed because of advertising.\n\nTell us about your business and we'll reply by email with what's available and what it costs. There's no obligation.",
+        "Leave a blank line between paragraphs.",
+      ),
+      text("formHeading", "Form heading", "Tell us about your business"),
+      text("success", "Message after sending", "Thanks — we've got your enquiry and will be in touch by email."),
     ],
   },
   {

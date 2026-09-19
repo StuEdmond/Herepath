@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { Tag } from "@/components/ui/tag";
 import { PlaceTips } from "./place-tips";
+import { SponsoredTag } from "./sponsored-tag";
 import type { PlaceReviewView } from "@/lib/place-reviews";
 
 export interface OvernightPlace {
@@ -11,6 +12,7 @@ export interface OvernightPlace {
   tags: string[];
   shortDescription: string | null;
   reviews: PlaceReviewView[];
+  isSponsored: boolean;
 }
 
 const TYPE_LABELS: Record<OvernightPlace["type"], string> = {
@@ -43,7 +45,10 @@ export function WhereToStay({ nights }: { nights: { dayNumber: number; places: O
                     <span className="text-[13px] font-medium uppercase tracking-wide text-text-muted">{TYPE_LABELS[type]}</span>
                     {places.map((place) => (
                       <div key={place.id} className="flex flex-col gap-1 rounded-lg bg-surface-raised p-3">
-                        <span className="font-medium text-text-primary">{place.name}</span>
+                        <span className="flex flex-wrap items-center gap-2 font-medium text-text-primary">
+                          {place.name}
+                          {place.isSponsored && <SponsoredTag />}
+                        </span>
                         {place.shortDescription && <span className="text-[14px] text-text-secondary">{place.shortDescription}</span>}
                         <PlaceTips reviews={place.reviews} />
                         {place.tags.length > 0 && (

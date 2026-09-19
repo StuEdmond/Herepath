@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getContent } from "@/lib/site-content";
+import { getContent, FAQ_SLOTS } from "@/lib/site-content";
+import { GuidelinesSection } from "@/components/ui/guidelines-section";
 
 export const metadata: Metadata = { title: "FAQ" };
-
-const FAQ_SLOTS = 12;
 
 export default async function FaqPage() {
   const c = await getContent("faq");
@@ -14,6 +13,13 @@ export default async function FaqPage() {
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4 pt-8 pb-16">
       <div>
         <h1 className="text-[28px]">{c.title}</h1>
+        <p className="mt-1 text-[14px] text-text-muted">
+          Posting on Herepath? Read the{" "}
+          <a href="#guidelines" className="text-text-secondary underline hover:text-text-primary">
+            community guidelines
+          </a>
+          .
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -24,6 +30,8 @@ export default async function FaqPage() {
           </details>
         ))}
       </div>
+
+      <GuidelinesSection />
 
       <p className="mt-4 text-[14px] text-text-muted">
         Didn&apos;t find your answer?{" "}

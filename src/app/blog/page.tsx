@@ -84,7 +84,7 @@ export default async function BlogPage() {
 
       <p className="text-[13px] text-text-muted">
         Posts are written by riders and checked by our team before they appear. See the{" "}
-        <Link href="/guidelines" className="underline hover:text-text-secondary">
+        <Link href="/faq#guidelines" className="underline hover:text-text-secondary">
           community guidelines
         </Link>
         .

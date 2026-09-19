@@ -130,6 +130,7 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
     isSuggestedLunch: row.isSuggestedLunch,
     stageMile: stopMileByPlace.get(row.place.id) ?? null,
     reviews: placeTips.get(row.place.id) ?? [],
+    isSponsored: row.place.isSponsored,
   }));
 
   const fuelStops = stageRows.filter((row) => row.stage.kind === "stop" && row.stage.stopType === "fuel" && row.place);

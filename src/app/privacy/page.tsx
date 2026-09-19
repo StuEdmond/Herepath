@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -76,7 +77,22 @@ export default function PrivacyPage() {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-[18px] text-text-primary">Sponsored content</h2>
-        <p>Any sponsored place listing is clearly labelled &ldquo;Sponsored&rdquo; wherever it appears.</p>
+        <p>
+          Any sponsored place listing is clearly labelled &ldquo;Sponsored&rdquo; wherever it appears. Businesses can ask about advertising
+          through our{" "}
+          <Link href="/advertise" className="text-green-bright underline hover:no-underline">
+            Advertise with us
+          </Link>{" "}
+          page.
+        </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-[18px] text-text-primary">Advertising enquiries</h2>
+        <p>
+          If a business sends us an advertising enquiry, we store the details it gives us (business and contact name, email, optional phone and
+          website, and its message) only to reply to that enquiry and to manage any advertising that follows. We don&apos;t share them.
+        </p>
       </section>
 
       <section className="flex flex-col gap-2">

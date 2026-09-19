@@ -82,7 +82,7 @@ export function PostForm({
         <input type="checkbox" name="guidelines" required className="mt-1" />
         <span>
           I&apos;ve read the{" "}
-          <Link href="/guidelines" target="_blank" className="text-green-bright underline">
+          <Link href="/faq#guidelines" target="_blank" className="text-green-bright underline">
             community guidelines
           </Link>{" "}
           and this post follows them.

@@ -100,11 +100,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </Link>
       )}
 
-      {post.status === "approved" && !isOwner && (
-        <div className="border-t border-surface-raised pt-3">
+      <div className="flex flex-col gap-2 border-t border-surface-raised pt-3">
+        <p className="text-[13px] text-text-muted">
+          Posts on Herepath are written by riders and checked by our team. See the{" "}
+          <Link href="/faq#guidelines" className="underline hover:text-text-secondary">
+            community guidelines
+          </Link>
+          .
+        </p>
+        {post.status === "approved" && !isOwner && (
           <ReportButton action={reportBlogPost} targetId={post.id} signedIn={!!session?.user?.id} label="Report this post" />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="mt-2 flex flex-col items-start gap-2 rounded-xl bg-surface p-5">
         <p className="text-[16px] text-text-primary">Got a story of your own?</p>

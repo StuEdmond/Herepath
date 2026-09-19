@@ -141,6 +141,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
       tags: row.place.tags,
       shortDescription: row.place.shortDescription,
       reviews: placeTips.get(row.place.id) ?? [],
+      isSponsored: row.place.isSponsored,
     });
     nightsMap.set(row.dayNumber, list);
   }

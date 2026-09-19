@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { createDiaryEntry } from "../actions";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
@@ -146,7 +147,11 @@ export function DiaryForm({
         <fieldset key={selectedTarget} className="flex flex-col gap-3 rounded-xl bg-surface p-3">
           <legend className="px-1 text-[15px] text-text-primary">Places on this ride</legend>
           <p className="-mt-1 text-[13px] text-text-muted">
-            Stopped anywhere? Leave a line for other riders — it&apos;s shown publicly on that place. Skip any you didn&apos;t visit.
+            Stopped anywhere? Leave a line for other riders — it&apos;s shown publicly on that place, so please follow the{" "}
+            <Link href="/faq#guidelines" target="_blank" className="underline">
+              community guidelines
+            </Link>
+            . Skip any you didn&apos;t visit.
           </p>
           {reviewablePlaces.map((place) => (
             <Field key={place.id} label={`${place.name} · ${PLACE_TYPE_LABELS[place.type] ?? place.type}`}>

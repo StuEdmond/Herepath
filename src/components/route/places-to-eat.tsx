@@ -4,6 +4,7 @@ import { Tag } from "@/components/ui/tag";
 import { LinkButton } from "@/components/ui/link-button";
 import { Button } from "@/components/ui/button";
 import { PlaceTips } from "./place-tips";
+import { SponsoredTag } from "./sponsored-tag";
 import type { PlaceReviewView } from "@/lib/place-reviews";
 
 export interface PlaceToEatEntry {
@@ -19,6 +20,7 @@ export interface PlaceToEatEntry {
   /** Mile marker if this place also appears as a stop on the route; null if it's an off-route alternative. */
   stageMile: number | null;
   reviews: PlaceReviewView[];
+  isSponsored: boolean;
 }
 
 const PRICE_LABELS = ["£", "££", "£££"];
@@ -41,9 +43,10 @@ export function PlacesToEat({ entries }: { entries: PlaceToEatEntry[] }) {
         {sorted.map((entry) => (
           <Card key={entry.id}>
             <CardBody>
-              <Tag variant={entry.isSuggestedLunch ? "suited" : "neutral"} className="self-start">
-                {stopLabel(entry, suggestedMile)}
-              </Tag>
+              <div className="flex flex-wrap items-center gap-1.5 self-start">
+                <Tag variant={entry.isSuggestedLunch ? "suited" : "neutral"}>{stopLabel(entry, suggestedMile)}</Tag>
+                {entry.isSponsored && <SponsoredTag />}
+              </div>
               <h3 className="text-[16px]">{entry.name}</h3>
               <p className="text-[13px] text-text-muted">
                 {entry.stageMile != null ? `On route · Mile ${entry.stageMile}` : "Not on the direct route"}

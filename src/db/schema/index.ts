@@ -18,3 +18,4 @@ export * from "./site-content";
 export * from "./place-reviews";
 export * from "./advice";
 export * from "./blog";
+export * from "./advertising";
