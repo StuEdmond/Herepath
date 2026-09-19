@@ -13,6 +13,9 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ExploreResult } from "@/lib/explore";
+import { mapStyleUrl, type MapStyleId } from "@/lib/map-styles";
+import { MapStyleSwitcher } from "@/components/map/map-style-switcher";
+import { readMapStyle, useApplyMapStyle } from "@/components/map/use-map-style";
 
 if (typeof window !== "undefined") {
   setWorkerUrl("https://cdn.jsdelivr.net/npm/maplibre-gl@6.10.0/dist/maplibre-gl-worker.mjs");
@@ -40,13 +43,16 @@ const TYPE_PATH: Record<ExploreResult["type"], string> = {
 export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MaplibreMap | null>(null);
+  const appliedStyleRef = useRef<MapStyleId>("streets");
   const router = useRouter();
 
   useEffect(() => {
     if (!containerRef.current) return;
+    const initialStyle = readMapStyle();
+    appliedStyleRef.current = initialStyle;
     const instance = new MaplibreMap({
       container: containerRef.current,
-      style: process.env.NEXT_PUBLIC_MAP_STYLE_URL || OSM_RASTER_FALLBACK,
+      style: mapStyleUrl(initialStyle) || OSM_RASTER_FALLBACK,
       center: [-2.5, 54],
       zoom: 5,
       attributionControl: false,
@@ -98,5 +104,13 @@ export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
     };
   }, [map, results, router]);
 
-  return <div ref={containerRef} className="h-[60vh] w-full rounded-lg" />;
+  // The pins are page elements, not part of the map style, so they survive a change of map type.
+  useApplyMapStyle(map, appliedStyleRef);
+
+  return (
+    <div className="relative">
+      <div ref={containerRef} className="h-[60vh] w-full rounded-lg" />
+      <MapStyleSwitcher />
+    </div>
+  );
 }

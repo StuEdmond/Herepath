@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Map as MaplibreMap,
   AttributionControl,
@@ -10,6 +10,9 @@ import {
   type GeoJSONSource,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { mapStyleUrl, type MapStyleId } from "@/lib/map-styles";
+import { MapStyleSwitcher } from "./map-style-switcher";
+import { readMapStyle, useApplyMapStyle } from "./use-map-style";
 
 /**
  * Turbopack (dev) fails to resolve maplibre-gl's own worker chunk — it serves
@@ -57,13 +60,17 @@ export interface TrackMapProps {
 export function TrackMap({ lines, className }: TrackMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MaplibreMap | null>(null);
+  const appliedStyleRef = useRef<MapStyleId>("streets");
 
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const initialStyle = readMapStyle();
+    appliedStyleRef.current = initialStyle;
+
     const instance = new MaplibreMap({
       container: containerRef.current,
-      style: process.env.NEXT_PUBLIC_MAP_STYLE_URL || OSM_RASTER_FALLBACK,
+      style: mapStyleUrl(initialStyle) || OSM_RASTER_FALLBACK,
       center: [-1.9, 53.3],
       zoom: 6,
       attributionControl: false,
@@ -83,28 +90,27 @@ export function TrackMap({ lines, className }: TrackMapProps) {
 
   const prevLineIdsRef = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!map) return;
-
-    const draw = () => {
+  // refit is true when the lines themselves changed, false when only the map type did (so the rider keeps their view).
+  const drawLines = useCallback(
+    (target: MaplibreMap, refit: boolean) => {
       const currentIds = new Set(lines.map((l) => l.id));
       for (const staleId of prevLineIdsRef.current) {
-        if (!currentIds.has(staleId) && map.getLayer(staleId)) {
-          map.removeLayer(staleId);
-          map.removeSource(staleId);
+        if (!currentIds.has(staleId) && target.getLayer(staleId)) {
+          target.removeLayer(staleId);
+          target.removeSource(staleId);
         }
       }
       prevLineIdsRef.current = currentIds;
 
       for (const line of lines) {
-        const existing = map.getSource(line.id) as GeoJSONSource | undefined;
+        const existing = target.getSource(line.id) as GeoJSONSource | undefined;
         const data: GeoJSON.Feature<GeoJSON.LineString> = { type: "Feature", geometry: line.geometry, properties: {} };
 
         if (existing) {
           existing.setData(data);
         } else {
-          map.addSource(line.id, { type: "geojson", data });
-          map.addLayer({
+          target.addSource(line.id, { type: "geojson", data });
+          target.addLayer({
             id: line.id,
             type: "line",
             source: line.id,
@@ -115,10 +121,10 @@ export function TrackMap({ lines, className }: TrackMapProps) {
       }
 
       const allCoords = lines.flatMap((l) => l.geometry.coordinates);
-      if (allCoords.length > 0) {
+      if (refit && allCoords.length > 0) {
         const lngs = allCoords.map((c) => c[0]);
         const lats = allCoords.map((c) => c[1]);
-        map.fitBounds(
+        target.fitBounds(
           [
             [Math.min(...lngs), Math.min(...lats)],
             [Math.max(...lngs), Math.max(...lats)],
@@ -126,11 +132,24 @@ export function TrackMap({ lines, className }: TrackMapProps) {
           { padding: 32, maxZoom: 14, duration: 0 },
         );
       }
-    };
+    },
+    [lines],
+  );
 
-    if (map.isStyleLoaded()) draw();
-    else map.once("load", draw);
-  }, [map, lines]);
+  useEffect(() => {
+    if (!map) return;
+    if (map.isStyleLoaded()) drawLines(map, true);
+    else map.once("load", () => drawLines(map, true));
+  }, [map, drawLines]);
 
-  return <div ref={containerRef} className={className ?? "h-64 w-full rounded-lg"} />;
+  useApplyMapStyle(map, appliedStyleRef, () => {
+    if (map) drawLines(map, false);
+  });
+
+  return (
+    <div className="relative">
+      <div ref={containerRef} className={className ?? "h-64 w-full rounded-lg"} />
+      <MapStyleSwitcher />
+    </div>
+  );
 }
