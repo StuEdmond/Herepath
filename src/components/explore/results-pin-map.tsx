@@ -57,7 +57,9 @@ export function ResultsPinMap({ results }: { results: ExploreResult[] }) {
       center: [-2.5, 54],
       zoom: 5,
       attributionControl: false,
-      cooperativeGestures: true,
+      // This map is the point of the page, so with a mouse the wheel zooms it directly. On a touch screen
+      // it still takes two fingers to move it, so one finger can keep scrolling the page.
+      cooperativeGestures: !window.matchMedia("(hover: hover)").matches,
     });
     instance.addControl(new AttributionControl({ customAttribution: process.env.NEXT_PUBLIC_MAP_STYLE_URL ? undefined : "© OpenStreetMap contributors" }));
     instance.addControl(new NavigationControl({ showCompass: false }), "top-right");
