@@ -31,8 +31,8 @@ export async function Header() {
         </nav>
 
         {session?.user ? (
-          <Link href="/rides" className="text-[14px] text-text-secondary hover:text-text-primary">
-            Your rides
+          <Link href="/profile" className="text-[14px] text-text-secondary hover:text-text-primary">
+            Profile
           </Link>
         ) : (
           <Link href="/account/sign-in">

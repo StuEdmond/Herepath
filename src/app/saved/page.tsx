@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getSavedRides } from "@/lib/your-rides";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
@@ -18,6 +19,10 @@ export default async function SavedPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4 pb-10">
+      <Link href="/profile" className="-mb-2 inline-flex min-h-11 items-center gap-1.5 self-start text-[14px] text-text-secondary hover:text-text-primary">
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Profile
+      </Link>
       <h1 className="text-[24px]">Saved</h1>
       {saved.length === 0 ? (
         <p className="rounded-lg bg-surface p-4 text-[14px] text-text-muted">

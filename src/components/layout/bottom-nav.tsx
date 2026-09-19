@@ -8,7 +8,13 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { href: "/explore", label: "Explore", icon: Compass, isActive: (path: string, view: string | null) => path === "/explore" && view !== "map" },
   { href: "/saved", label: "Saved", icon: Bookmark, isActive: (path: string) => path.startsWith("/saved") },
-  { href: "/rides", label: "Your rides", icon: User, isActive: (path: string) => path.startsWith("/rides") },
+  {
+    href: "/profile",
+    label: "Profile",
+    icon: User,
+    // Your rides, the diary and account settings all live under Profile.
+    isActive: (path: string) => ["/profile", "/rides", "/diary", "/account", "/reviews"].some((p) => path.startsWith(p)),
+  },
   { href: "/explore?view=map", label: "Map", icon: Map, isActive: (path: string, view: string | null) => path === "/explore" && view === "map" },
 ] as const;
 

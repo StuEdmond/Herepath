@@ -27,7 +27,7 @@ export async function signUp(formData: FormData) {
   const passwordHash = await bcrypt.hash(password, 10);
   await db.insert(users).values({ name, email, passwordHash });
 
-  await signIn("credentials", { email, password, redirectTo: "/rides" });
+  await signIn("credentials", { email, password, redirectTo: "/profile" });
 }
 
 export async function signInWithCredentials(formData: FormData) {
@@ -35,7 +35,7 @@ export async function signInWithCredentials(formData: FormData) {
   const password = String(formData.get("password") ?? "");
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/rides" });
+    await signIn("credentials", { email, password, redirectTo: "/profile" });
   } catch (error) {
     if (error instanceof AuthError) {
       redirect("/account/sign-in?error=invalid");
@@ -57,6 +57,15 @@ export async function updateProfile(formData: FormData) {
 
   await db.update(users).set({ name: name || null, mainBike }).where(eq(users.id, session.user.id));
   redirect("/account/settings?saved=1");
+}
+
+export async function updateBikes(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/account/sign-in");
+
+  const mainBike = String(formData.get("mainBike") ?? "").trim() || null;
+  await db.update(users).set({ mainBike }).where(eq(users.id, session.user.id));
+  redirect("/profile?saved=bikes");
 }
 
 export async function changePassword(formData: FormData) {

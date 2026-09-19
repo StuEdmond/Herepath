@@ -22,7 +22,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         <form
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: "/rides" });
+            await signIn("google", { redirectTo: "/profile" });
           }}
         >
           <Button type="submit" variant="secondary" fullWidth>

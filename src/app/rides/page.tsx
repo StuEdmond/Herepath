@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { users, regions } from "@/db/schema";
@@ -46,6 +47,11 @@ export default async function YourRidesPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 p-4 pb-10">
+      <Link href="/profile" className="-mb-3 inline-flex min-h-11 items-center gap-1.5 self-start text-[14px] text-text-secondary hover:text-text-primary">
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Profile
+      </Link>
+
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

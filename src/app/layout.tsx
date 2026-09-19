@@ -35,6 +35,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${archivo.variable} ${archivoNarrow.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Applies a saved Light/Dark choice before first paint, so pages don't flash the wrong theme. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("herepath:theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col bg-bg text-text-primary">
         <Header />
         <main className="flex-1 pb-20 md:pb-0">{children}</main>
