@@ -15,6 +15,30 @@ export function haversineMiles(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_MILES * Math.asin(Math.sqrt(h));
 }
 
+/** Shortest distance in metres from a point to a line, measuring to the stretches between vertices, not just the vertices. */
+export function distanceToLineMetres(coords: [number, number][], point: LatLng): number {
+  if (coords.length === 0) return Infinity;
+  // Flat-earth maths around the point is accurate to well under a metre at the few-kilometre scales used here.
+  const metresPerDegLat = 111320;
+  const metresPerDegLng = 111320 * Math.cos((point.lat * Math.PI) / 180);
+  const toXY = ([lng, lat]: [number, number]): [number, number] => [(lng - point.lng) * metresPerDegLng, (lat - point.lat) * metresPerDegLat];
+
+  let best = Infinity;
+  let prev = toXY(coords[0]);
+  best = Math.min(best, Math.hypot(prev[0], prev[1]));
+  for (let i = 1; i < coords.length; i++) {
+    const next = toXY(coords[i]);
+    const dx = next[0] - prev[0];
+    const dy = next[1] - prev[1];
+    const lengthSquared = dx * dx + dy * dy;
+    // Position of the point's closest approach along this stretch, clamped to its ends (the point itself is the origin).
+    const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, -(prev[0] * dx + prev[1] * dy) / lengthSquared));
+    best = Math.min(best, Math.hypot(prev[0] + t * dx, prev[1] + t * dy));
+    prev = next;
+  }
+  return best;
+}
+
 /**
  * Approximates how far along a route line a point sits, in miles, by finding
  * the nearest vertex and summing the cumulative distance up to it. Good

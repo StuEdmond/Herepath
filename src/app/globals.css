@@ -166,6 +166,30 @@
   margin: 0;
   color: var(--text-primary);
 }
+.herepath-pin-card-sub {
+  margin: -4px 0 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.herepath-pin-card-source {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.herepath-pin-card-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--green-tint-bg);
+  color: var(--green-tint-text);
+  font-size: 12px;
+}
+.herepath-pin-card-link {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--green-bright);
+  text-decoration: underline;
+}
 .herepath-pin-card-open {
   margin-top: 10px;
   min-height: 36px;

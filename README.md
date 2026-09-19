@@ -81,6 +81,7 @@ npm run db:migrate
 
 - Ride content is edited in admin. Sample rides are flagged "Sample content" until replaced.
 - Page wording and images (home, pricing, FAQ, About, contact) are edited in **Admin → Site content**. Defaults live in `src/lib/site-content.ts`.
+- **Fuel, food and stay pins** on ride maps come from two sources: OpenStreetMap (looked up by `/api/places-along` through the free Overpass service and cached for a week, so the first rider to ask for a ride can wait 10 to 25 seconds) and your own places in **Admin → Places**. A place needs a latitude and longitude to appear; tick **Sponsored** to label it and ring its pin. An OpenStreetMap place within 80 m of one of yours is treated as the same place and hidden.
 - The sample routes use road-snapped geometry from `src/db/sample-geometries.json`, generated once by `scripts/generate-snapped-geometries.ts`. Uploading a real GPX to a route in admin replaces it.
 
 ## Deploying (Vercel)

@@ -24,7 +24,7 @@ export function DayRideMapCard({
 
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-surface p-3">
-      <DynamicTrackMap lines={lines} className="h-64 w-full rounded-lg sm:h-80" />
+      <DynamicTrackMap lines={lines} className="h-64 w-full rounded-lg sm:h-80" placesFor={{ type: "day-ride", slug }} />
 
       <div className="flex flex-col gap-1">
         <LinkButton href={`/day-rides/${slug}/gpx`} variant="primary" className="min-h-10 self-start px-4 text-[14px]">

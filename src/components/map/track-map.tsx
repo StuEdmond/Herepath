@@ -14,8 +14,13 @@ import { mapStyleUrl, type MapStyleId } from "@/lib/map-styles";
 import { MapStyleSwitcher } from "./map-style-switcher";
 import { readMapStyle, useApplyMapStyle } from "./use-map-style";
 import { useMapExpanded } from "./map-layout-context";
+import { PlacesControls } from "./places-controls";
+import { syncPlacesLayers } from "./places-map";
+import { usePlaces } from "./use-places";
+import type { AlongPlace, PlacesSource } from "@/lib/place-kinds";
 
-const EXPANDED_MAP_CLASS = "h-[60vh] min-h-80 w-full rounded-lg lg:h-[calc(100vh-11rem)]";
+// Leaves room under the map for the toggle, the place buttons and the download buttons.
+const EXPANDED_MAP_CLASS = "h-[60vh] min-h-80 w-full rounded-lg lg:h-[calc(100vh-19rem)]";
 
 /**
  * Turbopack (dev) fails to resolve maplibre-gl's own worker chunk — it serves
@@ -57,10 +62,12 @@ export interface TrackLine {
 export interface TrackMapProps {
   lines: TrackLine[];
   className?: string;
+  /** When set, the map offers to show fuel, food and places to stay along this ride. */
+  placesFor?: PlacesSource;
 }
 
 /** Renders one or more GeoJSON lines on a shared basemap — the engine behind RouteMap. */
-export function TrackMap({ lines, className }: TrackMapProps) {
+export function TrackMap({ lines, className, placesFor }: TrackMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MaplibreMap | null>(null);
   const appliedStyleRef = useRef<MapStyleId>("streets");
@@ -145,8 +152,26 @@ export function TrackMap({ lines, className }: TrackMapProps) {
     else map.once("load", () => drawLines(map, true));
   }, [map, drawLines]);
 
+  // Fuel, food and stay pins. They sit on top of the route line and, like it, are wiped by a change of map type.
+  const placesState = usePlaces(placesFor);
+  const placesRef = useRef<AlongPlace[]>([]);
+
+  useEffect(() => {
+    placesRef.current = placesState.places;
+    if (!map) return;
+    const apply = () => syncPlacesLayers(map, placesState.places);
+    // isStyleLoaded() is also false while map tiles are still arriving, so instead just try, and try again once the style is ready.
+    try {
+      apply();
+    } catch {
+      map.once("style.load", apply);
+    }
+  }, [map, placesState.places]);
+
   useApplyMapStyle(map, appliedStyleRef, () => {
-    if (map) drawLines(map, false);
+    if (!map) return;
+    drawLines(map, false);
+    syncPlacesLayers(map, placesRef.current);
   });
 
   // In the larger-map layout the map is much taller. Switching layout moves the map to a new place in the page,
@@ -154,9 +179,12 @@ export function TrackMap({ lines, className }: TrackMapProps) {
   const expanded = useMapExpanded();
 
   return (
-    <div className="relative">
-      <div ref={containerRef} className={expanded ? EXPANDED_MAP_CLASS : (className ?? "h-64 w-full rounded-lg")} />
-      <MapStyleSwitcher />
+    <div className="flex flex-col gap-2">
+      <div className="relative">
+        <div ref={containerRef} className={expanded ? EXPANDED_MAP_CLASS : (className ?? "h-64 w-full rounded-lg")} />
+        <MapStyleSwitcher />
+      </div>
+      {placesFor && <PlacesControls state={placesState} />}
     </div>
   );
 }
