@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackToResults } from "@/components/explore/back-to-results";
 import Link from "next/link";
 import { eq, and, ne, isNotNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -133,6 +134,10 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="flex flex-col gap-6 pb-10">
+      <div className="mx-auto -mb-3 w-full max-w-3xl px-4">
+        <BackToResults />
+      </div>
+
       {/* 1. Hero photo */}
       <CardImage
         src={route.heroImage ?? undefined}

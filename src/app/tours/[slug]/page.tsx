@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackToResults } from "@/components/explore/back-to-results";
 import Link from "next/link";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -165,6 +166,10 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
 
   return (
     <div className="flex flex-col gap-6 pb-10">
+      <div className="mx-auto -mb-3 w-full max-w-3xl px-4">
+        <BackToResults />
+      </div>
+
       <CardImage src={tour.heroImage ?? undefined} alt={tour.name} className="aspect-[16/9] w-full rounded-none sm:aspect-[21/9]" priority />
 
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, Map as MapIcon, List, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { LAST_SEARCH_KEY } from "@/lib/last-search";
 
 const TRIP_TYPES = [
   { value: "all", label: "All rides" },
@@ -51,6 +52,16 @@ export function ExploreFilters({
     },
     [router, pathname, searchParams],
   );
+
+  // Remember this search so a ride page can offer "Back to results".
+  useEffect(() => {
+    try {
+      const query = searchParams.toString();
+      sessionStorage.setItem(LAST_SEARCH_KEY, query ? `${pathname}?${query}` : pathname);
+    } catch {
+      // storage unavailable (private mode) — the button falls back to plain /explore
+    }
+  }, [pathname, searchParams]);
 
   const activeTripType = searchParams.get("tripType") ?? "all";
   const activeView = searchParams.get("view") ?? "grid";
