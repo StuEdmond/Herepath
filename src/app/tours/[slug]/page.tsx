@@ -21,6 +21,7 @@ import {
 import { getDayRideHardestDifficulty, getTourHardestDifficulty } from "@/lib/difficulty";
 import { auth } from "@/lib/auth";
 import { getReviewsForTarget, hasLoggedRide } from "@/lib/reviews";
+import { getPlaceReviews } from "@/lib/place-reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
 import { StarRating } from "@/components/ui/star-rating";
 import { Tag } from "@/components/ui/tag";
@@ -128,6 +129,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
     .where(eq(tourOvernightStays.tourId, tour.id))
     .orderBy(tourOvernightStays.dayNumber);
 
+  const placeTips = await getPlaceReviews(overnightRows.map((row) => row.place.id));
   const nightsMap = new Map<number, OvernightPlace[]>();
   for (const row of overnightRows) {
     const list = nightsMap.get(row.dayNumber) ?? [];
@@ -138,6 +140,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
       address: row.place.address,
       tags: row.place.tags,
       shortDescription: row.place.shortDescription,
+      reviews: placeTips.get(row.place.id) ?? [],
     });
     nightsMap.set(row.dayNumber, list);
   }

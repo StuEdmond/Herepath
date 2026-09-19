@@ -1,5 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { Tag } from "@/components/ui/tag";
+import { PlaceTips } from "./place-tips";
+import type { PlaceReviewView } from "@/lib/place-reviews";
 
 export interface OvernightPlace {
   id: string;
@@ -8,6 +10,7 @@ export interface OvernightPlace {
   address: string | null;
   tags: string[];
   shortDescription: string | null;
+  reviews: PlaceReviewView[];
 }
 
 const TYPE_LABELS: Record<OvernightPlace["type"], string> = {
@@ -42,6 +45,7 @@ export function WhereToStay({ nights }: { nights: { dayNumber: number; places: O
                       <div key={place.id} className="flex flex-col gap-1 rounded-lg bg-surface-raised p-3">
                         <span className="font-medium text-text-primary">{place.name}</span>
                         {place.shortDescription && <span className="text-[14px] text-text-secondary">{place.shortDescription}</span>}
+                        <PlaceTips reviews={place.reviews} />
                         {place.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-1">
                             {place.tags.map((tag) => (

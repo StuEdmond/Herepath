@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Script from "next/script";
 import { Archivo, Archivo_Narrow } from "next/font/google";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Header } from "@/components/layout/header";
@@ -35,15 +36,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${archivo.variable} ${archivoNarrow.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
+      <body className="flex min-h-full flex-col bg-bg text-text-primary">
         {/* Applies a saved Light/Dark choice before first paint, so pages don't flash the wrong theme. */}
-        <script
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem("herepath:theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
           }}
         />
-      </head>
-      <body className="flex min-h-full flex-col bg-bg text-text-primary">
         <Header />
         <main className="flex-1 pb-20 md:pb-0">{children}</main>
         <Footer />

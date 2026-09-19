@@ -6,6 +6,8 @@ import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { Field, TextInput, Textarea, Select, FormRow } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
 import { ImageFileInput } from "@/components/ui/image-file-input";
+import { PLACE_REVIEW_MAX_LENGTH } from "@/lib/place-review-limits";
+import type { ReviewablePlace } from "@/lib/place-reviews";
 
 export interface CatalogueOption {
   id: string;
@@ -13,12 +15,28 @@ export interface CatalogueOption {
   type: "route" | "day_ride" | "tour";
 }
 
-export function DiaryForm({ catalogueOptions }: { catalogueOptions: CatalogueOption[] }) {
+const PLACE_TYPE_LABELS: Record<string, string> = {
+  cafe: "Cafe",
+  pub: "Pub",
+  restaurant: "Restaurant",
+  hotel: "Hotel",
+  b_and_b: "B&B",
+  campsite: "Campsite",
+};
+
+export function DiaryForm({
+  catalogueOptions,
+  reviewablePlacesByTarget,
+}: {
+  catalogueOptions: CatalogueOption[];
+  reviewablePlacesByTarget: Record<string, ReviewablePlace[]>;
+}) {
   const [source, setSource] = useState<"catalogue" | "own">("catalogue");
   const [rodeSolo, setRodeSolo] = useState(true);
   const [selectedTarget, setSelectedTarget] = useState(catalogueOptions[0] ? `${catalogueOptions[0].type}:${catalogueOptions[0].id}` : "");
 
   const [targetType, targetId] = selectedTarget.split(":");
+  const reviewablePlaces = reviewablePlacesByTarget[selectedTarget] ?? [];
 
   return (
     <form action={createDiaryEntry} className="flex flex-col gap-4">
@@ -123,6 +141,20 @@ export function DiaryForm({ catalogueOptions }: { catalogueOptions: CatalogueOpt
       <Field label="Notes">
         <Textarea name="notes" rows={4} placeholder="How was the ride?" />
       </Field>
+
+      {source === "catalogue" && reviewablePlaces.length > 0 && (
+        <fieldset key={selectedTarget} className="flex flex-col gap-3 rounded-xl bg-surface p-3">
+          <legend className="px-1 text-[15px] text-text-primary">Places on this ride</legend>
+          <p className="-mt-1 text-[13px] text-text-muted">
+            Stopped anywhere? Leave a line for other riders — it&apos;s shown publicly on that place. Skip any you didn&apos;t visit.
+          </p>
+          {reviewablePlaces.map((place) => (
+            <Field key={place.id} label={`${place.name} · ${PLACE_TYPE_LABELS[place.type] ?? place.type}`}>
+              <TextInput name={`placeReview_${place.id}`} maxLength={PLACE_REVIEW_MAX_LENGTH} placeholder="e.g. Great bacon rolls, plenty of bike parking" />
+            </Field>
+          ))}
+        </fieldset>
+      )}
 
       <div className="flex flex-col gap-1.5 text-[13px] text-text-muted">
         Photos

@@ -20,6 +20,8 @@ const NAV_ITEMS = [
   { href: "/admin/day-rides", label: "Day rides" },
   { href: "/admin/tours", label: "Tours" },
   { href: "/admin/collections", label: "Collections" },
+  { href: "/admin/advice", label: "Advice" },
+  { href: "/admin/place-reviews", label: "Place tips" },
   { href: "/admin/site-content", label: "Site content" },
   { href: "/admin/search-chips", label: "Search chips" },
   { href: "/admin/contact-messages", label: "Messages" },

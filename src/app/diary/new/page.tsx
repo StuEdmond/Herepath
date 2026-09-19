@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { routes, dayRides, tours } from "@/db/schema";
+import { getReviewablePlacesByTarget } from "@/lib/place-reviews";
 import { DiaryForm, type CatalogueOption } from "./diary-form";
 
 export const metadata: Metadata = { title: "Log a ride" };
@@ -18,6 +19,8 @@ export default async function NewDiaryEntryPage() {
     db.select({ id: tours.id, name: tours.name }).from(tours).where(eq(tours.status, "published")),
   ]);
 
+  const reviewablePlacesByTarget = await getReviewablePlacesByTarget();
+
   const catalogueOptions: CatalogueOption[] = [
     ...routeRows.map((r) => ({ ...r, type: "route" as const })),
     ...dayRideRows.map((r) => ({ ...r, type: "day_ride" as const })),
@@ -27,7 +30,7 @@ export default async function NewDiaryEntryPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-4 p-4 pt-6 pb-16">
       <h1 className="text-[22px]">Log a ride</h1>
-      <DiaryForm catalogueOptions={catalogueOptions} />
+      <DiaryForm catalogueOptions={catalogueOptions} reviewablePlacesByTarget={reviewablePlacesByTarget} />
     </div>
   );
 }

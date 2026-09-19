@@ -9,6 +9,7 @@ import { dayRides, regions, dayRideBikeSuitability, dayRideStages, dayRidePlaces
 import { getDayRideHardestDifficulty } from "@/lib/difficulty";
 import { auth } from "@/lib/auth";
 import { getReviewsForTarget, hasLoggedRide } from "@/lib/reviews";
+import { getPlaceReviews } from "@/lib/place-reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
 import { StarRating } from "@/components/ui/star-rating";
 import { Tag } from "@/components/ui/tag";
@@ -116,6 +117,7 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
     .from(dayRidePlacesToEat)
     .innerJoin(places, eq(dayRidePlacesToEat.placeId, places.id))
     .where(eq(dayRidePlacesToEat.dayRideId, dayRide.id));
+  const placeTips = await getPlaceReviews(placesToEatRows.map((row) => row.place.id));
   const placeToEatEntries: PlaceToEatEntry[] = placesToEatRows.map((row) => ({
     id: row.place.id,
     name: row.place.name,
@@ -127,6 +129,7 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
     shortDescription: row.place.shortDescription,
     isSuggestedLunch: row.isSuggestedLunch,
     stageMile: stopMileByPlace.get(row.place.id) ?? null,
+    reviews: placeTips.get(row.place.id) ?? [],
   }));
 
   const fuelStops = stageRows.filter((row) => row.stage.kind === "stop" && row.stage.stopType === "fuel" && row.place);

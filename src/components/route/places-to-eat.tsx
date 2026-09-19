@@ -3,6 +3,8 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Tag } from "@/components/ui/tag";
 import { LinkButton } from "@/components/ui/link-button";
 import { Button } from "@/components/ui/button";
+import { PlaceTips } from "./place-tips";
+import type { PlaceReviewView } from "@/lib/place-reviews";
 
 export interface PlaceToEatEntry {
   id: string;
@@ -16,6 +18,7 @@ export interface PlaceToEatEntry {
   isSuggestedLunch: boolean;
   /** Mile marker if this place also appears as a stop on the route; null if it's an off-route alternative. */
   stageMile: number | null;
+  reviews: PlaceReviewView[];
 }
 
 const PRICE_LABELS = ["£", "££", "£££"];
@@ -57,6 +60,7 @@ export function PlacesToEat({ entries }: { entries: PlaceToEatEntry[] }) {
                 ))}
               </div>
               {entry.shortDescription && <p className="text-[14px] text-text-secondary">{entry.shortDescription}</p>}
+              <PlaceTips reviews={entry.reviews} />
               <div className="flex flex-wrap gap-2 pt-1">
                 <LinkButton
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${entry.name} ${entry.address ?? ""}`)}`}

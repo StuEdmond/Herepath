@@ -15,3 +15,5 @@ export * from "./diary";
 export * from "./contact";
 export * from "./waitlist";
 export * from "./site-content";
+export * from "./place-reviews";
+export * from "./advice";

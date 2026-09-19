@@ -9,6 +9,7 @@ import { diaryEntries, diaryEntryPhotos, routes, dayRides, tours, reviews } from
 import type { tripTargetEnum } from "@/db/schema";
 import { processAndSavePhoto } from "@/lib/photo-upload";
 import { estimateMileMarkerOnLine } from "@/lib/geo";
+import { getReviewablePlacesForTarget, savePlaceReview } from "@/lib/place-reviews";
 import type { OwnRouteGeometry } from "@/db/schema/diary";
 
 type TripTarget = (typeof tripTargetEnum.enumValues)[number];
@@ -115,6 +116,19 @@ export async function createDiaryEntry(formData: FormData) {
     const { url, gps } = await processAndSavePhoto(buffer, browserGps[index] ?? null);
     const mileMarker = gps && geometryForPhotos ? estimateMileMarkerOnLine(geometryForPhotos, gps) : null;
     await db.insert(diaryEntryPhotos).values({ diaryEntryId: entry.id, url, mileMarker: mileMarker?.toString() });
+  }
+
+  // Short public tips about places on this ride. Only places that belong to the chosen ride are accepted.
+  if (targetType && targetId) {
+    const tipFields = [...formData.entries()].filter(([key, value]) => key.startsWith("placeReview_") && typeof value === "string" && value.trim());
+    if (tipFields.length > 0) {
+      const allowed = await getReviewablePlacesForTarget(targetType, targetId);
+      for (const [key, value] of tipFields) {
+        await savePlaceReview(userId, key.slice("placeReview_".length), String(value), allowed);
+      }
+      const touchedPaths = { day_ride: "/day-rides", tour: "/tours", route: "/routes" } as const;
+      revalidatePath(touchedPaths[targetType]);
+    }
   }
 
   // Sharing a diary entry as a public review is how reviews get published
