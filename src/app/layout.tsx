@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
 import { Archivo, Archivo_Narrow } from "next/font/google";
@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsentBanner } from "@/components/layout/cookie-consent-banner";
+import { NativeSystemBars } from "@/components/layout/native-system-bars";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -29,6 +30,12 @@ export const metadata: Metadata = {
   description: "Ancient roads. Modern riders. A UK motorcycle route guide.",
 };
 
+// "cover" lets the page draw behind the phone's status bar, so the header colour fills it in either theme;
+// the header and bottom bar pad themselves by the safe-area insets so nothing sits under the bars or a notch.
+export const viewport: Viewport = {
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -45,8 +52,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             __html: `try{var t=localStorage.getItem("herepath:theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
           }}
         />
+        <NativeSystemBars />
         <Header />
-        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+        <main className="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
         <Footer />
         <Suspense fallback={null}>
           <BottomNav />

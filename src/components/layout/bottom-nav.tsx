@@ -25,7 +25,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-raised bg-surface md:hidden print:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-surface-raised bg-surface pb-[env(safe-area-inset-bottom)] md:hidden print:hidden"
     >
       <ul className="flex">
         {ITEMS.map(({ href, label, icon: Icon, isActive }) => {

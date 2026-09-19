@@ -27,7 +27,7 @@ export async function Header() {
   const displayName = account?.name ?? account?.email ?? "You";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-surface-raised bg-surface print:hidden">
+    <header className="sticky top-0 z-30 border-b border-surface-raised bg-surface pt-[env(safe-area-inset-top)] print:hidden">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Link href="/" className="order-1 flex items-center gap-2 text-[16px] font-medium uppercase tracking-wide text-text-primary md:gap-2.5 md:text-[17px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}

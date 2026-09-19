@@ -95,7 +95,7 @@ Vercel limits request bodies to about 4.5MB, so very large photo uploads will fa
 
 ## Mobile app (Android)
 
-The Android app is a Capacitor shell around the live website (`capacitor.config.ts`); the project is in `android/`. It loads `https://herepath.vercel.app`, so website changes reach the app without a new release. `mobile-web/` holds only the offline fallback page. The app adds `HerepathApp` to its user agent, which the site uses to hide the "Get the app" badges inside the app.
+The Android app is a Capacitor shell around the live website (`capacitor.config.ts`); the project is in `android/`. It loads `https://herepath.vercel.app`, so website changes reach the app without a new release. `mobile-web/` holds only the offline fallback page. The app adds `HerepathApp` to its user agent, which the site uses to hide the "Get the app" badges inside the app. The site sends `viewport-fit=cover` and pads the header and bottom bar by the safe-area insets, so on Android the page's own colour fills the status bar; `NativeSystemBars` then sets the status/gesture bar icon colour from the rider's Light/Dark choice. These are website changes, so no new app build is needed.
 
 To build and run it you need [Android Studio](https://developer.android.com/studio) (it installs Java and the Android SDK).
 
