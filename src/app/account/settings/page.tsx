@@ -88,7 +88,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
 
       <div className="flex flex-col gap-2 border-t border-surface-raised pt-4">
         <h2 className="text-[16px] text-text-primary">Your data</h2>
-        <p className="text-[13px] text-text-muted">Download a copy of your reviews, saved rides and ride diary.</p>
+        <p className="text-[13px] text-text-muted">Download a copy of your profile, ride diary, reviews, place tips, blog posts and saved rides.</p>
         <a href="/account/data-export">
           <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]">
             Download my data
@@ -105,7 +105,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
       <div className="flex flex-col gap-2 border-t border-surface-raised pt-4">
         <h2 className="text-[16px] text-text-primary">Delete account</h2>
         <p className="text-[13px] text-text-muted">
-          Permanently deletes your account, ride diary, reviews and saved rides. This can&apos;t be undone.
+          Permanently deletes your account, bike details, ride diary and photos, reviews, place tips, blog posts and saved rides. This can&apos;t be undone.
         </p>
         <form action={deleteAccount}>
           <DeleteAccountButton />

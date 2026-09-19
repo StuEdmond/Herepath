@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { blogPosts, diaryEntries, diaryEntryPhotos, users } from "@/db/schema";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { deleteStoredImages } from "@/lib/storage";
 
 export async function signUp(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -96,6 +97,20 @@ export async function deleteAccount() {
   const session = await auth();
   if (!session?.user?.id) redirect("/account/sign-in");
 
-  await db.delete(users).where(eq(users.id, session.user.id));
+  const userId = session.user.id;
+
+  // Work out which uploaded files belong to this rider before their rows disappear, then remove the
+  // files once the account itself is gone. The account's bike details are part of the account row.
+  const [account] = await db.select({ image: users.image }).from(users).where(eq(users.id, userId));
+  const postCovers = await db.select({ image: blogPosts.coverImage }).from(blogPosts).where(eq(blogPosts.userId, userId));
+  const diaryPhotos = await db
+    .select({ url: diaryEntryPhotos.url })
+    .from(diaryEntryPhotos)
+    .innerJoin(diaryEntries, eq(diaryEntryPhotos.diaryEntryId, diaryEntries.id))
+    .where(eq(diaryEntries.userId, userId));
+
+  await db.delete(users).where(eq(users.id, userId));
+  await deleteStoredImages([account?.image, ...postCovers.map((p) => p.image), ...diaryPhotos.map((p) => p.url)]);
+
   await signOut({ redirectTo: "/" });
 }

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -23,6 +23,38 @@ async function store(buffer: Buffer, folder: string): Promise<string> {
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), buffer);
   return `/uploads/${folder}/${filename}`;
+}
+
+/**
+ * Removes images we stored (Blob or the local uploads folder) once nothing uses them any more, such as
+ * when a rider closes their account. Links to anywhere else are left alone. Failures are logged, not
+ * thrown, so a storage hiccup can't undo a deletion that has already happened in the database.
+ */
+export async function deleteStoredImages(urls: (string | null | undefined)[]): Promise<void> {
+  const wanted = [...new Set(urls.filter((u): u is string => !!u))];
+
+  const blobUrls = wanted.filter((u) => {
+    try {
+      return new URL(u).hostname.endsWith(".public.blob.vercel-storage.com");
+    } catch {
+      return false;
+    }
+  });
+  if (blobUrls.length > 0 && (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)) {
+    try {
+      const { del } = await import("@vercel/blob");
+      await del(blobUrls);
+    } catch (error) {
+      console.error("Couldn't delete stored images", error);
+    }
+  }
+
+  const uploadsRoot = path.join(process.cwd(), "public", "uploads");
+  for (const url of wanted.filter((u) => u.startsWith("/uploads/"))) {
+    const file = path.join(process.cwd(), "public", url);
+    if (!file.startsWith(uploadsRoot + path.sep)) continue;
+    await rm(file, { force: true }).catch((error) => console.error("Couldn't delete stored image", error));
+  }
 }
 
 /** Re-encodes an image (orientation applied, metadata stripped, max 2000px) and stores it. Returns its public URL. */
