@@ -15,6 +15,10 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { DiaryEntryCard } from "@/components/diary/diary-entry-card";
+import { DeleteTripButton } from "@/components/plan/delete-trip-button";
+import { deleteTrip } from "@/app/plan/actions";
+import { getPlannerRoutes, listSavedTrips } from "@/lib/trips";
+import { formatMiles, splitIntoDays, summariseTrip } from "@/lib/trip-planner";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -41,8 +45,30 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const { saved } = await searchParams;
 
   const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
-  const [entries, savedRides] = await Promise.all([getDiaryEntries(session.user.id), getSavedRides(session.user.id)]);
+  const [entries, savedRides, savedTripRows, plannerRoutes] = await Promise.all([
+    getDiaryEntries(session.user.id),
+    getSavedRides(session.user.id),
+    listSavedTrips(session.user.id),
+    getPlannerRoutes(),
+  ]);
   const milesRidden = entries.reduce((sum, e) => sum + Number(e.distanceMiles), 0);
+
+  const routesById = new Map(plannerRoutes.map((r) => [r.id, r]));
+  const trips = savedTripRows.map((trip) => {
+    const summary = summariseTrip(trip.items, routesById, trip.origin);
+    const parts = [`${summary.stops.length} ${summary.stops.length === 1 ? "route" : "routes"}`, `about ${formatMiles(summary.totalMiles)}`];
+    if (trip.milesPerDay && summary.stops.length > 0) {
+      const dayCount = splitIntoDays(summary, trip.milesPerDay, trip.origin).length;
+      parts.push(`${dayCount} ${dayCount === 1 ? "day" : "days"}`);
+    }
+    if (trip.origin) parts.push("round trip");
+    return { id: trip.id, name: trip.name, summary: parts.join(" · ") };
+  });
+
+  async function removeTrip(formData: FormData) {
+    "use server";
+    await deleteTrip(String(formData.get("id") ?? ""));
+  }
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 p-4 pb-10">
@@ -99,6 +125,39 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             Log a ride
           </Button>
         </Link>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <SectionHeader title="Your trips" href="/plan" linkLabel="Plan a trip" />
+        {trips.length === 0 ? (
+          <p className="rounded-lg bg-surface p-4 text-[14px] text-text-muted">
+            No planned trips yet. Join Herepath routes into your own day ride or tour in the trip planner, then save it here.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {trips.map((trip) => (
+              <li key={trip.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface p-3">
+                <div className="min-w-0">
+                  <Link href={`/plan?trip=${trip.id}`} className="block truncate text-[15px] text-text-primary hover:underline">
+                    {trip.name}
+                  </Link>
+                  <span className="text-[13px] text-text-muted">{trip.summary}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Link href={`/plan?trip=${trip.id}`}>
+                    <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]">
+                      Open
+                    </Button>
+                  </Link>
+                  <form action={removeTrip}>
+                    <input type="hidden" name="id" value={trip.id} />
+                    <DeleteTripButton name={trip.name} />
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="flex flex-col gap-3">

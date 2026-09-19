@@ -9,7 +9,7 @@ export function DeleteAccountButton() {
       variant="danger"
       className="min-h-9 px-3 text-[13px]"
       onClick={(e) => {
-        if (!confirm("Delete your account? This permanently removes your ride diary and photos, reviews, place tips, blog posts and saved rides, and can't be undone.")) {
+        if (!confirm("Delete your account? This permanently removes your ride diary and photos, reviews, place tips, blog posts, planned trips and saved rides, and can't be undone.")) {
           e.preventDefault();
         }
       }}

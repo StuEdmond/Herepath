@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 // The last three are also in the footer, so on a phone they're left out to keep the header to one tidy row.
 const NAV_LINKS = [
   { href: "/explore", label: "Explore", desktopOnly: false },
+  { href: "/plan", label: "Plan", desktopOnly: false },
   { href: "/advice", label: "Advice", desktopOnly: false },
   { href: "/blog", label: "Blog", desktopOnly: false },
   { href: "/pricing", label: "Pricing", desktopOnly: false },

@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
-import { users, reviews, savedRides, diaryEntries, diaryEntryPhotos, blogPosts, placeReviews } from "@/db/schema";
+import { users, reviews, savedRides, diaryEntries, diaryEntryPhotos, blogPosts, placeReviews, savedTrips } from "@/db/schema";
 
 export async function GET() {
   const session = await auth();
@@ -9,12 +9,13 @@ export async function GET() {
 
   const userId = session.user.id;
   const [user] = await db.select().from(users).where(eq(users.id, userId));
-  const [userReviews, userSavedRides, userDiaryEntries, userBlogPosts, userPlaceTips] = await Promise.all([
+  const [userReviews, userSavedRides, userDiaryEntries, userBlogPosts, userPlaceTips, userTrips] = await Promise.all([
     db.select().from(reviews).where(eq(reviews.userId, userId)),
     db.select().from(savedRides).where(eq(savedRides.userId, userId)),
     db.select().from(diaryEntries).where(eq(diaryEntries.userId, userId)),
     db.select().from(blogPosts).where(eq(blogPosts.userId, userId)),
     db.select().from(placeReviews).where(eq(placeReviews.userId, userId)),
+    db.select().from(savedTrips).where(eq(savedTrips.userId, userId)),
   ]);
 
   const entryIds = userDiaryEntries.map((e) => e.id);
@@ -28,6 +29,7 @@ export async function GET() {
     diaryEntries: userDiaryEntries.map((entry) => ({ ...entry, photos: userPhotos.filter((p) => p.diaryEntryId === entry.id) })),
     blogPosts: userBlogPosts,
     placeTips: userPlaceTips,
+    plannedTrips: userTrips,
   };
 
   return new Response(JSON.stringify(exportData, null, 2), {

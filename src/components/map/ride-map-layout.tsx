@@ -53,8 +53,8 @@ export function RideMapLayout({ before, map, after }: { before?: ReactNode; map:
   return (
     // Breaks out of the page's narrow reading column: the wrapper is centred on it and as wide as the screen allows.
     <div className="relative left-1/2 w-[min(calc(100vw-2rem),84rem)] -translate-x-1/2">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-        <div className="flex flex-col gap-2 lg:sticky lg:top-20">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-20">
           <LayoutToggle expanded />
           <MapExpandedContext.Provider value>{map}</MapExpandedContext.Provider>
         </div>

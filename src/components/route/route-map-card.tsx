@@ -1,4 +1,4 @@
-import { Download, Map as MapIcon, Navigation } from "lucide-react";
+import { Download, Map as MapIcon, Navigation, Route } from "lucide-react";
 import { DynamicRouteMap } from "@/components/map/dynamic-route-map";
 import { LinkButton } from "@/components/ui/link-button";
 import { buildGoogleMapsUrl, buildAppleMapsUrl } from "@/lib/map-links";
@@ -36,6 +36,10 @@ export function RouteMapCard({ slug, name, geometry }: { slug: string; name: str
         >
           <Navigation className="h-4 w-4" aria-hidden="true" />
           Open in Apple Maps
+        </LinkButton>
+        <LinkButton href={`/plan?add=${slug}`} variant="secondary" className="min-h-10 px-4 text-[14px]">
+          <Route className="h-4 w-4" aria-hidden="true" />
+          Plan a trip with this
         </LinkButton>
       </div>
       <p className="text-[13px] text-text-muted">
