@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { conditionsNoteDate, readDateField } from "@/lib/condition-reports";
+import { isRouteLicence } from "@/lib/route-sources";
 import {
   routes,
   routeBikeSuitability,
@@ -33,6 +34,12 @@ async function readForm(formData: FormData) {
   const stopOffNote = String(formData.get("stopOffNote") ?? "").trim() || null;
   const lastVerifiedOn = readDateField(formData.get("lastVerifiedOn"));
   const conditionsNote = String(formData.get("conditionsNote") ?? "").trim() || null;
+  const sourceName = String(formData.get("sourceName") ?? "").trim() || null;
+  const sourceUrl = String(formData.get("sourceUrl") ?? "").trim() || null;
+  const sourceAuthor = String(formData.get("sourceAuthor") ?? "").trim() || null;
+  const licenceValue = String(formData.get("sourceLicence") ?? "");
+  const sourceLicence = isRouteLicence(licenceValue) ? licenceValue : null;
+  const needsReview = formData.get("needsReview") === "on";
   const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
   const galleryUrls = String(formData.get("gallery") ?? "")
     .split("\n")
@@ -43,6 +50,11 @@ async function readForm(formData: FormData) {
 
   if (!name || !regionId || !introSell || !introCharacter || !distanceMiles) {
     throw new Error("Name, region, intro paragraphs and distance are required");
+  }
+
+  // Imported routes stay hidden until someone has written and checked them.
+  if (status === "published" && needsReview) {
+    throw new Error("This route is still marked as needing review, so it can't be published. Untick 'Still needs review' once it has been checked.");
   }
 
   // Honest ratings are the point of Herepath, so a demanding route can't be marked as suiting the bikes least able to ride it.
@@ -82,6 +94,11 @@ async function readForm(formData: FormData) {
     stopOffNote,
     lastVerifiedOn,
     conditionsNote,
+    sourceName,
+    sourceUrl,
+    sourceAuthor,
+    sourceLicence,
+    needsReview,
     heroImage,
     gallery,
     status,

@@ -16,6 +16,7 @@ import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { FreshnessFields } from "@/components/admin/freshness-fields";
 import { RatingRuleWarning } from "@/components/admin/rating-rule-warning";
+import { SourceFields } from "@/components/admin/source-fields";
 import { ImageFileInput } from "@/components/ui/image-file-input";
 import { Button } from "@/components/ui/button";
 
@@ -33,6 +34,12 @@ export interface RouteDefaults {
   stopOffNote: string | null;
   lastVerifiedOn: string | null;
   conditionsNote: string | null;
+  sourceName: string | null;
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
+  sourceLicence: string | null;
+  needsReview: boolean;
+  importedOn: string | null;
   heroImage: string | null;
   gallery: string[];
   status: string;
@@ -168,6 +175,15 @@ export async function RouteForm({
       </FormRow>
 
       <FreshnessFields lastVerifiedOn={defaults?.lastVerifiedOn} conditionsNote={defaults?.conditionsNote} />
+
+      <SourceFields
+        sourceName={defaults?.sourceName}
+        sourceUrl={defaults?.sourceUrl}
+        sourceAuthor={defaults?.sourceAuthor}
+        sourceLicence={defaults?.sourceLicence}
+        needsReview={defaults?.needsReview}
+        importedOn={defaults?.importedOn}
+      />
 
       <FormRow>
         <ImageUploadField label="Hero image" fileName="heroImageFile" urlName="heroImage" defaultUrl={defaults?.heroImage} />

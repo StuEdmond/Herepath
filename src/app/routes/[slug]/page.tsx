@@ -20,6 +20,7 @@ import { RouteMapCard } from "@/components/route/route-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
 import { RideFreshness } from "@/components/route/ride-freshness";
+import { routeCreditLine } from "@/lib/route-sources";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
 import { ShareButton } from "@/components/share/share-button";
@@ -185,6 +186,20 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
           conditionsNote={route.conditionsNote}
           conditionsNoteOn={route.conditionsNoteOn}
         />
+
+        {routeCreditLine({ name: route.sourceName, author: route.sourceAuthor, licence: route.sourceLicence }) && (
+          <p className="-mt-3 text-[12px] text-text-muted">
+            {routeCreditLine({ name: route.sourceName, author: route.sourceAuthor, licence: route.sourceLicence })}
+            {route.sourceUrl && /^https?:\/\//i.test(route.sourceUrl) && (
+              <>
+                {" · "}
+                <a href={route.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline hover:text-text-secondary">
+                  Source
+                </a>
+              </>
+            )}
+          </p>
+        )}
 
         <RideMapLayout
           before={

@@ -40,6 +40,74 @@ function haversineMetres(a: [number, number], b: [number, number]): number {
   return 2 * EARTH_RADIUS_METRES * Math.asin(Math.sqrt(h));
 }
 
+/** Length of a line in miles, adding up the straight stretches between its points. */
+export function lineDistanceMiles(coordinates: [number, number][]): number {
+  let metres = 0;
+  for (let i = 1; i < coordinates.length; i++) metres += haversineMetres(coordinates[i - 1], coordinates[i]);
+  return Math.round((metres / METRES_PER_MILE) * 10) / 10;
+}
+
+export interface GpxTrack {
+  /** The track's own name, when the file gives one. */
+  name?: string;
+  coordinates: [number, number][];
+  /** How long the recording took, in minutes, when its points carry timestamps. */
+  durationMinutes?: number;
+}
+
+function pointsFrom(list: unknown, note: (time: unknown) => void): [number, number][] {
+  const out: [number, number][] = [];
+  for (const pt of Array.isArray(list) ? list : list ? [list] : []) {
+    const lat = parseFloat(pt["@_lat"]);
+    const lng = parseFloat(pt["@_lon"]);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      out.push([lng, lat]);
+      note(pt.time);
+    }
+  }
+  return out;
+}
+
+/**
+ * Every separate track (and planned route) in a GPX file, each as its own line. A file that collects many roads gives many results,
+ * where parseGpx would join them into one. Tracks with fewer than two points are left out.
+ */
+export function parseGpxTracks(xml: string): GpxTrack[] {
+  const doc = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" }).parse(xml);
+  const gpx = doc.gpx;
+  if (!gpx) throw new Error("Not a valid GPX file: missing <gpx> root element.");
+
+  const asList = (value: unknown): Record<string, unknown>[] => (Array.isArray(value) ? value : value ? [value as Record<string, unknown>] : []);
+  const result: GpxTrack[] = [];
+
+  for (const trk of asList(gpx.trk)) {
+    let first: number | undefined;
+    let last: number | undefined;
+    const note = (value: unknown) => {
+      const time = asValidTime(value);
+      if (!time) return;
+      const ms = Date.parse(time);
+      first ??= ms;
+      last = ms;
+    };
+    const coordinates = asList(trk.trkseg).flatMap((seg) => pointsFrom(seg.trkpt, note));
+    if (coordinates.length >= 2) {
+      result.push({ name: asText(trk.name), coordinates, durationMinutes: first !== undefined && last !== undefined && last > first ? Math.round((last - first) / 60000) : undefined });
+    }
+  }
+
+  // Planned routes (<rte>) only count when the file has no recorded tracks.
+  if (result.length === 0) {
+    for (const rte of asList(gpx.rte)) {
+      const coordinates = pointsFrom(rte.rtept, () => {});
+      if (coordinates.length >= 2) result.push({ name: asText(rte.name), coordinates });
+    }
+  }
+
+  if (result.length === 0) throw new Error("No track or route points found in this GPX file.");
+  return result;
+}
+
 /** Parses GPX XML text into a GeoJSON LineString, total distance, and start/end points. */
 export function parseGpx(xml: string): ParsedGpx {
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });

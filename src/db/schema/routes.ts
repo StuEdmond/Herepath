@@ -60,6 +60,16 @@ export const routes = pgTable("routes", {
   isSample: boolean("is_sample").notNull().default(false),
   status: contentStatusEnum("status").notNull().default("draft"),
 
+  /** Where an imported route came from and on what terms it may be used. Empty for routes we wrote ourselves. */
+  sourceName: text("source_name"),
+  sourceUrl: text("source_url"),
+  sourceAuthor: text("source_author"),
+  /** A key from src/lib/route-sources.ts. */
+  sourceLicence: text("source_licence"),
+  importedAt: timestamp("imported_at"),
+  /** Set on routes from the bulk importer until someone has written, rated and checked them. A route in this state can't be published. */
+  needsReview: boolean("needs_review").notNull().default(false),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
