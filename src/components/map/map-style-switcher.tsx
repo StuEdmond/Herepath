@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { MAP_STYLE_OPTIONS, canSwitchMapStyle } from "@/lib/map-styles";
 import { setMapStyle, useMapStyle } from "./use-map-style";
 
-/** Small Map / Outdoor / Satellite switch that sits over the top-left corner of a map. */
+/** Small Map / Contour Map / Satellite switch that sits over the top-left corner of a map. */
 export function MapStyleSwitcher() {
   const current = useMapStyle();
   if (!canSwitchMapStyle()) return null;

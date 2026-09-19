@@ -54,7 +54,7 @@ Admin lives at `/admin`; log in with `ADMIN_PASSWORD`.
 | `ADMIN_SESSION_SECRET` | yes | Secret for the admin login cookie |
 | `AUTH_SECRET` | yes | Secret for rider sign-in sessions |
 | `NEXT_PUBLIC_SITE_URL` | yes | Public address of the site (used in share links and metadata) |
-| `NEXT_PUBLIC_MAP_STYLE_URL` | production | MapLibre style URL from a tile provider (MapTiler, Stadia…) including its API key. Without it the app falls back to OpenStreetMap's public tiles, which aren't allowed for production traffic. If it's a MapTiler URL (`…/maps/streets-v2/style.json?key=…`), riders also get a Map / Outdoor / Satellite switch on the maps (the `outdoor-v2` and `hybrid` styles, same key); otherwise the switch is hidden |
+| `NEXT_PUBLIC_MAP_STYLE_URL` | production | MapLibre style URL from a tile provider (MapTiler, Stadia…) including its API key. Without it the app falls back to OpenStreetMap's public tiles, which aren't allowed for production traffic. If it's a MapTiler URL (`…/maps/streets-v2/style.json?key=…`), riders also get a Map / Contour Map / Satellite switch on the maps (the `outdoor-v2` and `hybrid` styles, same key); otherwise the switch is hidden |
 | `BLOB_STORE_ID` or `BLOB_READ_WRITE_TOKEN` | production | Set automatically when you connect a Vercel Blob store to the project (Storage tab). Without one, uploads save to `public/uploads` locally and **fail on Vercel** |
 | `NEXT_PUBLIC_DEAD_CYLINDER_URL` | no | Link target for the "Dead Cylinder Co." mentions |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | no | Enables Google sign-in. Redirect URI: `<site>/api/auth/callback/google` |

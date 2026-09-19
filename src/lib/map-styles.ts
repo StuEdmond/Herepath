@@ -2,7 +2,7 @@ export type MapStyleId = "streets" | "outdoor" | "satellite";
 
 export const MAP_STYLE_OPTIONS: { id: MapStyleId; label: string }[] = [
   { id: "streets", label: "Map" },
-  { id: "outdoor", label: "Outdoor" },
+  { id: "outdoor", label: "Contour Map" },
   { id: "satellite", label: "Satellite" },
 ];
 
