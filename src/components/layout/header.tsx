@@ -16,7 +16,9 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-surface-raised bg-surface print:hidden">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="text-[18px] font-medium text-text-primary">
+        <Link href="/" className="flex items-center gap-2.5 text-[17px] font-medium uppercase tracking-wide text-text-primary">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/herepath-mark.png" alt="" width={40} height={32} className="h-8 w-10" />
           Herepath
         </Link>
 
