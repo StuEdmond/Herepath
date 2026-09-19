@@ -1,6 +1,6 @@
 "use server";
 
-import { getPlacesAlong, getRideLines } from "@/lib/places-along";
+import { REFRESH_AFTER_MS, getPlacesAlong, getRideLines } from "@/lib/places-along";
 import { PLACE_KINDS, type PlaceKind } from "@/lib/place-kinds";
 
 export type PreloadResult =
@@ -19,7 +19,8 @@ export async function preloadPlacesJob(type: string, slug: string, kind: string)
   try {
     const lines = await getRideLines(type, slug);
     if (!lines) return { status: "skipped", reason: "No published track" };
-    const result = await getPlacesAlong(kind as PlaceKind, lines);
+    // Only asks OpenStreetMap again for answers that are missing or more than 10 days old, the same rule as the daily refresh.
+    const result = await getPlacesAlong(kind as PlaceKind, lines, { maxAgeMs: REFRESH_AFTER_MS });
     return { status: result.osmOk ? "done" : "partial", count: result.places.length };
   } catch (error) {
     return { status: "error", reason: error instanceof Error ? error.message : "Something went wrong" };

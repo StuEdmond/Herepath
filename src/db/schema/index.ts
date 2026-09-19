@@ -19,3 +19,4 @@ export * from "./place-reviews";
 export * from "./advice";
 export * from "./blog";
 export * from "./advertising";
+export * from "./osm-cache";
