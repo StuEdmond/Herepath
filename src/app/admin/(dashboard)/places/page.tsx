@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/db/client";
 import { places } from "@/db/schema";
 import { AdminListHeader, AdminTable } from "@/components/admin/admin-table";
+import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 
 export default async function AdminPlacesPage() {
@@ -9,12 +10,21 @@ export default async function AdminPlacesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <AdminListHeader title="Places" newHref="/admin/places/new" count={rows.length} />
+      <AdminListHeader
+        title="Places"
+        newHref="/admin/places/new"
+        count={rows.length}
+        extraActions={
+          <Link href="/admin/places/preload">
+            <Button type="button" variant="secondary" className="min-h-9 px-3 text-[13px]">
+              Preload map places
+            </Button>
+          </Link>
+        }
+      />
       <p className="text-[13px] text-text-muted">
-        A place appears on ride maps once it has a latitude and longitude.{" "}
-        <Link href="/admin/places/preload" className="text-green-bright underline hover:no-underline">
-          Preload map places for every ride
-        </Link>
+        A place appears on ride maps once it has a latitude and longitude. &ldquo;Preload map places&rdquo; looks up fuel, food and stay pins for every
+        ride ahead of time, so riders don&apos;t wait.
       </p>
       <AdminTable
         rows={rows}

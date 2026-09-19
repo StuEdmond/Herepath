@@ -62,21 +62,27 @@ export function AdminListHeader({
   title,
   newHref,
   count,
+  extraActions,
 }: {
   title: string;
   newHref: string;
   count: number;
+  /** Extra buttons shown beside "New". */
+  extraActions?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 className="text-[20px]">
         {title} <span className="text-text-muted">({count})</span>
       </h2>
-      <Link href={newHref}>
-        <Button type="button" variant="primary" className="min-h-9 px-3 text-[13px]">
-          New
-        </Button>
-      </Link>
+      <div className="flex flex-wrap items-center gap-2">
+        {extraActions}
+        <Link href={newHref}>
+          <Button type="button" variant="primary" className="min-h-9 px-3 text-[13px]">
+            New
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
