@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
-import { users, reviews, savedRides, diaryEntries, diaryEntryPhotos, blogPosts, placeReviews, savedTrips } from "@/db/schema";
+import { users, reviews, savedRides, diaryEntries, diaryEntryPhotos, blogPosts, placeReviews, savedTrips, rideConditionReports } from "@/db/schema";
 
 export async function GET() {
   const session = await auth();
@@ -9,13 +9,14 @@ export async function GET() {
 
   const userId = session.user.id;
   const [user] = await db.select().from(users).where(eq(users.id, userId));
-  const [userReviews, userSavedRides, userDiaryEntries, userBlogPosts, userPlaceTips, userTrips] = await Promise.all([
+  const [userReviews, userSavedRides, userDiaryEntries, userBlogPosts, userPlaceTips, userTrips, userRoadReports] = await Promise.all([
     db.select().from(reviews).where(eq(reviews.userId, userId)),
     db.select().from(savedRides).where(eq(savedRides.userId, userId)),
     db.select().from(diaryEntries).where(eq(diaryEntries.userId, userId)),
     db.select().from(blogPosts).where(eq(blogPosts.userId, userId)),
     db.select().from(placeReviews).where(eq(placeReviews.userId, userId)),
     db.select().from(savedTrips).where(eq(savedTrips.userId, userId)),
+    db.select().from(rideConditionReports).where(eq(rideConditionReports.reporterId, userId)),
   ]);
 
   const entryIds = userDiaryEntries.map((e) => e.id);
@@ -30,6 +31,7 @@ export async function GET() {
     blogPosts: userBlogPosts,
     placeTips: userPlaceTips,
     plannedTrips: userTrips,
+    roadReports: userRoadReports,
   };
 
   return new Response(JSON.stringify(exportData, null, 2), {

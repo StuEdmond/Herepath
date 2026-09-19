@@ -7,6 +7,7 @@ import {
   boolean,
   jsonb,
   timestamp,
+  date,
 } from "drizzle-orm/pg-core";
 import { contentStatusEnum, bikeTypeEnum, suitabilityLevelEnum, dayRideStageKindEnum, stopTypeEnum } from "./enums";
 import { regions } from "./regions";
@@ -35,6 +36,10 @@ export const dayRides = pgTable("day_rides", {
 
   bestTime: text("best_time"),
   parkingNote: text("parking_note"),
+
+  lastVerifiedOn: date("last_verified_on"),
+  conditionsNote: text("conditions_note"),
+  conditionsNoteOn: date("conditions_note_on"),
 
   /** Full ride track as GeoJSON */
   geometry: jsonb("geometry").$type<GeoJSON.GeoJSON>(),

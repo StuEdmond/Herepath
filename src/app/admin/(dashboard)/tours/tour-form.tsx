@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { regions, dayRides, places, bikeTypeEnum, contentStatusEnum, tourRegions, tourBikeSuitability, tourDays, tourOvernightStays } from "@/db/schema";
 import type { TourPlanningNotes } from "@/db/schema/tours";
 import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
+import { FreshnessFields } from "@/components/admin/freshness-fields";
 import { TourDayBuilder, type TourDayDraft } from "@/components/admin/tour-day-builder";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,8 @@ export interface TourDefaults {
   startLocation: string;
   finishLocation: string;
   bestTime: string | null;
+  lastVerifiedOn?: string | null;
+  conditionsNote?: string | null;
   heroImage: string | null;
   status: string;
   isSample: boolean;
@@ -114,6 +117,8 @@ export async function TourForm({
         </Field>
         <ImageUploadField label="Hero image" fileName="heroImageFile" urlName="heroImage" defaultUrl={defaults?.heroImage} />
       </FormRow>
+
+      <FreshnessFields lastVerifiedOn={defaults?.lastVerifiedOn} conditionsNote={defaults?.conditionsNote} />
 
       <label className="flex items-center gap-1.5 text-[14px] text-text-primary">
         <input type="checkbox" name="isSample" defaultChecked={defaults?.isSample} />

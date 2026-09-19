@@ -8,6 +8,7 @@ import {
   boolean,
   jsonb,
   timestamp,
+  date,
 } from "drizzle-orm/pg-core";
 import { contentStatusEnum, surfaceQualityEnum, bikeTypeEnum, suitabilityLevelEnum } from "./enums";
 import { regions } from "./regions";
@@ -41,6 +42,12 @@ export const routes = pgTable("routes", {
   hazards: text("hazards"),
   bestTime: text("best_time"),
   stopOffNote: text("stop_off_note"),
+
+  /** When our team last checked this road, so riders can judge how fresh the details are. */
+  lastVerifiedOn: date("last_verified_on"),
+  /** A dated warning about the road as it is now (a closure, roadworks), shown at the top of the page. */
+  conditionsNote: text("conditions_note"),
+  conditionsNoteOn: date("conditions_note_on"),
 
   /** Full track as a GeoJSON LineString/FeatureCollection */
   geometry: jsonb("geometry").$type<GeoJSON.GeoJSON>(),

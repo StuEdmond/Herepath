@@ -36,6 +36,12 @@ Where it plugs in: `linkBetween()` in `src/lib/trip-planner.ts` returns a straig
 
 Where it plugs in: the "Round trip from where you start" panel in `src/components/plan/trip-builder.tsx`. It already takes a start point and target distance. Today it calls `suggestRoundTrips()` (whole routes only); a generator would be a second source of suggestions.
 
+## Google and Apple Maps links (need a test on real phones)
+- **Google:** Google's Maps URL documentation allows 3 waypoints on mobile browsers and 9 otherwise. `src/lib/map-links.ts` sends 8 per leg, so on a phone Google may drop the extras and choose its own roads. Test on an Android phone: open a ride, tap Open in Google Maps, and count the stops that show. If it's only 3, either send fewer waypoints per leg (more legs) or rely on the GPX as the main way to ride a route (the buttons already say "approximate").
+- **Apple:** the buttons now say "start and end only". Apple's newer unified URL format (`maps.apple.com/directions?source=…&destination=…&waypoint=…`) is reported to accept repeated `waypoint` parameters, but we couldn't read Apple's page to confirm the names, any limit, or which iOS versions. Test one link on an iPhone or Mac before switching `buildAppleMapsUrl()` to it.
+- **Legs at natural stops:** day rides already store lunch and fuel stops with mile markers, so leg boundaries could fall there. Longer legs mean fewer waypoints per mile, so this trades fidelity for fewer phone touches.
+- **Bulk GPX importer with a source and licence field per route**, to replace the sample content faster.
+
 ## Smaller ideas noted along the way
 - **Stay near the end of each day** in the trip planner: today the Stay pins show along all the trip's routes. Looking up places around an arbitrary point needs a limit on how many distinct places can be searched, so a visitor can't flood the free OpenStreetMap service.
 - **Making the main "Download GPX" buttons work inside the Android app.** The app's web view can't download files, so those buttons probably do nothing there. The "Send to a navigation app" share button works around it.

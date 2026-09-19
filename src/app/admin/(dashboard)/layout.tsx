@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/admin/blog-posts", label: "Blog posts" },
   { href: "/admin/advertising", label: "Advertising" },
   { href: "/admin/place-reviews", label: "Place tips" },
+  { href: "/admin/road-reports", label: "Road reports" },
   { href: "/admin/site-content", label: "Site content" },
   { href: "/admin/search-chips", label: "Search chips" },
   { href: "/admin/contact-messages", label: "Messages" },

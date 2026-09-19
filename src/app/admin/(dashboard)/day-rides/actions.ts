@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
+import { conditionsNoteDate, readDateField } from "@/lib/condition-reports";
 import { dayRides, dayRideBikeSuitability, dayRideStages, dayRidePlacesToEat, bikeTypeEnum, places } from "@/db/schema";
 import { slugify } from "@/lib/slug";
 import { uploadedImage } from "@/lib/storage";
@@ -22,6 +23,8 @@ async function readForm(formData: FormData) {
   const fullDayTimeEstimate = String(formData.get("fullDayTimeEstimate") ?? "").trim();
   const bestTime = String(formData.get("bestTime") ?? "").trim() || null;
   const parkingNote = String(formData.get("parkingNote") ?? "").trim() || null;
+  const lastVerifiedOn = readDateField(formData.get("lastVerifiedOn"));
+  const conditionsNote = String(formData.get("conditionsNote") ?? "").trim() || null;
   const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
   const status = String(formData.get("status") ?? "draft") as "draft" | "published";
   const isSample = formData.get("isSample") === "on";
@@ -48,6 +51,8 @@ async function readForm(formData: FormData) {
     fullDayTimeEstimate,
     bestTime,
     parkingNote,
+    lastVerifiedOn,
+    conditionsNote,
     heroImage,
     status,
     isSample,
@@ -102,7 +107,7 @@ export async function createDayRide(formData: FormData) {
   const data = await readForm(formData);
   const [dayRide] = await db
     .insert(dayRides)
-    .values({ ...data, slug: slugify(data.name) })
+    .values({ ...data, conditionsNoteOn: conditionsNoteDate(data.conditionsNote), slug: slugify(data.name) })
     .returning();
   await saveRelations(dayRide.id, formData);
   revalidatePath("/admin/day-rides");
@@ -111,7 +116,11 @@ export async function createDayRide(formData: FormData) {
 
 export async function updateDayRide(id: string, formData: FormData) {
   const data = await readForm(formData);
-  await db.update(dayRides).set({ ...data, slug: slugify(data.name), updatedAt: new Date() }).where(eq(dayRides.id, id));
+  const [before] = await db.select({ note: dayRides.conditionsNote, on: dayRides.conditionsNoteOn }).from(dayRides).where(eq(dayRides.id, id));
+  await db
+    .update(dayRides)
+    .set({ ...data, conditionsNoteOn: conditionsNoteDate(data.conditionsNote, before), slug: slugify(data.name), updatedAt: new Date() })
+    .where(eq(dayRides.id, id));
   await saveRelations(id, formData);
   revalidatePath("/admin/day-rides");
   redirect(`/admin/day-rides/${id}`);

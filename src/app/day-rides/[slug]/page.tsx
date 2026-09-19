@@ -18,6 +18,7 @@ import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { DayRideMapCard } from "@/components/route/day-ride-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
+import { RideFreshness } from "@/components/route/ride-freshness";
 import { StageTimeline, type TimelineStage } from "@/components/route/stage-timeline";
 import { PlacesToEat, type PlaceToEatEntry } from "@/components/route/places-to-eat";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -194,6 +195,14 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
             <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
           )}
         </div>
+
+        <RideFreshness
+          targetType="day_ride"
+          targetId={dayRide.id}
+          lastVerifiedOn={dayRide.lastVerifiedOn}
+          conditionsNote={dayRide.conditionsNote}
+          conditionsNoteOn={dayRide.conditionsNoteOn}
+        />
 
         <RideMapLayout
           before={

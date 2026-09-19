@@ -8,6 +8,7 @@ import {
   jsonb,
   timestamp,
   primaryKey,
+  date,
 } from "drizzle-orm/pg-core";
 import { contentStatusEnum, bikeTypeEnum, suitabilityLevelEnum } from "./enums";
 import { regions } from "./regions";
@@ -37,6 +38,10 @@ export const tours = pgTable("tours", {
   startLocation: text("start_location").notNull(),
   finishLocation: text("finish_location").notNull(),
   bestTime: text("best_time"),
+
+  lastVerifiedOn: date("last_verified_on"),
+  conditionsNote: text("conditions_note"),
+  conditionsNoteOn: date("conditions_note_on"),
 
   planningNotes: jsonb("planning_notes").$type<TourPlanningNotes>(),
 

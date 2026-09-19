@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
+import { conditionsNoteDate, readDateField } from "@/lib/condition-reports";
 import { tours, tourRegions, tourBikeSuitability, tourDays, tourOvernightStays, bikeTypeEnum, regions, places } from "@/db/schema";
 import { slugify } from "@/lib/slug";
 import { uploadedImage } from "@/lib/storage";
@@ -19,6 +20,8 @@ async function readForm(formData: FormData) {
   const startLocation = String(formData.get("startLocation") ?? "").trim();
   const finishLocation = String(formData.get("finishLocation") ?? "").trim();
   const bestTime = String(formData.get("bestTime") ?? "").trim() || null;
+  const lastVerifiedOn = readDateField(formData.get("lastVerifiedOn"));
+  const conditionsNote = String(formData.get("conditionsNote") ?? "").trim() || null;
   const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
   const status = String(formData.get("status") ?? "draft") as "draft" | "published";
   const isSample = formData.get("isSample") === "on";
@@ -47,6 +50,8 @@ async function readForm(formData: FormData) {
     startLocation,
     finishLocation,
     bestTime,
+    lastVerifiedOn,
+    conditionsNote,
     heroImage,
     status,
     isSample,
@@ -105,7 +110,7 @@ export async function createTour(formData: FormData) {
   const data = await readForm(formData);
   const [tour] = await db
     .insert(tours)
-    .values({ ...data, slug: slugify(data.name) })
+    .values({ ...data, conditionsNoteOn: conditionsNoteDate(data.conditionsNote), slug: slugify(data.name) })
     .returning();
   await saveRelations(tour.id, formData);
   revalidatePath("/admin/tours");
@@ -114,7 +119,11 @@ export async function createTour(formData: FormData) {
 
 export async function updateTour(id: string, formData: FormData) {
   const data = await readForm(formData);
-  await db.update(tours).set({ ...data, slug: slugify(data.name), updatedAt: new Date() }).where(eq(tours.id, id));
+  const [before] = await db.select({ note: tours.conditionsNote, on: tours.conditionsNoteOn }).from(tours).where(eq(tours.id, id));
+  await db
+    .update(tours)
+    .set({ ...data, conditionsNoteOn: conditionsNoteDate(data.conditionsNote, before), slug: slugify(data.name), updatedAt: new Date() })
+    .where(eq(tours.id, id));
   await saveRelations(id, formData);
   revalidatePath("/admin/tours");
   redirect(`/admin/tours/${id}`);

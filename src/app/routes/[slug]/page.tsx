@@ -19,6 +19,7 @@ import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { RouteMapCard } from "@/components/route/route-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
+import { RideFreshness } from "@/components/route/ride-freshness";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
 import { ShareButton } from "@/components/share/share-button";
@@ -176,6 +177,14 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
             <span className="text-[14px] text-text-muted">No reviews yet</span>
           )}
         </div>
+
+        <RideFreshness
+          targetType="route"
+          targetId={route.id}
+          lastVerifiedOn={route.lastVerifiedOn}
+          conditionsNote={route.conditionsNote}
+          conditionsNoteOn={route.conditionsNoteOn}
+        />
 
         <RideMapLayout
           before={

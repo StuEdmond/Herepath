@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { regions, routes, places, bikeTypeEnum, contentStatusEnum, dayRideBikeSuitability, dayRideStages, dayRidePlacesToEat } from "@/db/schema";
 import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
+import { FreshnessFields } from "@/components/admin/freshness-fields";
 import { StageBuilder, type StageDraft } from "@/components/admin/stage-builder";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ export interface DayRideDefaults {
   ridingTimeMinutes: number;
   fullDayTimeEstimate: string;
   bestTime: string | null;
+  lastVerifiedOn?: string | null;
+  conditionsNote?: string | null;
   parkingNote: string | null;
   heroImage: string | null;
   status: string;
@@ -146,6 +149,8 @@ export async function DayRideForm({
           <TextInput name="parkingNote" defaultValue={defaults?.parkingNote ?? ""} />
         </Field>
       </FormRow>
+
+      <FreshnessFields lastVerifiedOn={defaults?.lastVerifiedOn} conditionsNote={defaults?.conditionsNote} />
 
       <ImageUploadField label="Hero image" fileName="heroImageFile" urlName="heroImage" defaultUrl={defaults?.heroImage} />
 

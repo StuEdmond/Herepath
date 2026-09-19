@@ -14,6 +14,8 @@ import {
 import type { GeoPoint } from "@/db/schema/routes";
 import { Field, TextInput, Textarea, Select, FormRow, ImageUploadField } from "@/components/admin/form-fields";
 import { GpxUploadField } from "@/components/admin/gpx-upload-field";
+import { FreshnessFields } from "@/components/admin/freshness-fields";
+import { RatingRuleWarning } from "@/components/admin/rating-rule-warning";
 import { ImageFileInput } from "@/components/ui/image-file-input";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +31,8 @@ export interface RouteDefaults {
   hazards: string | null;
   bestTime: string | null;
   stopOffNote: string | null;
+  lastVerifiedOn: string | null;
+  conditionsNote: string | null;
   heroImage: string | null;
   gallery: string[];
   status: string;
@@ -163,6 +167,8 @@ export async function RouteForm({
         </Field>
       </FormRow>
 
+      <FreshnessFields lastVerifiedOn={defaults?.lastVerifiedOn} conditionsNote={defaults?.conditionsNote} />
+
       <FormRow>
         <ImageUploadField label="Hero image" fileName="heroImageFile" urlName="heroImage" defaultUrl={defaults?.heroImage} />
         <div className="flex flex-col gap-3">
@@ -187,6 +193,7 @@ export async function RouteForm({
           &ldquo;Suited&rdquo; shows under Best suited to. &ldquo;Caution&rdquo; shows under Take extra care, with your note beside it, so say why. On a difficulty 4 or 5
           route, or one with a poor surface, Cruiser and 125cc can&apos;t be marked as suited.
         </p>
+        <RatingRuleWarning />
         <div className="grid gap-2 rounded-lg bg-surface p-3 sm:grid-cols-2">
           {bikeTypeEnum.enumValues.map((bikeType) => {
             const existing = suitabilityByType.get(bikeType);

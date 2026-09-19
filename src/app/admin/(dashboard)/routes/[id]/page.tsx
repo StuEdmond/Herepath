@@ -29,6 +29,8 @@ export default async function EditRoutePage({ params }: { params: Promise<{ id: 
           surfaceQuality: route.surfaceQuality,
           hazards: route.hazards,
           bestTime: route.bestTime,
+          lastVerifiedOn: route.lastVerifiedOn,
+          conditionsNote: route.conditionsNote,
           stopOffNote: route.stopOffNote,
           heroImage: route.heroImage,
           gallery: route.gallery,

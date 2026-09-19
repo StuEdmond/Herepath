@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
+import { conditionsNoteDate, readDateField } from "@/lib/condition-reports";
 import {
   routes,
   routeBikeSuitability,
@@ -30,6 +31,8 @@ async function readForm(formData: FormData) {
   const hazards = String(formData.get("hazards") ?? "").trim() || null;
   const bestTime = String(formData.get("bestTime") ?? "").trim() || null;
   const stopOffNote = String(formData.get("stopOffNote") ?? "").trim() || null;
+  const lastVerifiedOn = readDateField(formData.get("lastVerifiedOn"));
+  const conditionsNote = String(formData.get("conditionsNote") ?? "").trim() || null;
   const heroImageUrl = String(formData.get("heroImage") ?? "").trim() || null;
   const galleryUrls = String(formData.get("gallery") ?? "")
     .split("\n")
@@ -77,6 +80,8 @@ async function readForm(formData: FormData) {
     hazards,
     bestTime,
     stopOffNote,
+    lastVerifiedOn,
+    conditionsNote,
     heroImage,
     gallery,
     status,
@@ -122,7 +127,7 @@ export async function createRoute(formData: FormData) {
   const data = await readForm(formData);
   const [route] = await db
     .insert(routes)
-    .values({ ...data, slug: slugify(data.name) })
+    .values({ ...data, conditionsNoteOn: conditionsNoteDate(data.conditionsNote), slug: slugify(data.name) })
     .returning();
   await saveRelations(route.id, formData);
   revalidatePath("/admin/routes");
@@ -131,7 +136,11 @@ export async function createRoute(formData: FormData) {
 
 export async function updateRoute(id: string, formData: FormData) {
   const data = await readForm(formData);
-  await db.update(routes).set({ ...data, slug: slugify(data.name), updatedAt: new Date() }).where(eq(routes.id, id));
+  const [before] = await db.select({ note: routes.conditionsNote, on: routes.conditionsNoteOn }).from(routes).where(eq(routes.id, id));
+  await db
+    .update(routes)
+    .set({ ...data, conditionsNoteOn: conditionsNoteDate(data.conditionsNote, before), slug: slugify(data.name), updatedAt: new Date() })
+    .where(eq(routes.id, id));
   await saveRelations(id, formData);
   revalidatePath("/admin/routes");
   redirect(`/admin/routes/${id}`);

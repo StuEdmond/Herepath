@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { countDistinct, eq } from "drizzle-orm";
+import { countDistinct, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   regions,
@@ -13,11 +13,12 @@ import {
   blogPosts,
   blogPostReports,
   advertisingEnquiries,
+  rideConditionReports,
 } from "@/db/schema";
 import { StatTile } from "@/components/ui/stat-tile";
 
 export default async function AdminDashboardPage() {
-  const [regionCount, landmarkCount, placeCount, routeCount, dayRideCount, tourCount, collectionCount, reportedTipRows, postsToReview, reportedPostRows, newEnquiries] =
+  const [regionCount, landmarkCount, placeCount, routeCount, dayRideCount, tourCount, collectionCount, reportedTipRows, postsToReview, reportedPostRows, newEnquiries, openRoadReports] =
     await Promise.all([
       db.$count(regions),
       db.$count(landmarks),
@@ -30,6 +31,7 @@ export default async function AdminDashboardPage() {
       db.$count(blogPosts, eq(blogPosts.status, "pending")),
       db.select({ n: countDistinct(blogPostReports.postId) }).from(blogPostReports),
       db.$count(advertisingEnquiries, eq(advertisingEnquiries.status, "new")),
+      db.$count(rideConditionReports, isNull(rideConditionReports.resolvedAt)),
     ]);
   const reportedTips = reportedTipRows[0]?.n ?? 0;
   const reportedPosts = reportedPostRows[0]?.n ?? 0;
@@ -45,6 +47,7 @@ export default async function AdminDashboardPage() {
     { label: "Posts to review", value: postsToReview, href: "/admin/blog-posts", attention: postsToReview > 0 },
     { label: "Reported posts", value: reportedPosts, href: "/admin/blog-posts", attention: reportedPosts > 0 },
     { label: "Reported tips", value: reportedTips, href: "/admin/place-reviews", attention: reportedTips > 0 },
+    { label: "Road reports", value: openRoadReports, href: "/admin/road-reports", attention: openRoadReports > 0 },
     { label: "New ad enquiries", value: newEnquiries, href: "/admin/advertising", attention: newEnquiries > 0 },
   ];
 

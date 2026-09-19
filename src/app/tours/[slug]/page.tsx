@@ -29,6 +29,7 @@ import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TourMapCard } from "@/components/route/tour-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
+import { RideFreshness } from "@/components/route/ride-freshness";
 import { TourDayCard, type TourDayInfo } from "@/components/route/tour-day-card";
 import { WhereToStay, type OvernightPlace } from "@/components/route/where-to-stay";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -204,6 +205,14 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
             <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
           )}
         </div>
+
+        <RideFreshness
+          targetType="tour"
+          targetId={tour.id}
+          lastVerifiedOn={tour.lastVerifiedOn}
+          conditionsNote={tour.conditionsNote}
+          conditionsNoteOn={tour.conditionsNoteOn}
+        />
 
         <RideMapLayout
           before={
