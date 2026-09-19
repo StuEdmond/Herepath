@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import { Field, TextInput, Textarea } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,15 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       <div>
         <h1 className="text-[28px]">{c.title}</h1>
         <p className="mt-1 text-text-secondary">{c.intro}</p>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4">
+        <p className="text-[14px] text-text-secondary">Run a cafe, pub, hotel, campsite or other business for riders?</p>
+        <Link href="/advertise">
+          <Button type="button" variant="secondary" className="min-h-10 px-4 text-[14px]">
+            Advertise with us
+          </Button>
+        </Link>
       </div>
 
       {sent === "1" ? (
