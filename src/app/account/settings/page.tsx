@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { updateProfile, deleteAccount, signOutAction } from "../actions";
+import { updateProfile, changePassword, deleteAccount, signOutAction } from "../actions";
 import { Field, TextInput } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
@@ -13,10 +13,10 @@ import { DeleteAccountButton } from "./delete-account-button";
 
 export const metadata: Metadata = { title: "Account settings" };
 
-export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; password?: string }> }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/account/sign-in");
-  const { saved } = await searchParams;
+  const { saved, password } = await searchParams;
 
   const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
 
@@ -50,6 +50,24 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
         {saved && <p className="text-[13px] text-green-bright">Saved.</p>}
         <Button type="submit" variant="primary" className="self-start">
           Save changes
+        </Button>
+      </form>
+
+      <form action={changePassword} className="flex flex-col gap-3 border-t border-surface-raised pt-4">
+        <h2 className="text-[16px] text-text-primary">{user?.passwordHash ? "Change password" : "Set a password"}</h2>
+        {user?.passwordHash && (
+          <Field label="Current password">
+            <TextInput name="currentPassword" type="password" autoComplete="current-password" required />
+          </Field>
+        )}
+        <Field label="New password" hint="At least 8 characters">
+          <TextInput name="newPassword" type="password" autoComplete="new-password" minLength={8} required />
+        </Field>
+        {password === "changed" && <p className="text-[13px] text-green-bright">Password updated.</p>}
+        {password === "wrong" && <p className="text-[13px] text-red-accent">That isn&apos;t your current password.</p>}
+        {password === "short" && <p className="text-[13px] text-red-accent">Use at least 8 characters.</p>}
+        <Button type="submit" variant="secondary" className="self-start">
+          {user?.passwordHash ? "Change password" : "Set password"}
         </Button>
       </form>
 

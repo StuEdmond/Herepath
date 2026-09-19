@@ -1,5 +1,7 @@
+import Link from "next/link";
+import { count } from "drizzle-orm";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { users, diaryEntries } from "@/db/schema";
 import { Tag } from "@/components/ui/tag";
 import { Button } from "@/components/ui/button";
 import { setMembershipTier } from "./actions";
@@ -11,6 +13,9 @@ function formatDate(date: Date): string {
 export default async function AdminUsersPage() {
   const rows = await db.select().from(users).orderBy(users.memberSince);
   rows.reverse();
+  const rideCounts = new Map(
+    (await db.select({ userId: diaryEntries.userId, rides: count() }).from(diaryEntries).groupBy(diaryEntries.userId)).map((r) => [r.userId, r.rides]),
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -33,6 +38,7 @@ export default async function AdminUsersPage() {
                 <th className="px-3 py-2 font-medium">Name</th>
                 <th className="px-3 py-2 font-medium">Email</th>
                 <th className="px-3 py-2 font-medium">Member since</th>
+                <th className="px-3 py-2 font-medium">Rides</th>
                 <th className="px-3 py-2 font-medium">Tier</th>
                 <th className="px-3 py-2" />
               </tr>
@@ -40,9 +46,14 @@ export default async function AdminUsersPage() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border-b border-surface-raised last:border-0">
-                  <td className="px-3 py-2">{row.name ?? "—"}</td>
+                  <td className="px-3 py-2">
+                    <Link href={`/admin/users/${row.id}`} className="underline hover:text-green-bright">
+                      {row.name ?? "—"}
+                    </Link>
+                  </td>
                   <td className="px-3 py-2 text-text-secondary">{row.email}</td>
                   <td className="px-3 py-2 text-text-muted">{formatDate(row.memberSince)}</td>
+                  <td className="px-3 py-2 text-text-muted">{rideCounts.get(row.id) ?? 0}</td>
                   <td className="px-3 py-2">
                     <Tag variant={row.membershipTier === "premium" ? "suited" : "neutral"}>
                       {row.membershipTier === "premium" ? "Premium" : "Free"}

@@ -59,6 +59,30 @@ export async function updateProfile(formData: FormData) {
   redirect("/account/settings?saved=1");
 }
 
+export async function changePassword(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/account/sign-in");
+
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  const newPassword = String(formData.get("newPassword") ?? "");
+
+  const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
+  if (!user) redirect("/account/sign-in");
+
+  if (newPassword.length < 8) redirect("/account/settings?password=short");
+
+  // Riders who signed up with Google have no password yet, so there is nothing to confirm.
+  if (user.passwordHash && !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+    redirect("/account/settings?password=wrong");
+  }
+
+  await db
+    .update(users)
+    .set({ passwordHash: await bcrypt.hash(newPassword, 10) })
+    .where(eq(users.id, user.id));
+  redirect("/account/settings?password=changed");
+}
+
 export async function deleteAccount() {
   const session = await auth();
   if (!session?.user?.id) redirect("/account/sign-in");
