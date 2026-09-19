@@ -12,12 +12,12 @@ import { getReviewsForTarget, hasLoggedRide } from "@/lib/reviews";
 import { getPlaceReviews } from "@/lib/place-reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
 import { StarRating } from "@/components/ui/star-rating";
-import { Tag } from "@/components/ui/tag";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { DayRideMapCard } from "@/components/route/day-ride-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
+import { BikeSuitability } from "@/components/route/bike-suitability";
 import { StageTimeline, type TimelineStage } from "@/components/route/stage-timeline";
 import { PlacesToEat, type PlaceToEatEntry } from "@/components/route/places-to-eat";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -36,14 +36,6 @@ function formatMinutes(minutes: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-const BIKE_TYPE_LABELS: Record<string, string> = {
-  sports: "Sports",
-  naked_and_roadster: "Naked and roadster",
-  adventure: "Adventure",
-  touring: "Touring",
-  cruiser: "Cruiser",
-  "125cc_and_new_riders": "125cc and new riders",
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -219,30 +211,14 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
             <StatTile label="Riding time" value={formatMinutes(dayRide.ridingTimeMinutes)} />
             <StatTile
               label="Hardest section"
-              value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
+              value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} showValue /> : "Not yet rated"}
             />
             <StatTile label="Start and finish" value={dayRide.isLoop ? dayRide.startLocation : `${dayRide.startLocation} → ${dayRide.finishLocation}`} />
           </div>
         </div>
 
         {/* 4. Best suited to */}
-        {(suited.length > 0 || caution.length > 0) && (
-          <div className="flex flex-col gap-2">
-            <h2 className="text-[17px]">Best suited to</h2>
-            <div className="flex flex-wrap gap-2">
-              {suited.map((s) => (
-                <Tag key={s.bikeType} variant="suited" title={s.note ?? undefined}>
-                  {BIKE_TYPE_LABELS[s.bikeType]}
-                </Tag>
-              ))}
-              {caution.map((s) => (
-                <Tag key={s.bikeType} variant="caution" title={s.note ?? undefined}>
-                  {BIKE_TYPE_LABELS[s.bikeType]}
-                </Tag>
-              ))}
-            </div>
-          </div>
-        )}
+        <BikeSuitability suited={suited} caution={caution} />
 
             </>
           }

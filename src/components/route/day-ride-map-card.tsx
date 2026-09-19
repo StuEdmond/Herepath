@@ -50,8 +50,9 @@ export function DayRideMapCard({
           </summary>
           <div className="mt-3 flex flex-col gap-2">
             <p className="text-[13px] text-text-muted">
-              Map apps only accept short routes in one go, so this ride opens in {stages.length} legs. Open them in order. For one
-              continuous route, use the GPX download above.
+              Map apps only accept short routes in one go, so this ride opens in {stages.length} legs. Open them in order. These are
+              approximate: Google Maps picks its own roads between the few points it&apos;s given, and Apple Maps takes just a start and an end. For
+              the exact ride as one continuous route, use the GPX download above.
             </p>
             {stages.map((stage) => (
               <StageLinks key={stage.index} stage={stage} showLabel />
@@ -73,11 +74,11 @@ function StageLinks({ stage, showLabel }: { stage: MapStage; showLabel: boolean 
       )}
       <LinkButton href={stage.googleUrl} target="_blank" rel="noopener noreferrer" variant="secondary" className="min-h-9 px-3 text-[13px]">
         <MapIcon className="h-4 w-4" aria-hidden="true" />
-        Google Maps
+        Google Maps (approximate)
       </LinkButton>
       <LinkButton href={stage.appleUrl} target="_blank" rel="noopener noreferrer" variant="secondary" className="min-h-9 px-3 text-[13px]">
         <Navigation className="h-4 w-4" aria-hidden="true" />
-        Apple Maps
+        Apple Maps (start and end only)
       </LinkButton>
     </div>
   );

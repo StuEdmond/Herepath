@@ -24,11 +24,11 @@ import { getReviewsForTarget, hasLoggedRide } from "@/lib/reviews";
 import { getPlaceReviews } from "@/lib/place-reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
 import { StarRating } from "@/components/ui/star-rating";
-import { Tag } from "@/components/ui/tag";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TourMapCard } from "@/components/route/tour-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
+import { BikeSuitability } from "@/components/route/bike-suitability";
 import { TourDayCard, type TourDayInfo } from "@/components/route/tour-day-card";
 import { WhereToStay, type OvernightPlace } from "@/components/route/where-to-stay";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -40,14 +40,6 @@ async function getTour(slug: string) {
   return tour;
 }
 
-const BIKE_TYPE_LABELS: Record<string, string> = {
-  sports: "Sports",
-  naked_and_roadster: "Naked and roadster",
-  adventure: "Adventure",
-  touring: "Touring",
-  cruiser: "Cruiser",
-  "125cc_and_new_riders": "125cc and new riders",
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -230,7 +222,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
             <StatTile label="Average day" value={`${tour.averageDayMiles} miles`} />
             <StatTile
               label="Hardest section"
-              value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} /> : "—"}
+              value={hardestDifficulty ? <DifficultyGauge level={hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} showValue /> : "Not yet rated"}
             />
           </div>
         </div>
@@ -251,23 +243,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
               <span className="text-text-primary">{tour.bestTime}</span>
             </div>
           )}
-          {(suited.length > 0 || caution.length > 0) && (
-            <div className="flex flex-col gap-1.5 pt-1">
-              <span className="text-text-muted">Best suited to</span>
-              <div className="flex flex-wrap gap-2">
-                {suited.map((s) => (
-                  <Tag key={s.bikeType} variant="suited" title={s.note ?? undefined}>
-                    {BIKE_TYPE_LABELS[s.bikeType]}
-                  </Tag>
-                ))}
-                {caution.map((s) => (
-                  <Tag key={s.bikeType} variant="caution" title={s.note ?? undefined}>
-                    {BIKE_TYPE_LABELS[s.bikeType]}
-                  </Tag>
-                ))}
-              </div>
-            </div>
-          )}
+          <BikeSuitability suited={suited} caution={caution} variant="rows" />
         </div>
 
             </>

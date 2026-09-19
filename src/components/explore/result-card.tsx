@@ -38,7 +38,7 @@ export function ResultCard({ result, matchedLandmarkName }: { result: ExploreRes
           <div className="flex items-center justify-between">
             <span className="text-[13px] text-text-secondary">{distanceLabel}</span>
             {result.difficulty ? (
-              <DifficultyGauge level={result.difficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} />
+              <DifficultyGauge level={result.difficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} showValue />
             ) : (
               <span className="text-[12px] text-text-muted">No reviews yet</span>
             )}

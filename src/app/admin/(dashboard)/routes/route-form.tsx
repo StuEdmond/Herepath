@@ -183,6 +183,10 @@ export async function RouteForm({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-[13px] text-text-muted">Bike suitability</legend>
+        <p className="text-[12px] text-text-muted">
+          &ldquo;Suited&rdquo; shows under Best suited to. &ldquo;Caution&rdquo; shows under Take extra care, with your note beside it, so say why. On a difficulty 4 or 5
+          route, or one with a poor surface, Cruiser and 125cc can&apos;t be marked as suited.
+        </p>
         <div className="grid gap-2 rounded-lg bg-surface p-3 sm:grid-cols-2">
           {bikeTypeEnum.enumValues.map((bikeType) => {
             const existing = suitabilityByType.get(bikeType);

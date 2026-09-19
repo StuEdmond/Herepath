@@ -18,6 +18,7 @@ import { Card, CardImage, CardBody } from "@/components/ui/card";
 import { TripTypeBadge } from "@/components/ui/trip-type-badge";
 import { RouteMapCard } from "@/components/route/route-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
+import { BikeSuitability } from "@/components/route/bike-suitability";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
 import { ShareButton } from "@/components/share/share-button";
@@ -34,14 +35,6 @@ function formatMinutes(minutes: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
-const BIKE_TYPE_LABELS: Record<string, string> = {
-  sports: "Sports",
-  naked_and_roadster: "Naked and roadster",
-  adventure: "Adventure",
-  touring: "Touring",
-  cruiser: "Cruiser",
-  "125cc_and_new_riders": "125cc and new riders",
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -198,29 +191,13 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
           <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
             <StatTile label="Distance" value={`${route.distanceMiles} miles`} />
             <StatTile label="Riding time" value={formatMinutes(route.ridingTimeMinutes)} />
-            <StatTile label="Difficulty" value={<DifficultyGauge level={route.difficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} />} />
+            <StatTile label="Difficulty" value={<DifficultyGauge level={route.difficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} showValue />} />
             <StatTile label="Road surface" value={<span className="capitalize">{route.surfaceQuality}</span>} />
           </div>
         </div>
 
         {/* 5. Best suited to */}
-        {(suited.length > 0 || caution.length > 0) && (
-          <div className="flex flex-col gap-2">
-            <h2 className="text-[17px]">Best suited to</h2>
-            <div className="flex flex-wrap gap-2">
-              {suited.map((s) => (
-                <Tag key={s.bikeType} variant="suited" className="[&:hover]:cursor-help" title={s.note ?? undefined}>
-                  {BIKE_TYPE_LABELS[s.bikeType]}
-                </Tag>
-              ))}
-              {caution.map((s) => (
-                <Tag key={s.bikeType} variant="caution" className="[&:hover]:cursor-help" title={s.note ?? undefined}>
-                  {BIKE_TYPE_LABELS[s.bikeType]}
-                </Tag>
-              ))}
-            </div>
-          </div>
-        )}
+        <BikeSuitability suited={suited} caution={caution} />
 
         {landmarkRows.length > 0 && (
           <div className="flex flex-wrap gap-2">

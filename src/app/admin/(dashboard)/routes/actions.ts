@@ -42,6 +42,15 @@ async function readForm(formData: FormData) {
     throw new Error("Name, region, intro paragraphs and distance are required");
   }
 
+  // Honest ratings are the point of Herepath, so a demanding route can't be marked as suiting the bikes least able to ride it.
+  const demanding = difficulty >= 4 || surfaceQuality === "poor";
+  const beginnerBikesMarkedSuited = ["cruiser", "125cc_and_new_riders"].filter((type) => formData.get(`suitability_${type}`) === "suited");
+  if (demanding && beginnerBikesMarkedSuited.length > 0) {
+    throw new Error(
+      `This route is ${difficulty >= 4 ? `difficulty ${difficulty}` : "on a poor surface"}, so Cruiser and 125cc and new riders can't be marked as "suited". Set them to "caution" (and add a note saying why) or leave them blank.`,
+    );
+  }
+
   const heroImage = (await uploadedImage(formData, "heroImageFile", "content")) ?? heroImageUrl;
   const gallery = [...galleryUrls, ...(await uploadedImages(formData, "galleryFiles", "content"))];
 

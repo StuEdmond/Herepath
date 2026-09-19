@@ -26,7 +26,7 @@ const image = (name: string, label: string, hint?: string): ContentField => ({ n
 const BENEFIT_DEFAULTS = [
   ["Curated routes, day rides & tours", "Hand-picked UK roads, from a quick blast to a multi-day crossing."],
   ["Honest difficulty ratings", "Real difficulty and bike-suitability ratings, not marketing spin."],
-  ["GPX export & app hand-off", "Download a GPX file or open straight in Google Maps or Apple Maps."],
+  ["GPX export & app hand-off", "Download a GPX for your sat-nav or app (Beeline, Garmin, TomTom), or open it in Google or Apple Maps."],
   ["Your ride diary", "Log every ride with photos, notes, weather and who you rode with."],
   ["Share your rides", "Branded share images for Instagram, X and Facebook, with a privacy safeguard built in."],
   ["Search, filter, map view", "Find a ride by region, difficulty, bike type, or a place name you already know."],
@@ -42,15 +42,18 @@ const FAQ_DEFAULTS = [
   ["Is Herepath free to use?", "Yes. Browsing, searching, saving rides and keeping a ride diary are all free. We're planning an optional Premium tier — see the pricing page for what's coming."],
   ["Do I need an account?", "No account is needed to browse routes, day rides and tours. You'll need a free account to save rides, keep a diary, or leave a review."],
   ["How are difficulty and bike-suitability ratings decided?", "They're set by hand based on road surface, technicality and how exposed a route is to weather — not generated automatically."],
-  ["Can I download a GPX file for my own sat-nav or app?", "Yes. Every route, day ride and tour page has a GPX download, plus direct hand-off buttons for Google Maps and Apple Maps."],
+  ["Can I download a GPX file for my own sat-nav or app?", "Yes. Every route, day ride and tour page has a GPX download, plus buttons to open the ride in Google Maps or Apple Maps. Those two only take a handful of points along a route, so they choose their own roads in between, and Apple Maps takes just a start and an end. For the exact route, use the GPX in a sat-nav or an app such as Beeline, Garmin or TomTom. The Use in Beeline, Garmin or TomTom section under each map shows how."],
   ["Do you provide turn-by-turn navigation?", "No — Herepath is a guide first. We hand you off to the navigation app you already use rather than building our own."],
   ["Can I share my rides?", "Yes. Diary entries and public ride pages have a share button that generates a branded image for Instagram, X or Facebook, or you can just copy a link."],
   ["Is my ride data private?", "Shared route maps trim the first and last half mile so a ride doesn't reveal where you live or keep your bike. Only what you choose to share publicly is visible to others."],
-  ['Why do some rides say "Sample content"?', "We're in beta. A handful of routes are illustrative until we've collected real GPX recordings from riders — those are clearly tagged so you know what you're looking at."],
-  ["What's coming next?", "Real GPX-recorded routes replacing the remaining sample content, an optional Premium tier, and video ride recaps built from your diary."],
+  ['Why do rides say "Sample content"?', "We're in beta. Right now the rides on Herepath are illustrative sample content, built to show how the site works, and each one says so. We're replacing them with real GPX recordings from riders. Please don't plan a real trip around a sample ride: check the route, the conditions and your own ability first."],
+  ["What's coming next?", "Real GPX-recorded routes replacing the sample content, an optional Premium tier, and video ride recaps built from your diary."],
   ["Can I write for the Rider blog?", "Yes. Once you have an account, you can write a post from the Rider blog page or your Profile. Every post is checked by our team before it appears, and it needs to follow the community guidelines further down this page."],
   ["How do I report a post or a rider tip?", "Every rider tip and blog post has a “Report” link. Choose a reason and send it, and our team will take a look. You need to be signed in to report something."],
   ["Can my business advertise on Herepath?", "Yes — see the Advertise with us page. Sponsored listings are always clearly labelled, so riders can tell what's an advert."],
+  ["Can I use Herepath without a phone signal?", "Herepath itself needs a signal to load maps. For weak signal, download the GPX and load it into your sat-nav, or into a navigation app such as Beeline, Garmin or TomTom, which keep the route on the device. Offline maps inside Herepath are planned for Premium."],
+  ["Can I log a ride I recorded in another app?", "Yes. On Log a ride, choose Import from your app and pick the GPX file from your tracker or mapping app (Beeline, Strava, Garmin Connect, REVER and others can export one). We fill in the distance, name, date and times from the file. Only GPX files can be imported for now."],
+  ["How do I tell you a road has changed?", "Every route, day ride and tour page has a Report a problem button. Tell us about a closure, roadworks, a new surface problem or anything else, and our team will check it and update the page. You need to be signed in to send a report."],
 ] as const;
 
 export const FAQ_SLOTS = 15;
@@ -65,7 +68,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       area("heroBody", "Intro paragraph", "Herepath curates the best motorcycling roads in the UK — honestly rated, GPX-ready, and handed off to the maps app you already trust."),
       text("heroPrimaryCta", "Main button", "Explore routes"),
       text("heroSecondaryCta", "Second button", "See what's free"),
-      area("heroNote", "Small print under the buttons", "No credit card, browsing is free forever. We're in beta, so a few rides are illustrative sample content until real GPX recordings are uploaded."),
+      area("heroNote", "Small print under the buttons", "No credit card, browsing is free forever. We're in beta, so the rides you'll see are illustrative sample content until real GPX recordings are uploaded."),
       image("heroImage", "Hero image", "Wide banner shown under the hero buttons. Leave empty to hide it."),
       text("heroImageAlt", "Hero image description", "", "Short description for screen readers."),
       ...BENEFIT_DEFAULTS.flatMap(([title, body], i) => [
@@ -111,6 +114,12 @@ export const CONTENT_GROUPS: ContentGroup[] = [
       ),
       text("waitlistButton", "Waitlist button", "Notify me"),
       text("waitlistSuccess", "Waitlist confirmation", "You're on the list — we'll email you when Premium launches."),
+      area(
+        "offlineNote",
+        "Note about weak signal",
+        "Riding somewhere with weak signal? Download a route's GPX and load it into your sat-nav, or into a navigation app such as Beeline, Garmin or TomTom. They keep the route on the device, so it works with no signal at all, and it's free. Offline maps inside Herepath are planned for Premium.",
+        "Shown under the two plans. Leave empty to hide it.",
+      ),
     ],
   },
   {

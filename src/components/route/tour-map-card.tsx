@@ -78,7 +78,7 @@ export function TourMapCard({
       </div>
 
       <p className="text-[13px] text-text-muted">
-        Each day opens separately in Google Maps or Apple Maps from its day ride page.{" "}
+        Each day opens separately in Google Maps or Apple Maps from its day ride page, but those links are approximate. For the exact route, use the GPX.{" "}
         <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
 

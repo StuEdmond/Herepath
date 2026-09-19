@@ -83,6 +83,13 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           )}
         </div>
       </div>
+
+      {c.offlineNote.trim() && (
+        <p className="mt-6 rounded-xl bg-surface p-4 text-[14px] text-text-secondary">
+          <span className="font-medium text-text-primary">No signal? </span>
+          {c.offlineNote}
+        </p>
+      )}
     </div>
   );
 }

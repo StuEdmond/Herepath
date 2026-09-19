@@ -25,7 +25,7 @@ export function RouteMapCard({ slug, name, geometry }: { slug: string; name: str
           className="min-h-10 px-4 text-[14px]"
         >
           <MapIcon className="h-4 w-4" aria-hidden="true" />
-          Open in Google Maps
+          Open in Google Maps (approximate)
         </LinkButton>
         <LinkButton
           href={appleUrl}
@@ -35,7 +35,7 @@ export function RouteMapCard({ slug, name, geometry }: { slug: string; name: str
           className="min-h-10 px-4 text-[14px]"
         >
           <Navigation className="h-4 w-4" aria-hidden="true" />
-          Open in Apple Maps
+          Open in Apple Maps (start and end only)
         </LinkButton>
         <LinkButton href={`/plan?add=${slug}`} variant="secondary" className="min-h-10 px-4 text-[14px]">
           <Route className="h-4 w-4" aria-hidden="true" />
@@ -43,7 +43,8 @@ export function RouteMapCard({ slug, name, geometry }: { slug: string; name: str
         </LinkButton>
       </div>
       <p className="text-[13px] text-text-muted">
-        Map apps may reroute slightly to follow their own road preferences — the GPX file follows the exact route.{" "}
+        For the exact route, use the GPX in a sat-nav or a navigation app. Google Maps only takes a few points along the route, so it picks its own roads
+        in between, and Apple Maps takes just a start and an end.{" "}
         <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
       <NavAppHandoff gpxHref={`/routes/${slug}/gpx`} filename={`${slug}.gpx`} rideName={name} />

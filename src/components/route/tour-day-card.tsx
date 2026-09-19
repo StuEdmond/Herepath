@@ -47,7 +47,7 @@ export function TourDayCard({ day }: { day: TourDayInfo }) {
         <div>
           <span className="block text-[12px] text-text-muted">Hardest section</span>
           {day.hardestDifficulty ? (
-            <DifficultyGauge level={day.hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} />
+            <DifficultyGauge level={day.hardestDifficulty as 1 | 2 | 3 | 4 | 5} showLabel={false} showValue />
           ) : (
             <span className="text-text-muted">—</span>
           )}
