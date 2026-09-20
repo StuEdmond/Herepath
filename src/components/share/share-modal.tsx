@@ -8,6 +8,7 @@ import { trimLineEnds } from "@/lib/geo";
 import { drawShareImage, type ShareFormat } from "@/lib/share-image";
 import { MapSnapshot } from "./map-snapshot";
 import { BrandIcon } from "./brand-icon";
+import { InstagramPanel } from "./instagram-panel";
 import { isNativeApp, openExternal, shareImageNative } from "@/lib/native";
 
 export interface ShareableData {
@@ -43,6 +44,10 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   const [youtubeLink, setYoutubeLink] = useState("");
   const [native] = useState(() => isNativeApp());
   const [note, setNote] = useState("");
+  const [view, setView] = useState<"share" | "instagram">("share");
+  // A phone or the app can hand the image to Instagram through the share sheet. A desktop browser can also "share", but its box has no
+  // Instagram in it, so that's only counted on touch screens.
+  const [canSendToApp] = useState(() => isNativeApp() || (typeof navigator !== "undefined" && "share" in navigator && window.matchMedia("(pointer: coarse)").matches));
   // This modal only ever mounts client-side (after a button click), but guard
   // against `document` anyway in case that ever changes.
   const canvasRef = useRef<HTMLCanvasElement>(typeof document !== "undefined" ? document.createElement("canvas") : (null as never));
@@ -143,13 +148,22 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
     void openExternal(`https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}&url=${encodeURIComponent(data.url)}`);
   }
 
-  async function handleInstagram() {
-    if (native || (typeof navigator !== "undefined" && "share" in navigator)) {
+  function handleCopyCaption() {
+    navigator.clipboard.writeText(caption).then(
+      () => setNote("Caption copied — paste it into your post."),
+      () => setNote("Couldn't copy the caption. Select it in the box and copy it."),
+    );
+  }
+
+  async function handleInstagramSend() {
+    if (canSendToApp) {
       await handleMoreApps();
-    } else {
-      await handleSaveImage();
-      alert("Image saved — Instagram doesn't support posting directly from the web, so add it from your camera roll.");
+      return;
     }
+    // Opened first, while the click still counts as a user gesture, so the browser doesn't block it.
+    void openExternal("https://www.instagram.com/");
+    await handleSaveImage();
+    handleCopyCaption();
   }
 
   async function handleTikTok() {
@@ -170,16 +184,37 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
         className="flex max-h-[90vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-2xl bg-bg p-4 sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Stays mounted on both screens: it draws the map the share image is made from. */}
+        {trimmedGeometry && showMap && (
+          <MapSnapshot geometry={trimmedGeometry} width={400} height={400} onReady={setMapCanvas} />
+        )}
+
+        {view === "instagram" ? (
+          <InstagramPanel
+            previewUrl={previewUrl}
+            format={format}
+            onFormatChange={setFormat}
+            caption={caption}
+            onCaptionChange={(value) => {
+              setCaption(value);
+              setCaptionTouched(true);
+            }}
+            canSendToApp={canSendToApp}
+            onSend={handleInstagramSend}
+            onSaveImage={handleSaveImage}
+            onCopyCaption={handleCopyCaption}
+            onBack={() => setView("share")}
+            onClose={onClose}
+            note={note}
+          />
+        ) : (
+          <>
         <div className="flex items-center justify-between">
           <h2 className="text-[18px] text-text-primary">Share</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="text-text-muted hover:text-text-primary">
             <X className="h-5 w-5" />
           </button>
         </div>
-
-        {trimmedGeometry && showMap && (
-          <MapSnapshot geometry={trimmedGeometry} width={400} height={400} onReady={setMapCanvas} />
-        )}
 
         <div className={format === "story" ? "mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-xl bg-surface" : "mx-auto aspect-square w-full max-w-[320px] overflow-hidden rounded-xl bg-surface"}>
           {previewUrl && (
@@ -240,7 +275,7 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
             <Button type="button" variant="secondary" onClick={handleX} aria-label="Share on X" title="X" className="min-h-12 px-0">
               <BrandIcon brand="x" className="h-5 w-5" />
             </Button>
-            <Button type="button" variant="secondary" onClick={handleInstagram} aria-label="Share on Instagram" title="Instagram" className="min-h-12 px-0">
+            <Button type="button" variant="secondary" onClick={() => setView("instagram")} aria-label="Share on Instagram" title="Instagram" className="min-h-12 px-0">
               <BrandIcon brand="instagram" className="h-6 w-6" />
             </Button>
             <Button type="button" variant="secondary" onClick={handleTikTok} aria-label="Share on TikTok" title="TikTok" className="min-h-12 px-0">
@@ -273,6 +308,8 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
         <p className="text-[12px] text-text-muted">
           Shared maps hide the first and last half mile of your ride, so it doesn&apos;t give away where you live or keep your bike.
         </p>
+          </>
+        )}
       </div>
     </div>
   );
