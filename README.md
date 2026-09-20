@@ -103,7 +103,7 @@ Vercel limits request bodies to about 4.5MB, so very large photo uploads will fa
 
 The Android app is a Capacitor shell around the live website (`capacitor.config.ts`); the project is in `android/`. It loads `https://herepath.vercel.app`, so website changes reach the app without a new release. `mobile-web/` holds only the offline fallback page. The app adds `HerepathApp` to its user agent, which the site uses to hide the "Get the app" badges inside the app. The site sends `viewport-fit=cover` and pads the header and bottom bar by the safe-area insets, so on Android the page's own colour fills the status bar; `NativeSystemBars` then sets the status/gesture bar icon colour from the rider's Light/Dark choice. These are website changes, so no new app build is needed.
 
-The one piece of app-specific native code is `android/app/src/main/java/com/herepath/InstagramSharePlugin.java`, which the Instagram screen in the share pop-up uses to send the ride image straight into the Instagram app (skipping the share sheet). It only exists in app builds made after it was added; older builds, or phones without Instagram, fall back to the normal share sheet automatically.
+The one piece of app-specific native code is `android/app/src/main/java/com/herepath/SocialSharePlugin.java`, which the Instagram and TikTok screens in the share pop-up use to send the ride image straight into those apps (skipping the share sheet). It only exists in app builds made after it was added; older builds, or phones without the app, fall back to the normal share sheet automatically.
 
 To build and run it you need [Android Studio](https://developer.android.com/studio) (it installs Java and the Android SDK).
 

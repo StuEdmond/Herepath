@@ -8,8 +8,8 @@ import { trimLineEnds } from "@/lib/geo";
 import { drawShareImage, type ShareFormat } from "@/lib/share-image";
 import { MapSnapshot } from "./map-snapshot";
 import { BrandIcon } from "./brand-icon";
-import { InstagramPanel } from "./instagram-panel";
-import { isNativeApp, openExternal, sendImageToInstagramNative, shareImageNative } from "@/lib/native";
+import { SocialPanel } from "./social-panel";
+import { isNativeApp, openExternal, sendImageToAppNative, shareImageNative, type SocialApp } from "@/lib/native";
 
 export interface ShareableData {
   title: string;
@@ -44,7 +44,7 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   const [youtubeLink, setYoutubeLink] = useState("");
   const [native] = useState(() => isNativeApp());
   const [note, setNote] = useState("");
-  const [view, setView] = useState<"share" | "instagram">("share");
+  const [view, setView] = useState<"share" | SocialApp>("share");
   // A phone or the app can hand the image to Instagram through the share sheet. A desktop browser can also "share", but its box has no
   // Instagram in it, so that's only counted on touch screens.
   const [canSendToApp] = useState(() => isNativeApp() || (typeof navigator !== "undefined" && "share" in navigator && window.matchMedia("(pointer: coarse)").matches));
@@ -155,17 +155,20 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
     );
   }
 
-  async function handleInstagramSend() {
+  const APP_NAMES = { instagram: "Instagram", tiktok: "TikTok" } as const;
+  const WEB_UPLOAD_PAGES = { instagram: "https://www.instagram.com/", tiktok: "https://www.tiktok.com/upload" } as const;
+
+  async function handleSocialSend(app: SocialApp) {
     if (native) {
-      // Copied first, while the tap still counts as a user gesture. Instagram can't take a caption from us.
+      // Copied first, while the tap still counts as a user gesture. Neither app can take a caption from us.
       navigator.clipboard?.writeText(caption).catch(() => {});
       const blob = await getImageBlob();
-      if (blob && (await sendImageToInstagramNative(blob)) === "sent") {
+      if (blob && (await sendImageToAppNative(app, blob)) === "sent") {
         setNote("Caption copied — paste it into your post.");
         return;
       }
-      // Instagram isn't installed, or this build of the app can't open it directly: use the share sheet instead.
-      setNote("Couldn't open Instagram directly, so here's the share sheet.");
+      // The app isn't installed, or this build of the app can't open it directly: use the share sheet instead.
+      setNote(`Couldn't open ${APP_NAMES[app]} directly, so here's the share sheet.`);
       await handleMoreApps();
       return;
     }
@@ -174,21 +177,16 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
       return;
     }
     // Opened first, while the click still counts as a user gesture, so the browser doesn't block it.
-    void openExternal("https://www.instagram.com/");
+    void openExternal(WEB_UPLOAD_PAGES[app]);
     await handleSaveImage();
     handleCopyCaption();
   }
 
-  async function handleTikTok() {
-    if (native || typeof navigator.share === "function") {
-      await handleMoreApps();
-      return;
-    }
-    // Opened first, while the click still counts as a user gesture, so the browser doesn't block it.
-    window.open("https://www.tiktok.com/upload", "_blank", "noopener,noreferrer");
-    await handleSaveImage();
-    await navigator.clipboard.writeText(caption).catch(() => {});
-    alert("Image saved and caption copied — upload the image on the TikTok page that just opened and paste the caption.");
+  function openSocial(app: SocialApp) {
+    // TikTok only takes the tall format.
+    if (app === "tiktok") setFormat("story");
+    setNote("");
+    setView(app);
   }
 
   return (
@@ -202,8 +200,9 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
           <MapSnapshot geometry={trimmedGeometry} width={400} height={400} onReady={setMapCanvas} />
         )}
 
-        {view === "instagram" ? (
-          <InstagramPanel
+        {view !== "share" ? (
+          <SocialPanel
+            network={view}
             previewUrl={previewUrl}
             format={format}
             onFormatChange={setFormat}
@@ -213,7 +212,7 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
               setCaptionTouched(true);
             }}
             canSendToApp={canSendToApp}
-            onSend={handleInstagramSend}
+            onSend={() => handleSocialSend(view)}
             onSaveImage={handleSaveImage}
             onCopyCaption={handleCopyCaption}
             onBack={() => setView("share")}
@@ -288,10 +287,10 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
             <Button type="button" variant="secondary" onClick={handleX} aria-label="Share on X" title="X" className="min-h-12 px-0">
               <BrandIcon brand="x" className="h-5 w-5" />
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setView("instagram")} aria-label="Share on Instagram" title="Instagram" className="min-h-12 px-0">
+            <Button type="button" variant="secondary" onClick={() => openSocial("instagram")} aria-label="Share on Instagram" title="Instagram" className="min-h-12 px-0">
               <BrandIcon brand="instagram" className="h-6 w-6" />
             </Button>
-            <Button type="button" variant="secondary" onClick={handleTikTok} aria-label="Share on TikTok" title="TikTok" className="min-h-12 px-0">
+            <Button type="button" variant="secondary" onClick={() => openSocial("tiktok")} aria-label="Share on TikTok" title="TikTok" className="min-h-12 px-0">
               <BrandIcon brand="tiktok" className="h-5 w-5" />
             </Button>
           </div>

@@ -7,7 +7,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     // App-specific plugins have to be registered before the bridge starts.
-    registerPlugin(InstagramSharePlugin.class);
+    registerPlugin(SocialSharePlugin.class);
     super.onCreate(savedInstanceState);
   }
 }

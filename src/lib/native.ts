@@ -42,24 +42,26 @@ export async function shareImageNative({ title, text, blob }: { title: string; t
   await shareFileNative({ title, text, filename: `herepath-ride-${Date.now()}.png`, blob, dialogTitle: "Share your ride" });
 }
 
-interface InstagramSharePlugin {
-  share(options: { path: string }): Promise<void>;
+export type SocialApp = "instagram" | "tiktok";
+
+interface SocialSharePlugin {
+  share(options: { app: SocialApp; path: string }): Promise<void>;
 }
 
-// Written in Java in the app itself (android/.../InstagramSharePlugin.java), so app builds made before it was added don't have it.
-const InstagramShare = registerPlugin<InstagramSharePlugin>("InstagramShare");
+// Written in Java in the app itself (android/.../SocialSharePlugin.java), so app builds made before it was added don't have it.
+const SocialShare = registerPlugin<SocialSharePlugin>("SocialShare");
 
 /**
- * Sends an image straight to the Instagram app, without the phone's share sheet. Returns "sent" once Instagram has opened, or
- * "unavailable" when it can't be done here (Instagram isn't installed, or this app build predates the plugin), so the caller can fall
+ * Sends an image straight to the Instagram or TikTok app, without the phone's share sheet. Returns "sent" once the app has opened, or
+ * "unavailable" when it can't be done here (the app isn't installed, or this app build predates the plugin), so the caller can fall
  * back to the share sheet.
  */
-export async function sendImageToInstagramNative(blob: Blob): Promise<"sent" | "unavailable"> {
+export async function sendImageToAppNative(app: SocialApp, blob: Blob): Promise<"sent" | "unavailable"> {
   if (!isNativeApp()) return "unavailable";
   try {
     const { Filesystem, Directory } = await import("@capacitor/filesystem");
-    const { uri } = await Filesystem.writeFile({ path: `herepath-instagram-${Date.now()}.png`, data: await blobToBase64(blob), directory: Directory.Cache });
-    await InstagramShare.share({ path: uri });
+    const { uri } = await Filesystem.writeFile({ path: `herepath-${app}-${Date.now()}.png`, data: await blobToBase64(blob), directory: Directory.Cache });
+    await SocialShare.share({ app, path: uri });
     return "sent";
   } catch {
     return "unavailable";
