@@ -67,6 +67,36 @@ export default function GpxGuidePage() {
       </section>
 
       <section className="flex flex-col gap-2">
+        <h3 className="text-[16px] text-text-primary">Google says &ldquo;Anonymous uploads are not allowed&rdquo;</h3>
+        <p>
+          That message comes from Google, not from our file, and the file is fine. It usually means Google can&apos;t tell which account
+          is uploading. Try these, in this order:
+        </p>
+        <ol className="list-inside list-decimal space-y-1 pl-1">
+          <li>
+            Make sure you&apos;re signed in. Check for your picture at the top right of My Maps, and if it isn&apos;t there, sign in and
+            reload the page.
+          </li>
+          <li>
+            If you&apos;re signed in to more than one Google account in the same browser, sign out of the others, or open a private
+            (incognito) window and sign in to just one account there.
+          </li>
+          <li>
+            Allow cookies for google.com. Blocking third-party cookies, or a privacy or ad-blocking extension, is a common cause. Try the
+            upload with extensions switched off.
+          </li>
+          <li>Try a different browser, such as Chrome or Edge.</li>
+          <li>
+            On a work or school account, your organisation may block uploads. Use a personal Google account instead.
+          </li>
+          <li>
+            Still stuck? Upload the file to your Google Drive first. Then, in My Maps, choose Import and pick it from the{" "}
+            <strong className="font-medium text-text-primary">Google Drive</strong> tab.
+          </li>
+        </ol>
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h2 className="text-[18px] text-text-primary">Step 3: See it on your phone</h2>
         <ol className="list-inside list-decimal space-y-1 pl-1">
           <li>Open the Google Maps app, signed in with the same Google account.</li>
