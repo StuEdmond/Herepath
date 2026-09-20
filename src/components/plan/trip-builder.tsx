@@ -10,6 +10,7 @@ import { DIFFICULTY_LABELS } from "@/components/ui/difficulty-gauge";
 import { LinkButton } from "@/components/ui/link-button";
 import { BIKE_TYPE_LABELS } from "@/lib/bike-types";
 import { haversineMiles, type LatLng } from "@/lib/geo";
+import type { PlaceResult } from "@/lib/geocode";
 import { slugify } from "@/lib/slug";
 import { DAY_LENGTH_OPTIONS, MAX_SAVED_TRIPS, TRIP_NAME_MAX_LENGTH } from "@/lib/trip-limits";
 import {
@@ -30,6 +31,7 @@ import {
 } from "@/lib/trip-planner";
 import { filterRoutes, hasFilters, NO_FILTERS, type RouteFilterState } from "@/lib/route-filters";
 import type { PopularChip } from "@/components/explore/filters";
+import { AddressSearch } from "./address-search";
 import { RouteFilterBar } from "./route-filter-bar";
 import { TripMap, type TripMapStop } from "./trip-map";
 import { useTripPlaces } from "./use-trip-places";
@@ -87,6 +89,8 @@ export function TripBuilder({
     return start ? [{ routeId: start.id, reversed: false }] : [];
   });
   const [origin, setOrigin] = useState<LatLng | null>(initial?.origin ?? null);
+  // What the rider searched for, shown beside the start point. Only the coordinates are saved with a trip.
+  const [originLabel, setOriginLabel] = useState<string | null>(null);
   const [milesPerDay, setMilesPerDay] = useState<number | null>(initial?.milesPerDay ?? null);
   const [name, setName] = useState(initial?.name ?? "");
   const [savedId, setSavedId] = useState<string | null>(initial?.id ?? null);
@@ -168,9 +172,17 @@ export function TripBuilder({
 
   const pickOrigin = useCallback((point: LatLng) => {
     setOrigin(point);
+    setOriginLabel(null);
     setPicking(false);
     setSearch(null);
   }, []);
+
+  function pickAddress(place: PlaceResult) {
+    pickOrigin({ lat: place.lat, lng: place.lng });
+    setOriginLabel(place.label);
+    setLocationError(null);
+    setFitKey((k) => k + 1);
+  }
 
   function locateMe() {
     setLocationError(null);
@@ -461,8 +473,9 @@ export function TripBuilder({
         <section className="flex flex-col gap-3 rounded-xl bg-surface p-3">
           <div>
             <h2 className="text-[18px] text-text-primary">Round trip from where you start</h2>
-            <p className="mt-0.5 text-[13px] text-text-muted">Set a start point and a length, and we&apos;ll suggest loops built from our routes that finish back where you began.</p>
+            <p className="mt-0.5 text-[13px] text-text-muted">Search for where you&apos;ll start, or pick it on the map, then choose a length, and we&apos;ll suggest loops built from our routes that finish back where you began.</p>
           </div>
+          <AddressSearch onPick={pickAddress} />
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" variant={picking ? "primary" : "secondary"} className="min-h-10 px-3 text-[14px]" onClick={() => setPicking((p) => !p)}>
               <Crosshair className="h-4 w-4" aria-hidden="true" />
@@ -478,6 +491,7 @@ export function TripBuilder({
                 className="inline-flex min-h-10 items-center gap-1 px-2 text-[13px] text-text-secondary hover:text-text-primary"
                 onClick={() => {
                   setOrigin(null);
+                  setOriginLabel(null);
                   setSearch(null);
                 }}
               >
@@ -488,7 +502,9 @@ export function TripBuilder({
           </div>
           {locationError && <p className="text-[13px] text-red-accent">{locationError}</p>}
           <p className="text-[12px] text-text-muted">
-            {origin ? "Start point set. It's used only in your browser and saved only if you save the trip." : "No start point yet."}
+            {origin
+              ? `${originLabel ? `Starting from ${originLabel}.` : "Start point set."} It's used only in your browser and saved only if you save the trip.`
+              : "No start point yet."}
           </p>
 
           <div className="flex flex-wrap items-end gap-2">
