@@ -24,10 +24,12 @@ function mapTilerKey(): string | null {
   }
 }
 
-async function getJson(url: string): Promise<unknown> {
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://herepath.vercel.app").replace(/\/$/, "");
+
+async function getJson(url: string, extraHeaders: Record<string, string> = {}): Promise<unknown> {
   const response = await fetch(url, {
     signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: { "User-Agent": `Herepath/1.0 (${process.env.NEXT_PUBLIC_SITE_URL ?? "https://herepath.vercel.app"})`, Accept: "application/json" },
+    headers: { "User-Agent": `Herepath/1.0 (${SITE_URL})`, Accept: "application/json", ...extraHeaders },
   });
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`Lookup failed (${response.status})`);
@@ -51,7 +53,11 @@ async function findPostcode(query: string): Promise<PlaceResult[]> {
 }
 
 async function findWithMapTiler(query: string, key: string): Promise<PlaceResult[]> {
-  const data = (await getJson(`https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${encodeURIComponent(key)}&country=gb&limit=5&language=en`)) as {
+  // The key is restricted to this site's address in MapTiler's settings, so a request from our server has to say it comes from the site.
+  const data = (await getJson(`https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${encodeURIComponent(key)}&country=gb&limit=5&language=en`, {
+    Origin: SITE_URL,
+    Referer: `${SITE_URL}/`,
+  })) as {
     features?: { place_name?: string; center?: number[] }[];
   } | null;
   const out: PlaceResult[] = [];
@@ -84,5 +90,11 @@ export async function searchPlaces(rawQuery: string): Promise<PlaceResult[]> {
     if (found.length > 0) return found;
   }
   const key = mapTilerKey();
-  return key ? findWithMapTiler(query, key) : findWithNominatim(query);
+  if (!key) return findWithNominatim(query);
+  try {
+    return await findWithMapTiler(query, key);
+  } catch {
+    // MapTiler refused or didn't answer (a changed key restriction, or its allowance used up): OpenStreetMap's search still gives an answer.
+    return findWithNominatim(query);
+  }
 }
