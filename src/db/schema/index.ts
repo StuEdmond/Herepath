@@ -22,3 +22,4 @@ export * from "./advertising";
 export * from "./osm-cache";
 export * from "./trips";
 export * from "./conditions";
+export * from "./road-routes";

@@ -39,6 +39,7 @@ const ROUTES_LINE = "trip-routes-line";
 const ROUTES_HIT = "trip-routes-hit";
 const LEGS_SOURCE = "trip-legs";
 const LEGS_LINE = "trip-legs-line";
+const LEGS_ROAD_LINE = "trip-legs-road-line";
 const UNSELECTED_COLOR = "#8a93a3";
 
 export interface TripMapStop {
@@ -174,18 +175,28 @@ function addLayers(map: MaplibreMap, routes: GeoJSON.FeatureCollection, legs: Ge
   map.addLayer({ id: ROUTES_HIT, type: "line", source: ROUTES_SOURCE, paint: { "line-color": "#000000", "line-width": 16, "line-opacity": 0.01 } });
 
   map.addSource(LEGS_SOURCE, { type: "geojson", data: legs });
+  // Estimates (a straight line between two points) are dashed; a real road route is solid.
   map.addLayer({
     id: LEGS_LINE,
     type: "line",
     source: LEGS_SOURCE,
+    filter: ["==", ["get", "road"], false],
     layout: { "line-cap": "butt" },
     paint: { "line-color": "#e8a13a", "line-width": 3, "line-dasharray": [2, 2] },
+  });
+  map.addLayer({
+    id: LEGS_ROAD_LINE,
+    type: "line",
+    source: LEGS_SOURCE,
+    filter: ["==", ["get", "road"], true],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#e8a13a", "line-width": 4 },
   });
 }
 
 /**
  * The trip planner's map: every published route as a line, the ones in the rider's trip picked out in colour and numbered, dashed
- * amber lines for the stretches joining them, and the rider's start point. Hover a route for details; click it to add or remove it.
+ * amber lines for the stretches joining them (solid where a road route was found, dashed where it is an estimate), and the rider's start point. Hover a route for details; click it to add or remove it.
  */
 export function TripMap({
   routes,
@@ -263,8 +274,8 @@ export function TripMap({
       type: "FeatureCollection",
       features: legs.map((l) => ({
         type: "Feature",
-        properties: {},
-        geometry: { type: "LineString", coordinates: [[l.from.lng, l.from.lat], [l.to.lng, l.to.lat]] },
+        properties: { road: l.road },
+        geometry: { type: "LineString", coordinates: l.line ?? [[l.from.lng, l.from.lat], [l.to.lng, l.to.lat]] },
       })),
     };
     return { routeFeatures, legFeatures };

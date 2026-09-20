@@ -34,6 +34,8 @@ import type { PopularChip } from "@/components/explore/filters";
 import { AddressSearch } from "./address-search";
 import { RouteFilterBar } from "./route-filter-bar";
 import { TripMap, type TripMapStop } from "./trip-map";
+import { useRoadLinks } from "./use-road-links";
+import { MIN_LINK_MILES } from "@/lib/road-link";
 import { useTripPlaces } from "./use-trip-places";
 
 export interface InitialTrip {
@@ -59,9 +61,10 @@ function LinkRow({ leg, label }: { leg: LinkLeg; label: string }) {
   const long = leg.straightMiles > LONG_GAP_MILES;
   return (
     <li className={`flex items-start gap-2 pl-9 text-[12px] ${long ? "text-red-tint-text" : "text-text-muted"}`}>
-      <span aria-hidden="true" className="mt-1.5 h-0 w-4 shrink-0 border-t-2 border-dashed border-current" />
+      <span aria-hidden="true" className={`mt-1.5 h-0 w-4 shrink-0 border-t-2 border-current ${leg.road ? "border-solid" : "border-dashed"}`} />
       <span>
-        {label}: about {formatMiles(leg.miles)} (estimate){long ? ". That's a long gap. Consider adding a route in between." : ""}
+        {leg.road ? `${label}: ${formatMiles(leg.miles)} by road, about ${formatDuration(leg.minutes)}` : `${label}: about ${formatMiles(leg.miles)} (estimate)`}
+        {long ? ". That's a long gap. Consider adding a route in between." : ""}
       </span>
     </li>
   );
@@ -114,7 +117,10 @@ export function TripBuilder({
     return routes.filter((r) => shown.has(r.id));
   }, [routes, filteredRoutes, items]);
 
-  const trip = useMemo(() => summariseTrip(items, routesById, origin), [items, routesById, origin]);
+  // The stretches between routes start as straight-line estimates. Once the routing service has found the road for one, it replaces the estimate.
+  const estimatedTrip = useMemo(() => summariseTrip(items, routesById, origin), [items, routesById, origin]);
+  const { roadLinks, pending: roadsPending, attribution: roadAttribution } = useRoadLinks(estimatedTrip.links);
+  const trip = useMemo(() => summariseTrip(items, routesById, origin, roadLinks), [items, routesById, origin, roadLinks]);
   const days = useMemo(() => (milesPerDay && trip.stops.length > 0 ? splitIntoDays(trip, milesPerDay, origin) : null), [trip, milesPerDay, origin]);
 
   const dayOfStop = useMemo(() => {
@@ -134,6 +140,15 @@ export function TripBuilder({
     [trip.stops, dayOfStop],
   );
   const legs = useMemo(() => trip.links.filter((l): l is LinkLeg => l !== null), [trip.links]);
+  // Stretches under a tenth of a mile are never looked up (they are the same place), so they don't count as unfinished estimates.
+  const routableLegs = legs.filter((l) => l.straightMiles >= MIN_LINK_MILES);
+  const estimatedLegs = routableLegs.filter((l) => !l.road).length;
+  const joiningText =
+    trip.linkMiles > 0
+      ? `, plus ${estimatedLegs === 0 ? `${formatMiles(trip.linkMiles)} of road` : `about ${formatMiles(trip.linkMiles)}`} joining them${
+          roadsPending > 0 ? " (finding the roads…)" : estimatedLegs > 0 ? ` (${estimatedLegs === 1 ? "one stretch is a straight-line estimate" : `${estimatedLegs} stretches are straight-line estimates`})` : ""
+        }`
+      : "";
 
   const stopSlugs = useMemo(() => trip.stops.map((s) => s.route.slug), [trip.stops]);
   const placesState = useTripPlaces(stopSlugs);
@@ -247,7 +262,7 @@ export function TripBuilder({
   const inTrip = new Set(items.map((i) => i.routeId));
 
   const tripName = name.trim() || "My trip";
-  const wholeHref = tripGpxHref(tripName, trip.stops.map((s) => ({ slug: s.route.slug, reversed: s.item.reversed })), origin);
+  const wholeHref = tripGpxHref(tripName, trip.stops.map((s) => ({ slug: s.route.slug, reversed: s.item.reversed })), origin, origin);
   const downloadName = `${slugify(tripName) || "herepath-trip"}.gpx`;
 
   return (
@@ -315,8 +330,9 @@ export function TripBuilder({
               </div>
               <p className="text-[12px] text-text-muted">
                 {formatMiles(trip.routeMiles)} on {trip.stops.length} {trip.stops.length === 1 ? "route" : "routes"}
-                {trip.linkMiles > 0 ? `, plus about ${formatMiles(trip.linkMiles)} joining them (an estimate: we join routes with straight lines, not roads)` : ""}.
+                {joiningText}.
               </p>
+              {roadAttribution && legs.some((l) => l.road) && <p className="text-[11px] text-text-muted">{roadAttribution}</p>}
               <p className="text-[13px] text-text-secondary">
                 <span className="text-text-muted">Suits: </span>
                 {trip.suitedForAll.length > 0 ? trip.suitedForAll.map((t) => BIKE_TYPE_LABELS[t] ?? t).join(", ") : "no bike type is rated as suited on every route"}
@@ -324,7 +340,7 @@ export function TripBuilder({
               {trip.missing > 0 && <p className="text-[13px] text-red-accent">{trip.missing} route(s) in this trip are no longer available and have been left out.</p>}
               {trip.longGaps > 0 && (
                 <p className="text-[13px] text-red-tint-text">
-                  {trip.longGaps} gap(s) between routes are over {LONG_GAP_MILES} miles. The dashed lines show them.
+                  {trip.longGaps} gap(s) between routes are over {LONG_GAP_MILES} miles. They&apos;re marked in the list below.
                 </p>
               )}
 
@@ -403,7 +419,7 @@ export function TripBuilder({
                           {day.overLimit ? ". This day runs over your limit because of a long route, or a long stretch to reach it." : ""}
                         </div>
                         <a
-                          href={tripGpxHref(`${tripName} - Day ${day.number}`, day.stopIndexes.map((i) => ({ slug: trip.stops[i].route.slug, reversed: trip.stops[i].item.reversed })), day.number === 1 ? origin : null)}
+                          href={tripGpxHref(`${tripName} - Day ${day.number}`, day.stopIndexes.map((i) => ({ slug: trip.stops[i].route.slug, reversed: trip.stops[i].item.reversed })), day.number === 1 ? origin : null, day.number === days.length ? origin : null)}
                           className="mt-1 inline-flex items-center gap-1 text-green-bright underline hover:no-underline"
                         >
                           <Download className="h-3.5 w-3.5" aria-hidden="true" />

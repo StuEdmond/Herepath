@@ -4,6 +4,8 @@ Things we have talked through and scoped but not built. Each says what it is, wh
 
 ## Trip planner: real road routing (Option 2) and a round-trip generator (Option 3)
 
+**Update (September 2026): the first part of Option 2 is built.** The stretches between routes (from the start point, between routes, and home) now use real road routes from a swappable routing service (`src/lib/routing.ts`, `/api/route`, `road_route_cache` table). It defaults to openrouteservice (needs `ORS_API_KEY`), falls back to straight-line estimates when the service is missing or fails, is drawn solid on the map and included in the GPX. Still to do: a motorcycle profile (the car profile is used now), settling commercial terms and Premium before the public launch, letting riders add their own point-to-point stops (not only Herepath routes) and drag via points, and making round-trip suggestions use real roads.
+
 **Where things stand.** The trip planner (`/plan`) joins Herepath's own routes end to end. The stretches *between* routes are straight-line estimates (distance × 1.3, at 30 mph), drawn as dashed lines and labelled as estimates. Round-trip suggestions are found by chaining whole routes that lie near the rider's start point. Nothing calls an outside routing service, so it costs nothing to run.
 
 ### Option 2: real routes between any two points

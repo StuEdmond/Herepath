@@ -1,9 +1,10 @@
 import { haversineMiles, type LatLng } from "./geo";
+import { linkKey, type RoadLink } from "./road-link";
 
 /**
  * The trip builder's arithmetic: joining Herepath routes end to end, totalling them, splitting them into days, and suggesting
- * round trips. Everything here is estimates from straight-line distances between where routes start and finish. There is no
- * road routing, so the stretches between routes are labelled as estimates wherever they're shown.
+ * round trips. The stretches between routes are straight-line estimates until a road route is supplied for them (see `RoadLink`),
+ * so they're labelled as estimates wherever they're shown and the trip still adds up when no routing service is available.
  */
 
 /** Straight-line distance understates the road; roads wander, so scale it up. */
@@ -48,6 +49,10 @@ export interface LinkLeg {
   minutes: number;
   from: LatLng;
   to: LatLng;
+  /** True when miles and minutes come from a real road route rather than the estimate. */
+  road: boolean;
+  /** The road as [lng, lat] points, when there is one. */
+  line?: [number, number][];
 }
 
 export interface TripStop {
@@ -84,16 +89,24 @@ export function exitPoint(route: PlannerRoute, reversed: boolean): LatLng {
   return reversed ? route.start : route.end;
 }
 
-export function linkBetween(from: LatLng, to: LatLng): LinkLeg {
+/** The stretch between two points: the road route when one is known, otherwise an estimate from the straight line. */
+export function linkBetween(from: LatLng, to: LatLng, road?: RoadLink): LinkLeg {
   const straightMiles = haversineMiles(from, to);
+  if (road) return { straightMiles, miles: road.miles, minutes: road.minutes, from, to, road: true, line: road.line };
   const miles = straightMiles * ROAD_FACTOR;
-  return { straightMiles, miles, minutes: (miles / LINK_MPH) * 60, from, to };
+  return { straightMiles, miles, minutes: (miles / LINK_MPH) * 60, from, to, road: false };
 }
 
 const SURFACE_ORDER = { good: 0, mixed: 1, poor: 2 } as const;
 
 /** Adds up a trip. With a start point, the trip begins and ends there (a round trip); without one it runs from the first route to the last. */
-export function summariseTrip(items: TripItem[], routesById: Map<string, PlannerRoute>, origin: LatLng | null): TripSummary {
+export function summariseTrip(
+  items: TripItem[],
+  routesById: Map<string, PlannerRoute>,
+  origin: LatLng | null,
+  /** Road routes already found, by `linkKey`. Stretches without one stay estimates. */
+  roadLinks?: ReadonlyMap<string, RoadLink>,
+): TripSummary {
   const stops: TripStop[] = [];
   let missing = 0;
   for (const item of items) {
@@ -116,7 +129,7 @@ export function summariseTrip(items: TripItem[], routesById: Map<string, Planner
   for (let i = 0; i <= stops.length; i++) {
     const from = i === 0 ? origin : stops[i - 1].exit;
     const to = i === stops.length ? origin : stops[i].entry;
-    links.push(from && to && stops.length > 0 ? linkBetween(from, to) : null);
+    links.push(from && to && stops.length > 0 ? linkBetween(from, to, roadLinks?.get(linkKey(from, to))) : null);
   }
 
   const routeMiles = stops.reduce((sum, s) => sum + s.route.distanceMiles, 0);
@@ -294,12 +307,16 @@ export function suggestRoundTrips(routes: PlannerRoute[], origin: LatLng, target
 /** One colour per day on the map, the same as the tour maps use. */
 export const DAY_COLORS = ["#4fae82", "#4a90d9", "#d9a544", "#9b72cf", "#3bc4b0", "#d97bb0"];
 
-/** The address of the GPX download for some of a trip's routes (the whole trip, or one day of it). */
-export function tripGpxHref(name: string, stops: { slug: string; reversed: boolean }[], origin: LatLng | null): string {
+/**
+ * The address of the GPX download for some of a trip's routes (the whole trip, or one day of it). `start` is where the first route is
+ * reached from; `home` is where the ride finishes, which only the last day of a trip has.
+ */
+export function tripGpxHref(name: string, stops: { slug: string; reversed: boolean }[], start: LatLng | null, home: LatLng | null = null): string {
   const params = new URLSearchParams();
   params.set("name", name.trim() || "Herepath trip");
   for (const stop of stops) params.append("r", stop.reversed ? `${stop.slug}~` : stop.slug);
-  if (origin) params.set("start", `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}`);
+  if (start) params.set("start", `${start.lat.toFixed(5)},${start.lng.toFixed(5)}`);
+  if (home) params.set("home", `${home.lat.toFixed(5)},${home.lng.toFixed(5)}`);
   return `/api/trip-gpx?${params.toString()}`;
 }
 

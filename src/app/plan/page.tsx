@@ -40,8 +40,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           split the trip into days. Or set a start point and ask for a round trip.
         </p>
         <p className="mt-1 max-w-3xl text-[13px] text-text-muted">
-          We work out the riding between one route and the next as a straight-line estimate, so treat those stretches as a guide and plan the actual roads in
-          your navigation app.
+          The riding between one route and the next is worked out along real roads where we can (solid lines) and as a straight-line estimate where we
+          can&apos;t (dashed lines). The roads are found for ordinary vehicles, not motorcycles, so treat them as a guide and plan the actual ride in your
+          navigation app.
         </p>
       </div>
       <TripBuilder routes={routes} popularChips={popularChips} initial={initial} addSlug={add ?? null} signedIn={!!session?.user} />
