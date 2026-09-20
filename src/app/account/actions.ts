@@ -7,6 +7,7 @@ import { AuthError } from "next-auth";
 import { db } from "@/db/client";
 import { blogPosts, diaryEntries, diaryEntryPhotos, users } from "@/db/schema";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { cancelSubscriptionForUser } from "@/lib/billing";
 import { deleteStoredImages } from "@/lib/storage";
 
 export async function signUp(formData: FormData) {
@@ -98,6 +99,9 @@ export async function deleteAccount() {
   if (!session?.user?.id) redirect("/account/sign-in");
 
   const userId = session.user.id;
+
+  // Stop any paid subscription first, so nobody is charged for an account that no longer exists.
+  await cancelSubscriptionForUser(userId);
 
   // Work out which uploaded files belong to this rider before their rows disappear, then remove the
   // files once the account itself is gone. The account's bike details are part of the account row.

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, Printer } from "lucide-react";
+import { Download, Lock, Printer } from "lucide-react";
 import { DynamicTrackMap } from "@/components/map/dynamic-track-map";
 import type { TrackLine } from "@/components/map/track-map";
 import { LinkButton } from "@/components/ui/link-button";
@@ -12,9 +12,12 @@ export function TourMapCard({
   slug,
   name,
   days,
+  access,
 }: {
   slug: string;
   name: string;
+  /** What this rider's plan includes. A free account sees a Premium button in place of these. */
+  access: { tourGpx: boolean; tourSheet: boolean };
   days: { dayNumber: number; name: string; slug: string; geometry: GeoJSON.LineString | null }[];
 }) {
   const lines: TrackLine[] = days
@@ -52,14 +55,28 @@ export function TourMapCard({
       )}
 
       <div className="flex flex-wrap gap-2">
-        <LinkButton href={`/tours/${slug}/gpx`} variant="primary" className="min-h-10 px-4 text-[14px]">
-          <Download className="h-4 w-4" aria-hidden="true" />
-          Download full tour GPX
-        </LinkButton>
-        <LinkButton href={`/tours/${slug}/print`} target="_blank" variant="secondary" className="min-h-10 px-4 text-[14px]">
-          <Printer className="h-4 w-4" aria-hidden="true" />
-          Printable tour sheet
-        </LinkButton>
+        {access.tourGpx ? (
+          <LinkButton href={`/tours/${slug}/gpx`} variant="primary" className="min-h-10 px-4 text-[14px]">
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Download full tour GPX
+          </LinkButton>
+        ) : (
+          <LinkButton href="/pricing?need=tour-gpx" variant="primary" className="min-h-10 px-4 text-[14px]">
+            <Lock className="h-4 w-4" aria-hidden="true" />
+            Full tour GPX (Premium)
+          </LinkButton>
+        )}
+        {access.tourSheet ? (
+          <LinkButton href={`/tours/${slug}/print`} target="_blank" variant="secondary" className="min-h-10 px-4 text-[14px]">
+            <Printer className="h-4 w-4" aria-hidden="true" />
+            Printable tour sheet
+          </LinkButton>
+        ) : (
+          <LinkButton href="/pricing?need=tour-sheet" variant="secondary" className="min-h-10 px-4 text-[14px]">
+            <Lock className="h-4 w-4" aria-hidden="true" />
+            Printable tour sheet (Premium)
+          </LinkButton>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -82,12 +99,14 @@ export function TourMapCard({
         <GpxGuideLink className="underline hover:text-text-secondary" />
       </p>
 
-      <NavAppHandoff
-        gpxHref={`/tours/${slug}/gpx`}
-        filename={`${slug}.gpx`}
-        rideName={name}
-        note="This is the whole tour, with each day as its own line. To ride one day at a time, use that day's GPX above instead."
-      />
+      {access.tourGpx && (
+        <NavAppHandoff
+          gpxHref={`/tours/${slug}/gpx`}
+          filename={`${slug}.gpx`}
+          rideName={name}
+          note="This is the whole tour, with each day as its own line. To ride one day at a time, use that day's GPX above instead."
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getLimits } from "@/lib/membership";
 import { db } from "@/db/client";
 import { tours, tourDays, dayRides } from "@/db/schema";
 import { generateMultiTrackGpx } from "@/lib/gpx";
@@ -7,6 +9,9 @@ import { slugify } from "@/lib/slug";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  // The whole-tour file is part of Premium. Each day's own GPX (a day ride) stays free.
+  const session = await auth();
+  if (!(await getLimits(session?.user?.id)).tourGpx) redirect("/pricing?need=tour-gpx");
   const [tour] = await db.select().from(tours).where(eq(tours.slug, slug));
   if (!tour) notFound();
 

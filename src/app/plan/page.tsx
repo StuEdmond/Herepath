@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { searchChips } from "@/db/schema";
 import { getPlannerRoutes, getSavedTrip } from "@/lib/trips";
 import { ensureClosuresFresh, getClosuresForPublishedRoutes } from "@/lib/closures";
+import { getLimits, premiumLive } from "@/lib/membership";
 import { TripBuilder, type InitialTrip } from "@/components/plan/trip-builder";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const { trip: tripId, add } = await searchParams;
   const session = await auth();
   await ensureClosuresFresh();
+  const limits = await getLimits(session?.user?.id);
   const [routes, popularChips, closuresByRoute] = await Promise.all([
     getPlannerRoutes(),
     db.select().from(searchChips).orderBy(searchChips.position),
@@ -54,7 +56,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           navigation app.
         </p>
       </div>
-      <TripBuilder routes={routes} popularChips={popularChips} initial={initial} addSlug={add ?? null} signedIn={!!session?.user} closuresByRoute={Object.fromEntries(closuresByRoute)} />
+      <TripBuilder routes={routes} popularChips={popularChips} initial={initial} addSlug={add ?? null} signedIn={!!session?.user}
+        closuresByRoute={Object.fromEntries(closuresByRoute)}
+        limits={{ savedTrips: limits.savedTrips, tripGpxLegs: limits.tripGpxLegs, showUpgrade: premiumLive() }}
+      />
     </div>
   );
 }

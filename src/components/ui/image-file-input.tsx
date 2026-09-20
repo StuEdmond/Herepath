@@ -28,20 +28,30 @@ export function ImageFileInput({
   name,
   multiple = false,
   gpsFieldName,
+  maxFiles,
+  overLimitMessage,
   className,
 }: {
   name: string;
   multiple?: boolean;
   gpsFieldName?: string;
+  /** Keeps only the first this many photos chosen. */
+  maxFiles?: number;
+  /** Shown when more were chosen than maxFiles. */
+  overLimitMessage?: string;
   className?: string;
 }) {
   const [busy, setBusy] = useState(false);
+  const [trimmed, setTrimmed] = useState(false);
   const [picked, setPicked] = useState<Picked[]>([]);
   const [gps, setGps] = useState("[]");
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
-    const files = Array.from(input.files ?? []);
+    let files = Array.from(input.files ?? []);
+    const tooMany = maxFiles !== undefined && files.length > maxFiles;
+    if (tooMany) files = files.slice(0, maxFiles);
+    setTrimmed(tooMany);
     if (files.length === 0) {
       setPicked([]);
       setGps("[]");
@@ -86,6 +96,7 @@ export function ImageFileInput({
         <input type="file" name={name} accept="image/*" multiple={multiple} onChange={handleChange} className="sr-only" />
       </label>
 
+      {trimmed && <p className="text-[12px] text-red-accent">{overLimitMessage ?? `Only the first ${maxFiles} photos were kept.`}</p>}
       {busy && <p className="text-[12px] text-text-muted">Optimising…</p>}
       {!busy && picked.length === 0 && <p className="text-[12px] text-text-muted">No file chosen</p>}
       {!busy &&

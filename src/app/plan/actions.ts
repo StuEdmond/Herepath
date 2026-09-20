@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { routes, savedTrips, type SavedTripItem } from "@/db/schema";
-import { MAX_SAVED_TRIPS, TRIP_NAME_MAX_LENGTH } from "@/lib/trip-limits";
+import { getLimits } from "@/lib/membership";
+import { TRIP_NAME_MAX_LENGTH } from "@/lib/trip-limits";
 import { MAX_TRIP_ROUTES } from "@/lib/trip-planner";
 
 export type SaveTripResult = { ok: true; id: string } | { ok: false; error: string };
@@ -60,8 +61,15 @@ export async function saveTrip(input: SaveTripInput): Promise<SaveTripResult> {
   }
 
   const [{ total }] = await db.select({ total: count() }).from(savedTrips).where(eq(savedTrips.userId, userId));
-  if (total >= MAX_SAVED_TRIPS) {
-    return { ok: false, error: `You can save up to ${MAX_SAVED_TRIPS} trips. Delete one from your profile to make room.` };
+  const { savedTrips: maxTrips } = await getLimits(userId);
+  if (total >= maxTrips) {
+    return {
+      ok: false,
+      error:
+        maxTrips <= 1
+          ? "A free account can keep one saved trip. Delete it from your profile to save a new one, or upgrade to Premium for unlimited trips."
+          : `You can save up to ${maxTrips} trips. Delete one from your profile to make room.`,
+    };
   }
   const [created] = await db.insert(savedTrips).values({ userId, name, items: cleanItems, milesPerDay, origin }).returning({ id: savedTrips.id });
   revalidatePath("/profile");

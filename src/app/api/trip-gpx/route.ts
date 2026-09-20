@@ -1,4 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { getLimits } from "@/lib/membership";
 import { db } from "@/db/client";
 import { routes } from "@/db/schema";
 import { haversineMiles, type LatLng } from "@/lib/geo";
@@ -59,10 +61,12 @@ export async function GET(request: Request) {
   const homeParts = (params.get("home") ?? "").split(",").map(Number);
   const homePoint: LatLng | null = homeParts.length === 2 && homeParts.every(Number.isFinite) && Math.abs(homeParts[0]) <= 90 && Math.abs(homeParts[1]) <= 180 ? { lat: homeParts[0], lng: homeParts[1] } : null;
   const routingDeadline = Date.now() + ROUTING_BUDGET_MS;
+  // The roads between routes are part of Premium; a free account's file has the routes only.
+  const includeLinks = (await getLimits((await auth())?.user?.id)).tripGpxLegs;
 
   /** The road from one point to another as a track, or nothing if it isn't worth routing or the service can't find it. */
   async function linkTrack(name: string, from: LatLng | null, to: LatLng | null) {
-    if (!from || !to || !inUk(from) || !inUk(to) || Date.now() > routingDeadline) return;
+    if (!includeLinks || !from || !to || !inUk(from) || !inUk(to) || Date.now() > routingDeadline) return;
     const straight = haversineMiles(from, to);
     if (straight < MIN_LINK_MILES || straight > MAX_LINK_STRAIGHT_MILES) return;
     try {

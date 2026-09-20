@@ -10,6 +10,7 @@ export async function joinWaitlist(formData: FormData) {
     .toLowerCase();
   if (!email || !email.includes("@")) throw new Error("Enter a valid email address");
 
-  await db.insert(waitlistSignups).values({ email }).onConflictDoNothing();
-  redirect("/pricing?joined=1");
+  const interest = formData.get("interest") === "premium_plus" ? "premium_plus" : "premium";
+  await db.insert(waitlistSignups).values({ email, interest }).onConflictDoNothing();
+  redirect(`/pricing?joined=${interest}`);
 }

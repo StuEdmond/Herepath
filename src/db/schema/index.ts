@@ -24,3 +24,4 @@ export * from "./trips";
 export * from "./conditions";
 export * from "./road-routes";
 export * from "./road-closures";
+export * from "./billing";

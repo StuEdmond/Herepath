@@ -6,11 +6,15 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import type { membershipTierEnum } from "@/db/schema";
+import { membershipTierEnum } from "@/db/schema";
 
-export async function setMembershipTier(id: string, tier: (typeof membershipTierEnum.enumValues)[number]) {
-  await db.update(users).set({ membershipTier: tier }).where(eq(users.id, id));
+/** Sets a rider's level by hand: a free upgrade for testers, friends and founding members. A paid subscription is separate and never changed here. */
+export async function setMembershipTier(id: string, formData: FormData) {
+  const tier = String(formData.get("tier"));
+  if (!(membershipTierEnum.enumValues as readonly string[]).includes(tier)) return;
+  await db.update(users).set({ membershipTier: tier as (typeof membershipTierEnum.enumValues)[number] }).where(eq(users.id, id));
   revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${id}`);
 }
 
 // No look-alike characters (0/O, 1/l/I), so a password read out or typed from a message is hard to get wrong.

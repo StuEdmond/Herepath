@@ -21,6 +21,7 @@ import {
 } from "@/db/schema";
 import { getDayRideHardestDifficulty, getTourHardestDifficulty } from "@/lib/difficulty";
 import { auth } from "@/lib/auth";
+import { getLimits } from "@/lib/membership";
 import { getReviewsForTarget, hasLoggedRide } from "@/lib/reviews";
 import { getPlaceReviews } from "@/lib/place-reviews";
 import { DifficultyGauge } from "@/components/ui/difficulty-gauge";
@@ -155,6 +156,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
     .where(eq(tourVariations.tourId, tour.id));
 
   const session = await auth();
+  const limits = await getLimits(session?.user?.id);
   const { reviews, average } = await getReviewsForTarget("tour", tour.id);
   let initialSaved = false;
   let canReview = false;
@@ -271,6 +273,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
             <TourMapCard
               slug={tour.slug}
               name={tour.name}
+              access={{ tourGpx: limits.tourGpx, tourSheet: limits.tourSheet }}
               days={dayRows.map((row) => ({
                 dayNumber: row.tourDay.dayNumber,
                 name: row.dayRide.name,

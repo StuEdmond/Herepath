@@ -1,9 +1,10 @@
 "use server";
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
+import { getLimits } from "@/lib/membership";
 import { db } from "@/db/client";
 import { diaryEntries, diaryEntryPhotos, routes, dayRides, tours, reviews } from "@/db/schema";
 import type { tripTargetEnum } from "@/db/schema";
@@ -52,6 +53,11 @@ export async function createDiaryEntry(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) redirect("/account/sign-in");
   const userId = session.user.id;
+
+  // The diary has a size limit on a free account. The form says so before this point; this is the backstop.
+  const limits = await getLimits(userId);
+  const [{ used }] = await db.select({ used: count() }).from(diaryEntries).where(eq(diaryEntries.userId, userId));
+  if (used >= limits.diaryEntries) redirect("/pricing?need=diary");
 
   const source = String(formData.get("source"));
   const date = String(formData.get("date"));
@@ -123,7 +129,10 @@ export async function createDiaryEntry(formData: FormData) {
     })
     .returning();
 
-  const photos = formData.getAll("photos").filter((p): p is File => p instanceof File && p.size > 0);
+  const photos = formData
+    .getAll("photos")
+    .filter((p): p is File => p instanceof File && p.size > 0)
+    .slice(0, limits.photosPerDiaryEntry);
   let browserGps: ({ lat: number; lng: number } | null)[] = [];
   try {
     const parsed = JSON.parse(String(formData.get("photoGps") ?? "[]"));

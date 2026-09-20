@@ -39,7 +39,7 @@ const STEP_DEFAULTS = [
 ] as const;
 
 const FAQ_DEFAULTS = [
-  ["Is Herepath free to use?", "Yes. Browsing, searching, saving rides and keeping a ride diary are all free. We're planning an optional Premium tier — see the pricing page for what's coming."],
+  ["Is Herepath free to use?", "Yes. Browsing, searching, saving rides and keeping a ride diary are all free. An optional Premium plan adds extras such as full tour GPX files, unlimited saved trips and diary photos. See the pricing page for what's included and what's coming."],
   ["Do I need an account?", "No account is needed to browse routes, day rides and tours. You'll need a free account to save rides, keep a diary, or leave a review."],
   ["How are difficulty and bike-suitability ratings decided?", "They're set by hand based on road surface, technicality and how exposed a route is to weather — not generated automatically."],
   ["Can I download a GPX file for my own sat-nav or app?", "Yes. Every route, day ride and tour page has a GPX download, plus buttons to open the ride in Google Maps or Apple Maps. Those two only take a handful of points along a route, so they choose their own roads in between, and Apple Maps takes just a start and an end. For the exact route, use the GPX in a sat-nav or an app such as Beeline, Garmin or TomTom. The Use in Beeline, Garmin or TomTom section under each map shows how."],
@@ -92,33 +92,15 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     label: "Pricing page",
     path: "/pricing",
     fields: [
-      text("title", "Heading", "Free to explore. Premium coming soon."),
-      text("subtitle", "Sub-heading", "No billing yet — Premium is on our roadmap, not live."),
-      text("freeLabel", "Free plan name", "Free"),
-      text("freePrice", "Free plan price", "£0"),
-      text("freePriceNote", "Free plan price note", "forever"),
-      area(
-        "freeFeatures",
-        "Free plan features",
-        "Browse every route, day ride and tour\nSearch, filters and map view\nSave rides and keep a ride diary\nGPX export and Google/Apple Maps hand-off\nShare your rides",
-        "One feature per line.",
-      ),
-      text("freeCta", "Free plan button", "Start exploring"),
-      text("premiumLabel", "Premium plan name", "Premium · coming soon"),
-      text("premiumPrice", "Premium plan price", "TBC"),
-      area(
-        "premiumFeatures",
-        "Premium plan features",
-        "Video ride recaps, built from your diary\nOffline-ready maps for weak-signal areas\nUnlimited cloud photo backup for your diary\nEarly access to new tours\nPriority support and feature requests",
-        "One feature per line.",
-      ),
+      text("title", "Heading", "Free to explore. Go further with Premium."),
+      text("subtitle", "Sub-heading", "Every route is free to read. Premium adds the extras for weekends away and long tours."),
       text("waitlistButton", "Waitlist button", "Notify me"),
-      text("waitlistSuccess", "Waitlist confirmation", "You're on the list — we'll email you when Premium launches."),
+      text("waitlistSuccess", "Waitlist confirmation", "You're on the list. We'll email you when it's ready."),
       area(
         "offlineNote",
         "Note about weak signal",
         "Riding somewhere with weak signal? Download a route's GPX and load it into your sat-nav, or into a navigation app such as Beeline, Garmin or TomTom. They keep the route on the device, so it works with no signal at all, and it's free. Offline maps inside Herepath are planned for Premium.",
-        "Shown under the two plans. Leave empty to hide it.",
+        "Shown under the plans. Leave empty to hide it.",
       ),
     ],
   },

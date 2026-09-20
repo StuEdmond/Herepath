@@ -12,7 +12,7 @@ import { BIKE_TYPE_LABELS } from "@/lib/bike-types";
 import { haversineMiles, type LatLng } from "@/lib/geo";
 import type { PlaceResult } from "@/lib/geocode";
 import { slugify } from "@/lib/slug";
-import { DAY_LENGTH_OPTIONS, MAX_SAVED_TRIPS, TRIP_NAME_MAX_LENGTH } from "@/lib/trip-limits";
+import { DAY_LENGTH_OPTIONS, TRIP_NAME_MAX_LENGTH } from "@/lib/trip-limits";
 import {
   DAY_COLORS,
   LONG_GAP_MILES,
@@ -79,7 +79,10 @@ export function TripBuilder({
   addSlug,
   signedIn,
   closuresByRoute,
+  limits,
 }: {
+  /** What this rider's plan allows in the planner. */
+  limits: { savedTrips: number; tripGpxLegs: boolean; showUpgrade: boolean };
   /** Road closures on each route, by route id (routes with none are absent). */
   closuresByRoute: Record<string, RideClosure[]>;
   routes: PlannerRoute[];
@@ -492,12 +495,36 @@ export function TripBuilder({
                     )}
                   </p>
                 )}
-                {signedIn && !savedId && <p className="text-[12px] text-text-muted">You can save up to {MAX_SAVED_TRIPS} trips. They&apos;re private to you.</p>}
+                {signedIn && !savedId && (
+                  <p className="text-[12px] text-text-muted">
+                    {limits.savedTrips <= 1 ? "A free account can keep one saved trip." : `You can save up to ${limits.savedTrips} trips.`} They&apos;re private to you.
+                    {limits.showUpgrade && limits.savedTrips <= 1 && (
+                      <>
+                        {" "}
+                        <Link href="/pricing" className="text-green-bright underline">
+                          Premium keeps unlimited trips.
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                )}
+                {limits.showUpgrade && !limits.tripGpxLegs && (
+                  <p className="text-[12px] text-text-muted">
+                    <Link href="/pricing" className="text-green-bright underline">
+                      Premium
+                    </Link>{" "}
+                    adds the roads between your routes to the GPX.
+                  </p>
+                )}
                 <NavAppHandoff
                   gpxHref={wholeHref}
                   filename={downloadName}
                   rideName={tripName}
-                  note="This file has one track per route, in order. Your navigation app finds its own way between the routes, so plan those stretches in the app."
+                  note={
+                    limits.tripGpxLegs
+                      ? "This file has one track per route, in order, with the roads between them where we could find them. Check the whole route in your navigation app before you set off."
+                      : "This file has one track per route, in order. Your navigation app finds its own way between the routes, so plan those stretches in the app."
+                  }
                 />
               </div>
             </>

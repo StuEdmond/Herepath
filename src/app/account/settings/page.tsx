@@ -8,17 +8,17 @@ import { users } from "@/db/schema";
 import { updateProfile, changePassword, deleteAccount, signOutAction } from "../actions";
 import { Field, TextInput } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
 import { ThemeSelector } from "@/components/ui/theme-selector";
 import { ArrowLeft } from "lucide-react";
 import { DeleteAccountButton } from "./delete-account-button";
+import { PlanSection } from "./plan-section";
 
 export const metadata: Metadata = { title: "Settings" };
 
-export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; password?: string }> }) {
+export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; password?: string; subscribed?: string }> }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/account/sign-in");
-  const { saved, password } = await searchParams;
+  const { saved, password, subscribed } = await searchParams;
 
   const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
 
@@ -33,21 +33,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
         <p className="text-[13px] text-text-muted">{user?.email}</p>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-surface p-4">
-        <div className="flex items-center gap-2">
-          <Tag variant={user?.membershipTier === "premium" ? "suited" : "neutral"}>
-            {user?.membershipTier === "premium" ? "Premium" : "Free"}
-          </Tag>
-          <span className="text-[13px] text-text-muted">
-            {user?.membershipTier === "premium" ? "Thanks for being an early Premium tester." : "Premium is coming soon."}
-          </span>
-        </div>
-        {user?.membershipTier !== "premium" && (
-          <Link href="/pricing" className="text-[13px] text-green-bright underline">
-            See what&apos;s included
-          </Link>
-        )}
-      </div>
+      <PlanSection userId={session.user.id} justSubscribed={subscribed === "1"} />
 
       <form action={updateProfile} className="flex flex-col gap-3">
         <Field label="Name">

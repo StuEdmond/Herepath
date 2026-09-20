@@ -1,0 +1,2 @@
+ALTER TABLE "waitlist_signups" DROP CONSTRAINT "waitlist_signups_email_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "waitlist_email_interest_unique" ON "waitlist_signups" USING btree ("email","interest");

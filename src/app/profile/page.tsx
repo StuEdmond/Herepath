@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { getDiaryEntries, getSavedRides } from "@/lib/your-rides";
+import { getMembership } from "@/lib/membership";
+import { TIER_LABELS } from "@/lib/plans";
 import { updateBikes } from "../account/actions";
 import { Field, TextInput } from "@/components/admin/form-fields";
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const { saved } = await searchParams;
 
   const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
+  const membership = await getMembership(session.user.id);
   const [entries, savedRides, savedTripRows, plannerRoutes] = await Promise.all([
     getDiaryEntries(session.user.id),
     getSavedRides(session.user.id),
@@ -86,8 +89,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <h1 className="truncate text-[22px]">{user?.name ?? "Your profile"}</h1>
             <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-text-muted">
               <span className="truncate">{user?.email}</span>
-              <Tag variant={user?.membershipTier === "premium" ? "suited" : "neutral"} className="px-2 py-0.5 text-[12px]">
-                {user?.membershipTier === "premium" ? "Premium" : "Free"}
+              <Tag variant={membership.tier === "free" ? "neutral" : "suited"} className="px-2 py-0.5 text-[12px]">
+                {TIER_LABELS[membership.tier]}
               </Tag>
             </p>
           </div>

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const rows = await db.select().from(waitlistSignups).orderBy(desc(waitlistSignups.createdAt));
-  const csv = ["email,signed_up", ...rows.map((r) => `"${r.email.replace(/"/g, '""')}",${r.createdAt.toISOString()}`)].join("\n");
+  const csv = ["email,plan,signed_up", ...rows.map((r) => `"${r.email.replace(/"/g, '""')}",${r.interest},${r.createdAt.toISOString()}`)].join("\n");
 
   return new Response(csv, {
     headers: {

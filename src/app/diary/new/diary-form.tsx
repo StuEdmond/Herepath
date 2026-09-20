@@ -28,9 +28,18 @@ const PLACE_TYPE_LABELS: Record<string, string> = {
 export function DiaryForm({
   catalogueOptions,
   reviewablePlacesByTarget,
+  photoLimit,
+  canImportGpx,
+  showUpgrade,
 }: {
   catalogueOptions: CatalogueOption[];
   reviewablePlacesByTarget: Record<string, ReviewablePlace[]>;
+  /** The most photos this rider can add to one ride. */
+  photoLimit: number;
+  /** Whether importing a GPX file is included in this rider's plan. */
+  canImportGpx: boolean;
+  /** Premium is on sale, so it's fair to point riders at it. */
+  showUpgrade: boolean;
 }) {
   // Importing a recording is the common way in, so it comes first.
   const [source, setSource] = useState<"catalogue" | "own">("own");
@@ -105,7 +114,17 @@ export function DiaryForm({
                 Choose the GPX file your app saved of your ride. We draw it on the map and fill in the distance, name, date and times for you.
               </p>
             </div>
-            <GpxImportField onImported={applyImport} />
+            {canImportGpx ? (
+              <GpxImportField onImported={applyImport} />
+            ) : (
+              <p className="rounded-lg bg-surface-raised p-3 text-[13px] text-text-secondary">
+                Importing a ride from a GPX file is included with{" "}
+                <Link href="/pricing" className="text-green-bright underline">
+                  Premium
+                </Link>
+                . You can still fill in the details below by hand.
+              </p>
+            )}
           </div>
           <Field label="Route name">
             <TextInput name="ownRouteName" placeholder="e.g. My Sunday loop" required value={routeName} onChange={(e) => setRouteName(e.target.value)} />
@@ -191,8 +210,17 @@ export function DiaryForm({
 
       <div className="flex flex-col gap-1.5 text-[13px] text-text-muted">
         Photos
-        <ImageFileInput name="photos" multiple gpsFieldName="photoGps" />
-        <span className="text-[12px]">Location data is removed before anything is shown publicly</span>
+        <ImageFileInput
+          name="photos"
+          multiple
+          gpsFieldName="photoGps"
+          maxFiles={photoLimit}
+          overLimitMessage={`Your plan adds up to ${photoLimit} photos to a ride, so only the first ${photoLimit} were kept.`}
+        />
+        <span className="text-[12px]">
+          Location data is removed before anything is shown publicly
+          {showUpgrade && photoLimit <= 3 ? `. Free accounts can add ${photoLimit} photos to a ride; Premium allows more.` : ""}
+        </span>
       </div>
 
       <fieldset className="flex flex-col gap-1.5">

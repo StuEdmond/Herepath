@@ -16,9 +16,9 @@ export default async function AdminWaitlistPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-[20px]">
-            Premium waitlist <span className="text-text-muted">({rows.length})</span>
+            Waitlist <span className="text-text-muted">({rows.length})</span>
           </h2>
-          <p className="text-[13px] text-text-muted">People who asked to be told when Premium launches.</p>
+          <p className="text-[13px] text-text-muted">People who asked to be told when Premium or Premium Plus is ready.</p>
         </div>
         {rows.length > 0 && (
           <a href="/admin/waitlist/export">
@@ -37,6 +37,7 @@ export default async function AdminWaitlistPage() {
             <thead>
               <tr className="border-b border-surface-raised text-text-muted">
                 <th className="px-3 py-2 font-medium">Email</th>
+                <th className="px-3 py-2 font-medium">Plan</th>
                 <th className="px-3 py-2 font-medium">Signed up</th>
                 <th className="px-3 py-2" />
               </tr>
@@ -45,6 +46,7 @@ export default async function AdminWaitlistPage() {
               {rows.map((row) => (
                 <tr key={row.id} className="border-b border-surface-raised last:border-0">
                   <td className="px-3 py-2">{row.email}</td>
+                  <td className="px-3 py-2 text-text-secondary">{row.interest === "premium_plus" ? "Premium Plus" : "Premium"}</td>
                   <td className="px-3 py-2 text-text-muted">{formatDate(row.createdAt)}</td>
                   <td className="px-3 py-2 text-right">
                     <form action={deleteWaitlistSignup.bind(null, row.id)}>

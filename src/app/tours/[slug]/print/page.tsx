@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getLimits } from "@/lib/membership";
 import { db } from "@/db/client";
 import { tours, tourDays, tourOvernightStays, places, dayRides } from "@/db/schema";
 import { getTourHardestDifficulty } from "@/lib/difficulty";
@@ -12,6 +14,9 @@ export default async function TourPrintSheetPage({ params }: { params: Promise<{
   const { slug } = await params;
   const [tour] = await db.select().from(tours).where(eq(tours.slug, slug));
   if (!tour || tour.status !== "published") notFound();
+  // Printable tour sheets are part of Premium.
+  const session = await auth();
+  if (!(await getLimits(session?.user?.id)).tourSheet) redirect("/pricing?need=tour-sheet");
 
   const dayRows = await db
     .select({ tourDay: tourDays, dayRide: dayRides })
