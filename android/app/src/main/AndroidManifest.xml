@@ -29,6 +29,11 @@
         </provider>
     </application>
 
+    <!-- Lets the app see whether Instagram is installed (Android 11 and later hide other apps by default) -->
+    <queries>
+        <package android:name="com.instagram.android" />
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />

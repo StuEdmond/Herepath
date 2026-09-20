@@ -9,7 +9,7 @@ import { drawShareImage, type ShareFormat } from "@/lib/share-image";
 import { MapSnapshot } from "./map-snapshot";
 import { BrandIcon } from "./brand-icon";
 import { InstagramPanel } from "./instagram-panel";
-import { isNativeApp, openExternal, shareImageNative } from "@/lib/native";
+import { isNativeApp, openExternal, sendImageToInstagramNative, shareImageNative } from "@/lib/native";
 
 export interface ShareableData {
   title: string;
@@ -156,6 +156,19 @@ export function ShareModal({ data, onClose }: { data: ShareableData; onClose: ()
   }
 
   async function handleInstagramSend() {
+    if (native) {
+      // Copied first, while the tap still counts as a user gesture. Instagram can't take a caption from us.
+      navigator.clipboard?.writeText(caption).catch(() => {});
+      const blob = await getImageBlob();
+      if (blob && (await sendImageToInstagramNative(blob)) === "sent") {
+        setNote("Caption copied — paste it into your post.");
+        return;
+      }
+      // Instagram isn't installed, or this build of the app can't open it directly: use the share sheet instead.
+      setNote("Couldn't open Instagram directly, so here's the share sheet.");
+      await handleMoreApps();
+      return;
+    }
     if (canSendToApp) {
       await handleMoreApps();
       return;

@@ -110,7 +110,7 @@ export function InstagramPanel({
       <ol className="list-decimal space-y-1 pl-5 text-[13px] text-text-secondary">
         {canSendToApp ? (
           <>
-            <li>Tap Send to Instagram and choose {story ? "Stories" : "Feed"} when your phone asks.</li>
+            <li>Tap Send to Instagram. If it asks where to post, choose {story ? "Story" : "Feed"}.</li>
             <li>Paste the caption. It&apos;s copied for you, and Instagram can&apos;t fill it in itself.</li>
           </>
         ) : (
