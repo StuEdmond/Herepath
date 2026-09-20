@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { BackToResults } from "@/components/explore/back-to-results";
 import Link from "next/link";
 import { eq, and } from "drizzle-orm";
@@ -19,6 +20,7 @@ import { DayRideMapCard } from "@/components/route/day-ride-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
 import { RideFreshness } from "@/components/route/ride-freshness";
+import { RoadClosureNotice } from "@/components/route/road-closure-notice";
 import { StageTimeline, type TimelineStage } from "@/components/route/stage-timeline";
 import { PlacesToEat, type PlaceToEatEntry } from "@/components/route/places-to-eat";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -37,6 +39,9 @@ function formatMinutes(minutes: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
+
+// Reading road closures again (after the page is sent) can take a little while.
+export const maxDuration = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -195,6 +200,10 @@ export default async function DayRidePage({ params }: { params: Promise<{ slug: 
             <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
           )}
         </div>
+
+        <Suspense fallback={null}>
+          <RoadClosureNotice type="day-ride" slug={dayRide.slug} />
+        </Suspense>
 
         <RideFreshness
           targetType="day_ride"

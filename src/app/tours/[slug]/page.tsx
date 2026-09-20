@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { BackToResults } from "@/components/explore/back-to-results";
 import Link from "next/link";
 import { eq, and } from "drizzle-orm";
@@ -30,6 +31,7 @@ import { TourMapCard } from "@/components/route/tour-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
 import { RideFreshness } from "@/components/route/ride-freshness";
+import { RoadClosureNotice } from "@/components/route/road-closure-notice";
 import { TourDayCard, type TourDayInfo } from "@/components/route/tour-day-card";
 import { WhereToStay, type OvernightPlace } from "@/components/route/where-to-stay";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -41,6 +43,9 @@ async function getTour(slug: string) {
   return tour;
 }
 
+
+// Reading road closures again (after the page is sent) can take a little while.
+export const maxDuration = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -205,6 +210,10 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
             <span className="text-[14px] text-text-muted">No reviews yet from riders who completed it</span>
           )}
         </div>
+
+        <Suspense fallback={null}>
+          <RoadClosureNotice type="tour" slug={tour.slug} />
+        </Suspense>
 
         <RideFreshness
           targetType="tour"

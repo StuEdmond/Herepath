@@ -35,6 +35,8 @@ import { AddressSearch } from "./address-search";
 import { RouteFilterBar } from "./route-filter-bar";
 import { TripMap, type TripMapStop } from "./trip-map";
 import { useRoadLinks } from "./use-road-links";
+import { ClosureList } from "@/components/route/closure-list";
+import type { RideClosure } from "@/lib/closures";
 import { MIN_LINK_MILES } from "@/lib/road-link";
 import { useTripPlaces } from "./use-trip-places";
 
@@ -76,7 +78,10 @@ export function TripBuilder({
   initial,
   addSlug,
   signedIn,
+  closuresByRoute,
 }: {
+  /** Road closures on each route, by route id (routes with none are absent). */
+  closuresByRoute: Record<string, RideClosure[]>;
   routes: PlannerRoute[];
   popularChips: PopularChip[];
   initial: InitialTrip | null;
@@ -149,6 +154,18 @@ export function TripBuilder({
           roadsPending > 0 ? " (finding the roads…)" : estimatedLegs > 0 ? ` (${estimatedLegs === 1 ? "one stretch is a straight-line estimate" : `${estimatedLegs} stretches are straight-line estimates`})` : ""
         }`
       : "";
+
+  // Closures on any route (drawn on the map), and the ones on routes in this trip (listed as a warning).
+  const allClosures = useMemo(() => {
+    const unique = new Map<string, RideClosure>();
+    for (const list of Object.values(closuresByRoute)) for (const closure of list) unique.set(closure.id, closure);
+    return [...unique.values()];
+  }, [closuresByRoute]);
+  const tripClosures = useMemo(() => {
+    const unique = new Map<string, RideClosure>();
+    for (const stop of trip.stops) for (const closure of closuresByRoute[stop.route.id] ?? []) unique.set(closure.id, closure);
+    return [...unique.values()];
+  }, [trip.stops, closuresByRoute]);
 
   const stopSlugs = useMemo(() => trip.stops.map((s) => s.route.slug), [trip.stops]);
   const placesState = useTripPlaces(stopSlugs);
@@ -283,6 +300,7 @@ export function TripBuilder({
           routes={mapRoutes}
           stops={mapStops}
           legs={legs}
+          closures={allClosures}
           origin={origin}
           picking={picking}
           fitKey={fitKey}
@@ -337,6 +355,7 @@ export function TripBuilder({
                 <span className="text-text-muted">Suits: </span>
                 {trip.suitedForAll.length > 0 ? trip.suitedForAll.map((t) => BIKE_TYPE_LABELS[t] ?? t).join(", ") : "no bike type is rated as suited on every route"}
               </p>
+              <ClosureList closures={tripClosures} heading="Road closures on routes in your trip" />
               {trip.missing > 0 && <p className="text-[13px] text-red-accent">{trip.missing} route(s) in this trip are no longer available and have been left out.</p>}
               {trip.longGaps > 0 && (
                 <p className="text-[13px] text-red-tint-text">
@@ -586,7 +605,12 @@ export function TripBuilder({
               return (
                 <li key={route.id} className="flex items-center gap-2 rounded-lg bg-surface-raised p-2">
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[14px] text-text-primary">{route.name}</div>
+                    <div className="truncate text-[14px] text-text-primary">
+                      {route.name}
+                      {closuresByRoute[route.id]?.length ? (
+                        <span className="ml-2 rounded bg-red-tint-bg px-1.5 py-0.5 align-middle text-[11px] text-red-tint-text">Closure reported</span>
+                      ) : null}
+                    </div>
                     <div className="truncate text-[12px] text-text-muted">
                       {route.regionName} · {route.distanceMiles} mi · difficulty {route.difficulty} of 5 · {route.startLabel ?? "start"} → {route.endLabel ?? "finish"}
                     </div>

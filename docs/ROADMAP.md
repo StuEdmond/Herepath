@@ -38,6 +38,17 @@ Where it plugs in: `linkBetween()` in `src/lib/trip-planner.ts` returns a straig
 
 Where it plugs in: the "Round trip from where you start" panel in `src/components/plan/trip-builder.tsx`. It already takes a start point and target distance. Today it calls `suggestRoundTrips()` (whole routes only); a generator would be a second source of suggestions.
 
+## Road closures: what is built and what is next
+**Built (September 2026):** National Highways closures (motorways and major A roads in England), shown on ride pages and the trip planner. See the README for how it works.
+
+**Next:**
+- **Street Manager (DfT)** covers roadworks and closures by councils and utilities on minor roads in England, which is where most riders' roads close. Free but needs registration and receiving a data stream, so it is a bigger job. LiveRoad and similar services sell it ready-made.
+- **Scotland, Wales and Northern Ireland** have their own feeds (Traffic Scotland, Traffic Wales, TrafficWatch NI).
+- **Rider road reports** could be shown as a "closure reported by riders" flag on the ride (they are private today).
+- **Lane closures and slip roads** are ignored on purpose. They could be shown as a lighter "delays likely" note.
+- **Unplanned closures** are fetched with the planned ones but were empty when we tested (a Sunday afternoon). Check the output when one is live.
+- **Licence and credit:** the pages say "Source: National Highways". Check National Highways' terms page for any wording they require.
+
 ## Google and Apple Maps links (need a test on real phones)
 - **Google:** Google's Maps URL documentation allows 3 waypoints on mobile browsers and 9 otherwise. `src/lib/map-links.ts` sends 8 per leg (plus a start and a finish). **Tested by the owner (September 2026):** on the routes checked, Google Maps showed 8 stops plus the start and end, so all 8 waypoints are kept and no change is needed. This was in Google Maps on a phone, which is where riders will use it, so the documented 3-waypoint limit for mobile browsers doesn't affect us in practice. The buttons still say "approximate" because Google picks its own roads between waypoints.
 - **Apple:** the buttons now say "start and end only". Apple's newer unified URL format (`maps.apple.com/directions?source=…&destination=…&waypoint=…`) is reported to accept repeated `waypoint` parameters, but we couldn't read Apple's page to confirm the names, any limit, or which iOS versions. Test one link on an iPhone or Mac before switching `buildAppleMapsUrl()` to it.

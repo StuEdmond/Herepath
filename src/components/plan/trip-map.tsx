@@ -40,6 +40,8 @@ const ROUTES_HIT = "trip-routes-hit";
 const LEGS_SOURCE = "trip-legs";
 const LEGS_LINE = "trip-legs-line";
 const LEGS_ROAD_LINE = "trip-legs-road-line";
+const CLOSURES_SOURCE = "trip-closures";
+const CLOSURES_LINE = "trip-closures-line";
 const UNSELECTED_COLOR = "#8a93a3";
 
 export interface TripMapStop {
@@ -158,8 +160,17 @@ function bindEvents(map: MaplibreMap, ref: { current: Handlers }) {
   });
 }
 
-function addLayers(map: MaplibreMap, routes: GeoJSON.FeatureCollection, legs: GeoJSON.FeatureCollection) {
+function addLayers(map: MaplibreMap, routes: GeoJSON.FeatureCollection, legs: GeoJSON.FeatureCollection, closures: GeoJSON.FeatureCollection) {
   map.addSource(ROUTES_SOURCE, { type: "geojson", data: routes });
+  // Closed roads get a wide red band under the route lines, so a route running along one shows red on either side of it.
+  map.addSource(CLOSURES_SOURCE, { type: "geojson", data: closures });
+  map.addLayer({
+    id: CLOSURES_LINE,
+    type: "line",
+    source: CLOSURES_SOURCE,
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#e5484d", "line-width": 11, "line-opacity": 0.75 },
+  });
   map.addLayer({
     id: ROUTES_LINE,
     type: "line",
@@ -202,6 +213,7 @@ export function TripMap({
   routes,
   stops,
   legs,
+  closures,
   origin,
   picking,
   fitKey,
@@ -212,6 +224,8 @@ export function TripMap({
   routes: PlannerRoute[];
   stops: TripMapStop[];
   legs: LinkLeg[];
+  /** Closed stretches of road to draw in red, as [lng, lat] lines. */
+  closures: { id: string; lines: [number, number][][] }[];
   origin: LatLng | null;
   picking: boolean;
   /** Changes when the map should zoom to fit the trip (or every route, when the trip is empty). */
@@ -278,18 +292,23 @@ export function TripMap({
         geometry: { type: "LineString", coordinates: l.line ?? [[l.from.lng, l.from.lat], [l.to.lng, l.to.lat]] },
       })),
     };
-    return { routeFeatures, legFeatures };
-  }, [routes, stops, legs]);
+    const closureFeatures: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: closures.map((c) => ({ type: "Feature", properties: { id: c.id }, geometry: { type: "MultiLineString", coordinates: c.lines } })),
+    };
+    return { routeFeatures, legFeatures, closureFeatures };
+  }, [routes, stops, legs, closures]);
 
   const draw = useCallback(
     (target: MaplibreMap) => {
-      const { routeFeatures, legFeatures } = buildData();
+      const { routeFeatures, legFeatures, closureFeatures } = buildData();
       const routesSource = target.getSource(ROUTES_SOURCE) as GeoJSONSource | undefined;
       if (routesSource) {
         routesSource.setData(routeFeatures);
         (target.getSource(LEGS_SOURCE) as GeoJSONSource | undefined)?.setData(legFeatures);
+        (target.getSource(CLOSURES_SOURCE) as GeoJSONSource | undefined)?.setData(closureFeatures);
       } else {
-        addLayers(target, routeFeatures, legFeatures);
+        addLayers(target, routeFeatures, legFeatures, closureFeatures);
       }
       bindEvents(target, handlersRef);
     },

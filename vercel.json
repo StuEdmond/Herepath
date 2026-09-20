@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/refresh-places",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-closures",
+      "schedule": "30 3 * * *"
     }
   ]
 }

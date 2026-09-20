@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { BackToResults } from "@/components/explore/back-to-results";
 import Link from "next/link";
 import { eq, and, ne, isNotNull } from "drizzle-orm";
@@ -20,6 +21,7 @@ import { RouteMapCard } from "@/components/route/route-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
 import { RideFreshness } from "@/components/route/ride-freshness";
+import { RoadClosureNotice } from "@/components/route/road-closure-notice";
 import { routeCreditLine } from "@/lib/route-sources";
 import { ReviewsSection } from "@/components/route/reviews-section";
 import { SaveRideButton } from "@/components/route/save-ride-button";
@@ -37,6 +39,9 @@ function formatMinutes(minutes: number): string {
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
+
+// Reading road closures again (after the page is sent) can take a little while.
+export const maxDuration = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -178,6 +183,10 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
             <span className="text-[14px] text-text-muted">No reviews yet</span>
           )}
         </div>
+
+        <Suspense fallback={null}>
+          <RoadClosureNotice type="route" slug={route.slug} />
+        </Suspense>
 
         <RideFreshness
           targetType="route"

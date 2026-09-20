@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { searchChips } from "@/db/schema";
 import { getPlannerRoutes, getSavedTrip } from "@/lib/trips";
+import { ensureClosuresFresh, getClosuresForPublishedRoutes } from "@/lib/closures";
 import { TripBuilder, type InitialTrip } from "@/components/plan/trip-builder";
 
 export const metadata: Metadata = {
@@ -10,12 +11,20 @@ export const metadata: Metadata = {
   description: "Join Herepath routes together into your own day ride or multi-day tour, or ask for a round trip from where you start.",
 };
 
+// Reading road closures again (after the page is sent) can take a little while.
+export const maxDuration = 60;
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ trip?: string; add?: string }> }) {
   const { trip: tripId, add } = await searchParams;
   const session = await auth();
-  const [routes, popularChips] = await Promise.all([getPlannerRoutes(), db.select().from(searchChips).orderBy(searchChips.position)]);
+  await ensureClosuresFresh();
+  const [routes, popularChips, closuresByRoute] = await Promise.all([
+    getPlannerRoutes(),
+    db.select().from(searchChips).orderBy(searchChips.position),
+    getClosuresForPublishedRoutes(),
+  ]);
 
   let initial: InitialTrip | null = null;
   if (tripId && UUID.test(tripId) && session?.user?.id) {
@@ -45,7 +54,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           navigation app.
         </p>
       </div>
-      <TripBuilder routes={routes} popularChips={popularChips} initial={initial} addSlug={add ?? null} signedIn={!!session?.user} />
+      <TripBuilder routes={routes} popularChips={popularChips} initial={initial} addSlug={add ?? null} signedIn={!!session?.user} closuresByRoute={Object.fromEntries(closuresByRoute)} />
     </div>
   );
 }
