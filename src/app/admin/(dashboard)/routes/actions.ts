@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { conditionsNoteDate, readDateField } from "@/lib/condition-reports";
+import { BEGINNER_BIKE_TYPES, isDemandingRoute } from "@/lib/bike-types";
 import { isRouteLicence } from "@/lib/route-sources";
 import {
   routes,
@@ -57,9 +58,8 @@ async function readForm(formData: FormData) {
     throw new Error("This route is still marked as needing review, so it can't be published. Untick 'Still needs review' once it has been checked.");
   }
 
-  // Honest ratings are the point of Herepath, so a demanding route can't be marked as suiting the bikes least able to ride it.
-  const demanding = difficulty >= 4 || surfaceQuality === "poor";
-  const beginnerBikesMarkedSuited = ["cruiser", "125cc_and_new_riders"].filter((type) => formData.get(`suitability_${type}`) === "suited");
+  const demanding = isDemandingRoute(difficulty, surfaceQuality);
+  const beginnerBikesMarkedSuited = BEGINNER_BIKE_TYPES.filter((type) => formData.get(`suitability_${type}`) === "suited");
   if (demanding && beginnerBikesMarkedSuited.length > 0) {
     throw new Error(
       `This route is ${difficulty >= 4 ? `difficulty ${difficulty}` : "on a poor surface"}, so Cruiser and 125cc and new riders can't be marked as "suited". Set them to "caution" (and add a note saying why) or leave them blank.`,

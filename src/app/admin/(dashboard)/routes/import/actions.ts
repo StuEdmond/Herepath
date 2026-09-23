@@ -1,9 +1,10 @@
 "use server";
 
-import { like } from "drizzle-orm";
+import { inArray, like } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
-import { regions, routes } from "@/db/schema";
+import { BEGINNER_BIKE_TYPES, isBikeType, isDemandingRoute, type BikeType } from "@/lib/bike-types";
+import { regions, routeBikeSuitability, routeLandmarks, routes, landmarks } from "@/db/schema";
 import { lineDistanceMiles } from "@/lib/gpx";
 import { findLikelyDuplicate, summariseExistingRoute, type ExistingRouteSummary, type ImportBatch, type ImportResult, type ImportRow } from "@/lib/route-import";
 import { MAX_IMPORT_FILES, MAX_IMPORT_POINTS, isRouteLicence } from "@/lib/route-sources";
@@ -36,8 +37,10 @@ async function freeSlug(name: string, taken: Set<string>): Promise<string> {
 
 /**
  * Creates a draft route for each row, recording where the files came from and their licence. Everything comes in as an unpublished draft
- * marked "needs review", with no description and no bike ratings, so nothing goes live until someone has written and checked it.
- * Distance is worked out again here from the track, and a route that looks like one already on the site is skipped.
+ * marked "needs review", so nothing goes live until someone has checked it — a route-details spreadsheet can fill in the description,
+ * bike ratings and the rest, but doesn't skip that check. Distance is worked out again here from the track, and a route that looks like
+ * one already on the site is skipped. A row's own source overrides the batch's for just that route, when the files came from more than
+ * one place; a beginner bike marked "suited" on a route too demanding for it is moved to "caution" instead, and that's noted for the admin.
  */
 export async function importRoutes(batch: ImportBatch, rows: ImportRow[]): Promise<ImportResult> {
   const sourceName = String(batch?.sourceName ?? "").trim().slice(0, 120);
@@ -54,8 +57,12 @@ export async function importRoutes(batch: ImportBatch, rows: ImportRow[]): Promi
   const regionIds = new Set((await db.select({ id: regions.id }).from(regions)).map((r) => r.id));
   const existing = await db.select().from(routes);
   const summaries: ExistingRouteSummary[] = existing.map(summariseExistingRoute);
+  const wantedLandmarkIds = [...new Set(rows.flatMap((r) => r.landmarkIds ?? []))].filter((id) => UUID.test(id));
+  const landmarkIds = wantedLandmarkIds.length
+    ? new Set((await db.select({ id: landmarks.id }).from(landmarks).where(inArray(landmarks.id, wantedLandmarkIds))).map((l) => l.id))
+    : new Set<string>();
 
-  const created: { id: string; name: string }[] = [];
+  const created: { id: string; name: string; note?: string }[] = [];
   const skipped: { name: string; reason: string }[] = [];
   const taken = new Set<string>();
 
@@ -82,14 +89,21 @@ export async function importRoutes(batch: ImportBatch, rows: ImportRow[]): Promi
       const first = coordinates[0];
       const last = coordinates[coordinates.length - 1];
 
+      // A route-details spreadsheet can name a different source than the batch's own, when the files came from more than one place.
+      const rowSourceUrl = String(row.sourceUrl ?? "").trim().slice(0, 300);
+      const rowLicence = row.sourceLicence && isRouteLicence(row.sourceLicence) ? row.sourceLicence : null;
+
       const [route] = await db
         .insert(routes)
         .values({
           name,
           slug: await freeSlug(name, taken),
           regionId: row.regionId,
-          introSell: "",
-          introCharacter: "",
+          introSell: String(row.introSell ?? "").trim().slice(0, 5000),
+          introCharacter: String(row.introCharacter ?? "").trim().slice(0, 5000),
+          hazards: String(row.hazards ?? "").trim().slice(0, 2000) || null,
+          bestTime: String(row.bestTime ?? "").trim().slice(0, 500) || null,
+          stopOffNote: String(row.stopOffNote ?? "").trim().slice(0, 2000) || null,
           distanceMiles: String(distanceMiles),
           ridingTimeMinutes: minutes,
           difficulty: row.difficulty,
@@ -99,15 +113,44 @@ export async function importRoutes(batch: ImportBatch, rows: ImportRow[]): Promi
           endPoint: { lat: last[1], lng: last[0], ...(endLabel && { label: endLabel }) },
           status: "draft",
           isSample: false,
-          sourceName,
-          sourceUrl: sourceUrl || null,
-          sourceAuthor: sourceAuthor || null,
-          sourceLicence: batch.licence,
+          sourceName: String(row.sourceName ?? "").trim().slice(0, 120) || sourceName,
+          sourceUrl: rowSourceUrl || sourceUrl || null,
+          sourceAuthor: String(row.sourceAuthor ?? "").trim().slice(0, 120) || sourceAuthor || null,
+          sourceLicence: rowLicence ?? batch.licence,
           importedAt: new Date(),
           needsReview: true,
         })
         .returning({ id: routes.id });
-      created.push({ id: route.id, name });
+
+      // Cruiser and 125cc can't be "suited" on a route this demanding (Section: ratings rule) — moved to "caution" instead of
+      // dropped, so the honest rating still comes through and the admin sees why in the note below.
+      const demanding = isDemandingRoute(row.difficulty, row.surface);
+      const suited = new Set((row.suitedBikeTypes ?? []).filter(isBikeType));
+      const caution = new Set((row.cautionBikeTypes ?? []).filter(isBikeType));
+      let downgraded: BikeType[] = [];
+      if (demanding) {
+        downgraded = BEGINNER_BIKE_TYPES.filter((t) => suited.has(t));
+        for (const type of downgraded) {
+          suited.delete(type);
+          caution.add(type);
+        }
+      }
+      for (const type of caution) suited.delete(type); // a type marked both ways is kept as the safer "caution"
+
+      const suitabilityRows = [
+        ...[...suited].map((bikeType) => ({ routeId: route.id, bikeType, level: "suited" as const })),
+        ...[...caution].map((bikeType) => ({ routeId: route.id, bikeType, level: "caution" as const })),
+      ];
+      if (suitabilityRows.length > 0) await db.insert(routeBikeSuitability).values(suitabilityRows);
+
+      const linkedLandmarkIds = (row.landmarkIds ?? []).filter((id) => landmarkIds.has(id));
+      if (linkedLandmarkIds.length > 0) await db.insert(routeLandmarks).values(linkedLandmarkIds.map((landmarkId) => ({ routeId: route.id, landmarkId })));
+
+      created.push({
+        id: route.id,
+        name,
+        note: downgraded.length > 0 ? `Moved from suited to caution (too demanding for it): ${downgraded.join(", ")}.` : undefined,
+      });
       // Later rows in this batch are checked against this one too.
       summaries.push({
         name,

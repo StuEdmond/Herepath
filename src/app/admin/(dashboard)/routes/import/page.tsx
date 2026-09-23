@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { db } from "@/db/client";
-import { regions, routes } from "@/db/schema";
+import { landmarks, regions, routes } from "@/db/schema";
 import { BulkRouteImport } from "@/components/admin/bulk-route-import";
 import { summariseExistingRoute, type ExistingRouteSummary } from "@/lib/route-import";
 
 export default async function ImportRoutesPage() {
-  const [regionRows, existingRoutes] = await Promise.all([db.select().from(regions).orderBy(regions.name), db.select().from(routes)]);
+  const [regionRows, existingRoutes, landmarkRows] = await Promise.all([
+    db.select().from(regions).orderBy(regions.name),
+    db.select().from(routes),
+    db.select({ id: landmarks.id, name: landmarks.name, regionId: landmarks.regionId }).from(landmarks),
+  ]);
 
   const existing: ExistingRouteSummary[] = existingRoutes.map(summariseExistingRoute);
 
@@ -21,7 +25,7 @@ export default async function ImportRoutesPage() {
           and its licence.
         </p>
       </div>
-      <BulkRouteImport regions={regionRows.map((r) => ({ id: r.id, name: r.name }))} existing={existing} />
+      <BulkRouteImport regions={regionRows.map((r) => ({ id: r.id, name: r.name }))} existing={existing} landmarks={landmarkRows} />
     </div>
   );
 }
