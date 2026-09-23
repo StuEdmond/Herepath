@@ -49,6 +49,43 @@ Where it plugs in: the "Round trip from where you start" panel in `src/component
 - **Unplanned closures** are fetched with the planned ones but were empty when we tested (a Sunday afternoon). Check the output when one is live.
 - **Licence and credit:** the pages say "Source: National Highways". Check National Highways' terms page for any wording they require.
 
+## Premium's "coming soon" list, worked through
+
+Everything below is marked `soon` in `src/lib/plans.ts` (`PLAN_FEATURES`) and shown on the pricing page with a "Coming soon" tag, not sold as included. This is the order I'd tackle them in, and why. Nothing here is committed to a date — it's a starting point to look at and reprioritise.
+
+### Phase 0: one decision this blocks two features on
+
+**Pick a transactional email service.** Nothing in Herepath can send an email today — I checked. The contact form, blog approvals and admin password resets all rely on someone checking the admin dashboard or being handed a password directly; there's no `nodemailer`/Resend/Postmark/SES anywhere in the code. Two Premium features need a real message to land in someone's inbox (below), so this has to be chosen before either can be built. Resend and Postmark both have a small free tier and a straightforward API; either would do. This is a business decision (which service, and the cost once past its free tier) as much as a technical one.
+
+### Phase 1: cheap, code-only, ship first
+
+These don't need Phase 0, don't cost anything extra to run, and each is a solid week or so of focused work, so they're the natural way to make Premium feel finished before touching anything bigger.
+
+1. **Early access to new tours before they're public.** A new field on tours (an "early access from" date, or reusing the existing draft/published status with a third state) that shows the tour to Premium riders while everyone else still sees it as not yet published. Plugs into `src/app/tours/[slug]/page.tsx` and the tours admin form. No new infrastructure.
+2. **Roadbook PDFs — worth clarifying first.** The printable tour sheet (`/tours/[slug]/print`) already exists and is Premium; a phone or laptop can already save it as a PDF through its own print dialog. If "Roadbook PDF" means something more (a proper generated PDF file to download in one tap, rather than print-to-PDF), say so and I'll scope it properly — likely a PDF library run on the server, `pdf-lib` or similar, which is a bounded, knowable job once the shape is agreed. If it just means "make sure Print works well as a PDF," that's closer to done already and worth a quick pass rather than new engineering.
+3. **Founding member badge, and a direct line for feature requests.** A flag on the rider's account and a small badge component next to their name on reviews and tips (same pattern as the existing "Sponsored" tag). The "direct line" can be as simple as a dedicated contact-form option or a named email alias once Phase 0 exists to send from — until then, a note to check the contact messages admin page more often for these riders.
+4. **Dead Cylinder Co. discount and a welcome pack.** The discount is a Stripe coupon code, a few minutes' work. The patch or sticker pack is fulfilment (buy them, post them), not code — I'd log new subscribers somewhere you check monthly, unless you want a small admin page to tick off "pack sent."
+
+### Phase 2: needs Phase 0 (email)
+
+5. **Route watchlist.** A rider follows a saved route; a message goes out when its "last checked" date changes, a conditions note is added, or a closure is matched to it. Needs a small `route_watches` table and a job that compares against what changed since the last email — the road-closures refresh (`src/lib/closures.ts`) and the admin route form are exactly where the trigger would sit. Blocked on Phase 0.
+6. **Advance notice on new region launches.** The lightest version of this needs no code at all: export Premium subscribers' emails from Stripe and send one manually. A built version (a "subscribe to be told" list per region, or just all Premium riders) is Phase 2 work once Phase 0 exists, but I'd start with the manual version and only build it once you're doing it often enough to be worth automating.
+
+### Phase 3: bigger, and worth deferring until there are paying subscribers to justify them
+
+7. **Offline ride packs.** I'd split this in two, because only half of it is actually hard:
+   - **The easy half:** a route's GPX, its notes and its list of places, bundled into one downloadable file (or cached for the Android app to use with no signal). This has no external blocker and is a moderate build.
+   - **The hard half — offline maps themselves.** This needs checking MapTiler's terms allow downloading and caching map tiles for offline use; a lot of tile providers explicitly forbid it. I flagged this as unconfirmed back when Premium was first designed, and it's still unconfirmed. Check that before promising it, since it might mean a different map provider or a paid tile-caching plan.
+   - Nationwide offline (Premium Plus) is the same feature at a bigger scale — same blocker, do it after the regional version works.
+8. **Video ride recaps (Premium Plus).** The biggest single build here. It needs a rendering service (something like Remotion or a hosted API such as Shotstack), a real per-render cost that has to be metered so one rider can't run up a large bill, and a decision on whether recaps include music (a licensing question) or stay silent/photo-and-map only for a first version. I'd start with the silent version.
+9. **Ride-outs (Premium Plus).** New tables for the event and who's going, a joining link, and a group GPX pack — all reasonably ordinary building on top of the existing trip planner and diary. The part that takes longer than the code is everything around it: a real-world meeting point tied to a real date is a different privacy and moderation question to a route page, so the community guidelines and privacy policy need to cover it, which are both already waiting on `info@herepath.com`.
+10. **Group trip planning (Premium Plus).** Extends the existing trip planner (`src/components/plan/trip-builder.tsx`) to a shared itinerary with per-rider notes and a printable pack per person. Builds on solid ground, but comes after ride-outs make sense to prioritise since they likely share people, not just because of build order.
+11. **Custom route request, two a year (Premium Plus).** Small to build (a request form, a per-rider yearly counter, an admin queue) but a real recurring cost in your own time, not money — worth costing that against what Premium Plus actually brings in before promising it to every subscriber.
+
+### My suggested order
+
+Phase 0 → Phase 1 (all four, in roughly the order above) → Phase 2 → then revisit Phase 3 once Premium has real subscribers and real content behind it, at which point I'd do the offline GPX pack before video, and video before ride-outs, since each is progressively more expensive to get wrong.
+
 ## Google and Apple Maps links (need a test on real phones)
 - **Google:** Google's Maps URL documentation allows 3 waypoints on mobile browsers and 9 otherwise. `src/lib/map-links.ts` sends 8 per leg (plus a start and a finish). **Tested by the owner (September 2026):** on the routes checked, Google Maps showed 8 stops plus the start and end, so all 8 waypoints are kept and no change is needed. This was in Google Maps on a phone, which is where riders will use it, so the documented 3-waypoint limit for mobile browsers doesn't affect us in practice. The buttons still say "approximate" because Google picks its own roads between waypoints.
 - **Apple:** the buttons now say "start and end only". Apple's newer unified URL format (`maps.apple.com/directions?source=…&destination=…&waypoint=…`) is reported to accept repeated `waypoint` parameters, but we couldn't read Apple's page to confirm the names, any limit, or which iOS versions. Test one link on an iPhone or Mac before switching `buildAppleMapsUrl()` to it.
