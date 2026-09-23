@@ -140,6 +140,18 @@
 .herepath-popup-hover {
   pointer-events: none;
 }
+/* Bleeds to the popup's own edges by cancelling out its padding (12px 14px), so the thumbnail reaches the rounded top corners. */
+.herepath-pin-card-thumb {
+  display: block;
+  /* Tailwind's base styles cap an <img> at 100% of its container; this one is meant to bleed past it. */
+  max-width: none;
+  width: calc(100% + 28px);
+  height: 96px;
+  margin: -12px -14px 8px;
+  border-radius: 9px 9px 0 0;
+  background: var(--surface-raised);
+  object-fit: cover;
+}
 .herepath-pin-card-type {
   font-size: 11px;
   letter-spacing: 0.04em;

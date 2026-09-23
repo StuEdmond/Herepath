@@ -28,6 +28,7 @@ function toFeatureCollection(places: AlongPlace[]): GeoJSON.FeatureCollection<Ge
         source: place.source,
         sponsored: place.sponsored,
         website: place.website ?? null,
+        photoUrl: place.photoUrl ?? null,
       },
     })),
   };
@@ -102,6 +103,7 @@ function showCard(map: MaplibreMap, state: MapState, feature: MapGeoJSONFeature,
       source: props.source === "osm" ? "osm" : "herepath",
       sponsored: props.sponsored === true,
       website: props.website ? String(props.website) : undefined,
+      photoUrl: props.photoUrl ? String(props.photoUrl) : undefined,
     },
     pinned,
   );

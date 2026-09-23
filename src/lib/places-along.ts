@@ -250,6 +250,7 @@ async function ownPlaces(kind: PlaceKind, lines: Line[], radiusMetres: number): 
       source: "herepath",
       sponsored: row.isSponsored,
       website: safeWebsite(row.websiteUrl ?? undefined),
+      photoUrl: row.photo ?? undefined,
     });
   }
   return result;

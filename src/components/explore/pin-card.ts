@@ -44,6 +44,17 @@ export function buildPinCard(result: ExploreResult, onOpen?: () => void): HTMLEl
   const card = document.createElement("div");
   card.className = "herepath-pin-card";
 
+  if (result.heroImage) {
+    const thumb = document.createElement("img");
+    thumb.className = "herepath-pin-card-thumb";
+    thumb.src = result.heroImage;
+    thumb.alt = "";
+    thumb.loading = "lazy";
+    // A stored image that no longer loads (deleted, or a broken admin edit) just leaves the card as it was before thumbnails.
+    thumb.addEventListener("error", () => thumb.remove());
+    card.appendChild(thumb);
+  }
+
   const type = document.createElement("div");
   type.className = "herepath-pin-card-type";
   type.textContent = TYPE_LABEL[result.type];

@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { signOutAction } from "@/app/account/actions";
 import { Button } from "@/components/ui/button";
+import { AccountMenu } from "./account-menu";
 
 // The last three are also in the footer, so on a phone they're left out to keep the header to one tidy row.
 const NAV_LINKS = [
@@ -46,26 +46,8 @@ export async function Header() {
         </nav>
 
         {session?.user ? (
-          <div className="order-2 flex min-w-0 items-center gap-1.5 md:order-3 md:gap-3">
-            <Link href="/profile" className="hidden text-[14px] text-text-secondary hover:text-text-primary md:inline">
-              Profile
-            </Link>
-            <Link href="/profile" aria-label="Your profile" className="flex min-w-0 items-center gap-2 text-[14px] text-text-primary">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-raised text-[13px] font-medium">
-                {account?.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={account.image} alt="" className="h-8 w-8 object-cover" />
-                ) : (
-                  displayName[0].toUpperCase()
-                )}
-              </span>
-              <span className="max-w-20 truncate sm:max-w-28">{displayName}</span>
-            </Link>
-            <form action={signOutAction}>
-              <Button type="submit" variant="ghost" className="min-h-9 px-2 text-[13px] md:px-3">
-                Sign out
-              </Button>
-            </form>
+          <div className="order-2 flex min-w-0 items-center md:order-3">
+            <AccountMenu name={displayName} email={account?.email ?? null} image={account?.image ?? null} />
           </div>
         ) : (
           <Link href="/account/sign-in" className="order-2 md:order-3">

@@ -1,6 +1,6 @@
 import type { AlongPlace } from "@/lib/place-kinds";
 
-type CardPlace = Pick<AlongPlace, "name" | "label" | "note" | "source" | "sponsored" | "website">;
+type CardPlace = Pick<AlongPlace, "name" | "label" | "note" | "source" | "sponsored" | "website" | "photoUrl">;
 
 function element(tag: string, className: string, text?: string): HTMLElement {
   const el = document.createElement(tag);
@@ -16,6 +16,16 @@ function element(tag: string, className: string, text?: string): HTMLElement {
  */
 export function buildPlaceCard(place: CardPlace, withLink: boolean): HTMLElement {
   const card = element("div", "herepath-pin-card");
+
+  if (place.photoUrl) {
+    const thumb = element("img", "herepath-pin-card-thumb") as HTMLImageElement;
+    thumb.src = place.photoUrl;
+    thumb.alt = "";
+    thumb.loading = "lazy";
+    thumb.addEventListener("error", () => thumb.remove());
+    card.appendChild(thumb);
+  }
+
   card.appendChild(element("div", "herepath-pin-card-type", place.label));
   card.appendChild(element("div", "herepath-pin-card-title", place.name));
   if (place.note) card.appendChild(element("div", "herepath-pin-card-sub", place.note));

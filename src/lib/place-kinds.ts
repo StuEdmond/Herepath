@@ -37,6 +37,8 @@ export interface AlongPlace {
   source: "osm" | "herepath";
   sponsored: boolean;
   website?: string;
+  /** A photo of the place, only ever one we hold ourselves (OpenStreetMap's own image tags aren't used, so nothing from there is embedded as a picture). */
+  photoUrl?: string;
 }
 
 /** Which ride a map belongs to, so the server can find the places along it. */
