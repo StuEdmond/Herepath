@@ -92,6 +92,23 @@ Phase 0 → Phase 1 (all four, in roughly the order above) → Phase 2 → then 
 - **Legs at natural stops:** day rides already store lunch and fuel stops with mile markers, so leg boundaries could fall there. Longer legs mean fewer waypoints per mile, so this trades fidelity for fewer phone touches.
 - **Bulk GPX importer with a source and licence field per route**, to replace the sample content faster.
 
+## Affiliate links on hotels, campsites, pubs and restaurants (waiting on feedback, September 2026)
+
+Click a place's listing and it opens a small page or panel with its details, plus a link through to book it on a site like booking.com. Scoped but not started, while the owner gets feedback from others first.
+
+**Only Herepath's own places could carry this**, not the OpenStreetMap-sourced pins: an OSM point has no admin record behind it and no reliable way to match it to the right listing on a booking site.
+
+What it needs, roughly in order:
+1. **Decide on a provider (or a few) and apply.** Booking.com's own partner programme needs an application; going through an aggregator (Awin, Travelpayouts) is the easier route but takes a cut and adds a middleman. Restaurants would more likely use OpenTable or TheFork; campsites, Pitchup.com — Booking.com doesn't cover those well.
+2. **A new field or two on `places`**: an affiliate link (or one per provider), and which provider it is. Small schema change.
+3. **A real detail page or panel** for a place — today a listing is just a few lines of text in "Where to stay" with nowhere to click through to. Similar in size to the account panel already built.
+4. **Wire listings and the map popup to it.** The map popup already supports a website link when a place has one (`src/components/map/place-card.ts`); a detail page just needs linking in from there and from the ride-page lists.
+5. **A clear affiliate disclosure**, as the ASA's rules on affiliate marketing require — a wording and a small label, not a big build.
+6. **A privacy policy update**, since the current draft says "We don't use analytics, advertising or tracking cookies. If that changes, we'll ask for your consent first" — a click-through sets a cookie on the other site's domain, not Herepath's, so this is mostly a line explaining that, alongside the disclosure above.
+7. **Matching each of your own places to its real listing, by hand**, once it's built — not something to automate, since getting it wrong sends a rider to the wrong hotel.
+
+None of it is hard engineering; the slow part is the provider applications, the disclosure wording, and matching places by hand, not the code.
+
 ## Smaller ideas noted along the way
 - **Stay near the end of each day** in the trip planner: today the Stay pins show along all the trip's routes. Looking up places around an arbitrary point needs a limit on how many distinct places can be searched, so a visitor can't flood the free OpenStreetMap service.
 - **Making the main "Download GPX" buttons work inside the Android app.** The app's web view can't download files, so those buttons probably do nothing there. The "Send to a navigation app" share button works around it.
