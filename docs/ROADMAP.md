@@ -109,6 +109,27 @@ What it needs, roughly in order:
 
 None of it is hard engineering; the slow part is the provider applications, the disclosure wording, and matching places by hand, not the code.
 
+## Elevation profile and a 3D fly-through preview (scoped September 2026, not started)
+
+Like AllTrails' route preview: pick a route and a "Preview" button plays a 3D animation of the camera following the road, with the hills showing. **Owner's decision: the fly-through belongs in Premium** (it costs real map-tile requests each time it runs, which is the line already drawn for what Premium pays for). The elevation profile and gradient figures are safety-relevant and cheap once stored, so the intention is that they stay free. The pricing page has not been changed; add the fly-through to Premium's "coming soon" list in `src/lib/plans.ts` when the tiers are settled.
+
+**The gap first: Herepath stores no elevation.** `src/lib/gpx.ts` never reads or writes an elevation value, routes are stored as flat longitude/latitude pairs, and exported GPX files carry no `<ele>`. Nothing below works until routes have it.
+
+### Step A: get elevation onto routes (useful on its own, no per-view cost)
+- Work out each route's elevation once, when it is imported or saved, and store it with the route (a per-point value alongside the geometry, or a thinned profile — the choice isn't made).
+- Show an elevation profile chart on ride pages, with total ascent, descent and the steepest gradient. The steepest gradient matters to riders: Hardknott and Wrynose are defined by it, and it supports the honest-difficulty ratings.
+- Put `<ele>` into exported GPX files, which some sat-navs use for climb information.
+- **Where the numbers would come from** (September 2026; check each current page before deciding):
+  - The GPX file's own `<ele>` when present. Real recordings usually have it, but GPS height is noisy, and the sample routes have none.
+  - A terrain-model lookup done once per route: **Open-Meteo** (free only for non-commercial use, so a paid plan once charging), **OpenTopoData** (public service allows 100 points a request, 1 request a second, 1,000 a day, plenty for a few hundred routes; its commercial-use terms weren't confirmed, or self-host it), or **MapTiler's own terrain tiles** (already paid for, but read MapTiler's terms on storing values derived from their tiles first, the same open question as offline maps).
+- Terrain models aren't road surveys: tunnels, cuttings and bridges can read a little off and a short steep pitch can be smoothed out. Word it as approximate.
+
+### Step B: the 3D fly-through (Premium), built on Step A
+- MapLibre (already in use, `maplibre-gl` 6.x) supports 3D terrain, and MapTiler serves terrain tiles (`terrain-rgb-v2`, Terrarium encoding) up to a fairly detailed zoom. The animation is a camera moving along the stored route, tilted and turning with the road, with the relief slightly exaggerated, and a marker moving along the elevation chart in step. Play, pause, speed and scrub controls; respect "reduce motion".
+- **It costs per use.** A fly-through loads far more tiles than a normal map view, each counting against the MapTiler allowance, so it only runs when someone presses Preview, never automatically.
+- **Phones may struggle** with 3D terrain (older devices, battery), so it needs a fallback to the flat map.
+- **Testing:** the in-app browser pane can't render maps reliably, so the numbers and controls can be checked here, but smoothness has to be judged on a real phone.
+
 ## Smaller ideas noted along the way
 - **Stay near the end of each day** in the trip planner: today the Stay pins show along all the trip's routes. Looking up places around an arbitrary point needs a limit on how many distinct places can be searched, so a visitor can't flood the free OpenStreetMap service.
 - **Making the main "Download GPX" buttons work inside the Android app.** The app's web view can't download files, so those buttons probably do nothing there. The "Send to a navigation app" share button works around it.
