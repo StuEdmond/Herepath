@@ -15,6 +15,7 @@ Everything on the roadmap ([ROADMAP.md](ROADMAP.md)) that is still to do, number
 | A5 | **Check MapTiler's terms on offline tiles and on storing values derived from their tiles** | You | Blocks B6, and one of the options for A4. |
 | A6 | **Affiliate links: wait for the feedback you're gathering, then pick a provider and apply** | You | Booking.com directly or through an aggregator; Pitchup for campsites; OpenTable or TheFork for restaurants. Needed before E1. |
 | A7 | **Say what "Roadbook PDF" should be** | You | The printable tour sheet already exists and saves as a PDF from a phone's print dialog. If you meant more than that, B2 is a real build. |
+| A8 | **An Anthropic API key, and a rate limit you're comfortable with** | You | Needed before G2. Priced per use, like MapTiler and routing. |
 
 ## B. Premium and Premium Plus features
 
@@ -60,6 +61,18 @@ Everything on the roadmap ([ROADMAP.md](ROADMAP.md)) that is still to do, number
 |---|---|---|---|---|
 | E1 | **Affiliate links, with a place detail page** | M, plus set-up | A6, disclosure wording, privacy policy line | Only your own places, not OpenStreetMap's. Each one matched to its real listing by hand. |
 
+## G. The conversational route-finder agent
+
+| # | Item | Size | Needs | Notes |
+|---|---|---|---|---|
+| G1 | **A plain recommendation list** — routes similar to what a rider has already ridden, no AI | M | Nothing | Instant, free to run, no risk of a wrong answer. Build this before G2 regardless of what else is decided. |
+| G2 | **The conversational agent**: search by free text, ask a follow-up question when something's missing, off-topic gate, message logging | L | A8 | Sign-in only. The off-topic/misuse distinction and the flagged-message log should be in from day one, not added later. |
+| G3 | **A real day plan and a map in the reply**: reuses `summariseTrip()`/`splitIntoDays()` and the existing `TrackMap` component | M | G2 | Where "home location" comes from (ask each time, a saved profile field, or inferred from the diary) is still undecided. |
+| G4 | **Hand off several suggested routes to the real planner** (`/plan?add=`, extended to take a short list) | S | G2 | Today it only takes one route. |
+| G5 | **Admin → Flagged assistant messages** queue | S to M | G2 | Same pattern as Place tips and blog reports. A person decides every warning. |
+| G6 | **Admin-side account closure** | S to M | Nothing | Doesn't exist yet — today's account deletion is rider-initiated only. A real decision each time, not automatic. |
+| G7 | **The warning email itself** | S | A2, G5 | Sent by hand until A2 is chosen. |
+
 ## F. Small ideas and tests
 
 | # | Item | Size | Needs | Notes |
@@ -80,5 +93,5 @@ Everything on the roadmap ([ROADMAP.md](ROADMAP.md)) that is still to do, number
 ## If it helps to order them
 
 - **Do soonest:** A1 (minutes once you decide) and A2, since they unblock the most.
-- **Best value for effort:** C1 (free for riders, and B11 stands on it), then C2 and C3.
-- **Wait until there are paying subscribers:** B6 to B9.
+- **Best value for effort:** C1 (free for riders, and B11 stands on it), then C2 and C3. G1 belongs here too — cheap, no AI, genuinely useful.
+- **Wait until there are paying subscribers:** B6 to B9, and G2 onward — a large build, worth doing once there's a reason to believe riders want it.

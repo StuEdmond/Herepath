@@ -130,6 +130,47 @@ Like AllTrails' route preview: pick a route and a "Preview" button plays a 3D an
 - **Phones may struggle** with 3D terrain (older devices, battery), so it needs a fallback to the flat map.
 - **Testing:** the in-app browser pane can't render maps reliably, so the numbers and controls can be checked here, but smoothness has to be judged on a real phone.
 
+## A conversational route-finder agent (scoped October 2026, not started)
+
+A rider describes what they want ("something scenic for a long weekend on my Africa Twin, under 150 miles, avoiding motorways") or asks it to look at their own ride history, and it suggests real Herepath routes, asks a follow-up question when something important is missing, and can sketch out what the day would look like from a stated start point, with a short map alongside. Scoped in full; nothing built, no dependency added.
+
+**The right shape for this is tool use, not free generation.** The model never invents a route. It calls functions that query the real database — the same tables and filters `src/lib/route-filters.ts` and the Explore page already use — gets real rows back with real slugs, and only then writes its reply. The "analyse my past rides" half works the same way: a tool hands it a short summary of the rider's own history (regions, typical distance and difficulty, their bike) from `getRiddenRouteIds()`/the diary — not their raw notes — and it reasons from that.
+
+**Worth building without any AI at all, first:** "you've mostly ridden relaxed Peak District routes under 50 miles, here are similar ones in the Yorkshire Dales you haven't done" is a plain database comparison, instant, free to run, and carries no risk of a wrong answer. I'd ship that as an ordinary recommendation list before the conversational agent, and keep the agent for the genuinely open-ended, free-text asks a fixed query can't follow.
+
+### Architecture
+- **Anthropic's Claude API**, with tool use (function-calling), from a new server-side conversation loop. Needs an API key and the `@anthropic-ai/sdk` package — nothing currently in the project talks to an LLM.
+- **Tools the model would be given:**
+  - Search routes/day rides/tours by region, difficulty, bike type, distance, surface and landmark — mostly already-built logic (`matchesSearch`, `matchesDifficultyBand`, the bike-type and difficulty-band options in `route-filters.ts`), wrapped as callable functions.
+  - A short, aggregated summary of the signed-in rider's own ride history — never their raw diary notes.
+  - Resolve a place name into coordinates (the trip planner's own `/api/geocode` address search, reused) — for "near Peveril Castle" or a stated home town.
+  - Build a day plan from a start point and a chosen set of routes, by calling `summariseTrip()` / `splitIntoDays()` in `src/lib/trip-planner.ts` directly — this is the existing trip-planner arithmetic (distance, riding time, the stretch from the start town using the real road routing already built), not new maths.
+- **Multi-turn conversation**, stored server-side (a short-lived table of messages per rider), so it can ask a clarifying question — where to start from, roughly how far, which bike, how much time — rather than guess when something important is missing.
+- **A map inside the reply.** Reuses the existing `TrackMap` component (the same one route and tour pages already use, with its fuel/food/stay pins) rendered small inside the chat, one per suggested route.
+- **A real hand-off to the planner.** `/plan?add=<slug>` already seeds the trip builder with one route; worth extending to take a short list, so "plan this properly" drops the agent's suggestions straight into the real planner.
+- **Where "home location" comes from** — not decided: ask every time, a saved home location on the rider's profile (which would also improve the ordinary trip planner's address search), or inferred from their most-ridden area once they have diary history.
+- **Likely sign-in only.** Personalisation and the guardrails below both work far better with an account behind the conversation than an anonymous visitor.
+
+### Guardrails (two different problems, not one)
+**Off-topic and misuse are not the same thing, and should not lead to the same response.** A new rider asking something unrelated once is not an attack and shouldn't be treated like one; only a deliberate, repeated attempt to misuse it should ever reach a human decision about the rider's account.
+
+1. **A cheap check before the main model sees the message at all**, asking only "is this about routes, riding, or the site?" — an off-topic message gets a plain on-screen message and never reaches (or costs) a full conversation turn.
+2. **A system prompt with a fixed, detectable boundary** — the model returns a structured on-topic flag alongside its answer, so the site never has to guess from wording whether something was a decline.
+3. **Guardrails on what it's allowed to say even on-topic**: only ever names a route it actually looked up, never medical, legal or mechanical advice (point to the existing Advice articles instead), never repeats its own instructions, and treats anything a rider types as data to answer, never as instructions to follow — the same rule this assistant works under, and the right one here too, since a chat box is exactly where someone tries that first.
+4. **Every flagged message is logged as its own row**, the same shape as the existing `blog_post_reports` table — the actual message, when, by whom, and a status of pending/warned/actioned — not just a counter. A new **Admin → Flagged assistant messages** queue, same pattern as Place tips and blog reports.
+5. **A person decides every escalation.** A flagged message doesn't warn or close an account by itself — an admin looks at the actual message first. Sending the warning itself needs the email service from Phase 0 of the Premium work list (`WORK-LIST.md`, item A2); until then it's sent by hand. Closing an account from admin doesn't exist yet either — today's account deletion is rider-initiated only (Settings) — so an admin-side version is a small, separate addition, kept as a deliberate action each time rather than automatic at a threshold.
+6. **A rate limit per rider per hour**, the same shape as the one already on `/api/route`.
+7. **The terms of service need to say this can happen**, or there's nothing to point to if an account is ever actually closed over it — another thing waiting on `info@herepath.com`.
+
+### Cost
+Priced per use like routing and map tiles, not a one-off: every message costs a small amount of Anthropic API usage, and a multi-turn conversation with tool calls costs more than a single question. A natural Premium feature, same principle as the rest of what's listed there. Needs its own rate limit so the worst case is an annoyance, not a bill.
+
+### Privacy
+A rider's question, and a summary of their ride history if personalising, goes to Anthropic's API to generate the answer — the same kind of line already in the privacy draft for Stripe, MapTiler and the routing service, just a new one to add.
+
+### Suggested build order
+The plain, non-AI recommendation list first (cheap, useful, ships quickly) → the conversational agent with search and the day-plan tool, signed in only, with the off-topic gate and logging from day one → the map-in-reply and the multi-route planner hand-off → the admin flag queue and (once email exists) the warning step.
+
 ## Smaller ideas noted along the way
 - **Stay near the end of each day** in the trip planner: today the Stay pins show along all the trip's routes. Looking up places around an arbitrary point needs a limit on how many distinct places can be searched, so a visitor can't flood the free OpenStreetMap service.
 - **Making the main "Download GPX" buttons work inside the Android app.** The app's web view can't download files, so those buttons probably do nothing there. The "Send to a navigation app" share button works around it.
