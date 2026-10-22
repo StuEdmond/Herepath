@@ -64,7 +64,7 @@ export const CONTENT_GROUPS: ContentGroup[] = [
     label: "Home page",
     path: "/",
     fields: [
-      text("heroTitle", "Headline", "Ancient roads. Modern riders."),
+      text("heroTitle", "Headline", "Every road worth riding in Britain."),
       area("heroBody", "Intro paragraph", "Herepath curates the best motorcycling roads in the UK — honestly rated, GPX-ready, and handed off to the maps app you already trust."),
       text("heroPrimaryCta", "Main button", "Explore routes"),
       text("heroSecondaryCta", "Second button", "See what's free"),
