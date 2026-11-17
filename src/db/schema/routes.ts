@@ -45,6 +45,8 @@ export const routes = pgTable("routes", {
 
   /** When our team last checked this road, so riders can judge how fresh the details are. */
   lastVerifiedOn: date("last_verified_on"),
+  /** The date someone last rode this route. Optional, and shown on the route page when set. */
+  lastRidden: date("last_ridden"),
   /** A dated warning about the road as it is now (a closure, roadworks), shown at the top of the page. */
   conditionsNote: text("conditions_note"),
   conditionsNoteOn: date("conditions_note_on"),

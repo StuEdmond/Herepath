@@ -21,6 +21,7 @@ import { RouteMapCard } from "@/components/route/route-map-card";
 import { RideMapLayout } from "@/components/map/ride-map-layout";
 import { BikeSuitability } from "@/components/route/bike-suitability";
 import { RideFreshness } from "@/components/route/ride-freshness";
+import { formatVerifiedDate } from "@/lib/condition-reports";
 import { RoadClosureNotice } from "@/components/route/road-closure-notice";
 import { routeCreditLine } from "@/lib/route-sources";
 import { ReviewsSection } from "@/components/route/reviews-section";
@@ -195,6 +196,10 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
           conditionsNote={route.conditionsNote}
           conditionsNoteOn={route.conditionsNoteOn}
         />
+
+        {route.lastRidden && (
+          <p className="-mt-3 text-[13px] text-text-muted">Last ridden: {formatVerifiedDate(route.lastRidden)}</p>
+        )}
 
         {routeCreditLine({ name: route.sourceName, author: route.sourceAuthor, licence: route.sourceLicence }) && (
           <p className="-mt-3 text-[12px] text-text-muted">
